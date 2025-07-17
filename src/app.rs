@@ -43,6 +43,10 @@ impl eframe::App for CogsApp {
 
     /// Called each time the UI needs repainting, which may be many times per second.
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        //
+        // Not yet usable. See https://github.com/catppuccin/egui/pull/77
+        //catppuccin_egui::set_theme(ctx, catppuccin_egui::MOCHA);
+
         // Put your widgets into a `SidePanel`, `TopBottomPanel`, `CentralPanel`, `Window` or `Area`.
         // For inspiration and more examples, go to https://emilk.github.io/egui
 

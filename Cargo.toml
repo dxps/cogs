@@ -32,6 +32,7 @@ eframe = { version = "=0.32.0", default-features = false, features = [
     "wayland",       # To support Linux (and CI).
     "x11",           # To support older Linux distributions (restores one of the default features).
 ] }
+catppuccin-egui = { version = "5.5.0", default-features = false, features = ["egui31"] }
 
 log = "=0.4.27"
 
