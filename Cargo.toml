@@ -1,44 +1,72 @@
+#########
 [package]
-name = "eframe_template"
+#########
+
+name = "cogs"
+description = "_"
 version = "0.1.0"
-authors = ["Emil Ernerfeldt <emil.ernerfeldt@gmail.com>"]
+authors = ["Marius Ileana <dev@devisions.org>"]
 edition = "2024"
 include = ["LICENSE-APACHE", "LICENSE-MIT", "**/*.rs", "Cargo.toml"]
 rust-version = "1.85"
 
+
+##########################
 [package.metadata.docs.rs]
+##########################
+
 all-features = true
 targets = ["x86_64-unknown-linux-gnu", "wasm32-unknown-unknown"]
 
+
+##############
 [dependencies]
-egui = "0.32"
-eframe = { version = "0.32", default-features = false, features = [
+##############
+
+egui = "=0.32.0"
+eframe = { version = "=0.32.0", default-features = false, features = [
     "accesskit",     # Make egui compatible with screen readers. NOTE: adds a lot of dependencies.
     "default_fonts", # Embed the default egui fonts.
     "glow",          # Use the glow rendering backend. Alternative: "wgpu".
     "persistence",   # Enable restoring app state when restarting the app.
-    "wayland",       # To support Linux (and CI)
-    "x11",           # To support older Linux distributions (restores one of the default features)
+    "wayland",       # To support Linux (and CI).
+    "x11",           # To support older Linux distributions (restores one of the default features).
 ] }
-log = "0.4.27"
+
+log = "=0.4.27"
 
 # You only need serde if you want app persistence:
-serde = { version = "1.0.219", features = ["derive"] }
+serde = { version = "=1.0.219", features = ["derive"] }
 
-# native:
+
+# Native deps
+########################################################
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-env_logger = "0.11.8"
+########################################################
 
-# web:
+env_logger = "=0.11.8"
+
+
+# Web deps
+###################################################
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-wasm-bindgen-futures = "0.4.50"
-web-sys = "0.3.70"              # to access the DOM (to hide the loading text)
+###################################################
 
+wasm-bindgen-futures = "=0.4.50"
+web-sys = "=0.3.77"              # to access the DOM (to hide the loading text)
+
+
+#################
 [profile.release]
+#################
+
 opt-level = 2 # fast and small wasm
 
 # Optimize all dependencies even in debug builds:
+#########################
 [profile.dev.package."*"]
+#########################
+
 opt-level = 2
 
 
@@ -54,8 +82,9 @@ opt-level = 2
 
 
 
-# ----------------------------------------------------------------------------------------
-# Lints:
+###############################################################################
+# Lints  #
+#########
 
 [lints]
 workspace = true
@@ -78,13 +107,17 @@ unused_lifetimes = "warn"
 trivial_casts = "allow"
 unused_qualifications = "allow"
 
-
+#########################
 [workspace.lints.rustdoc]
+#########################
+
 all = "warn"
 missing_crate_level_docs = "warn"
 
-
+########################
 [workspace.lints.clippy]
+########################
+
 allow_attributes = "warn"
 as_ptr_cast_mut = "warn"
 await_holding_lock = "warn"

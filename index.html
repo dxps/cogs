@@ -1,13 +1,9 @@
 <!DOCTYPE html>
-<html>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-
-<!-- Disable zooming: -->
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 
 <head>
-    <!-- change this to your project name -->
-    <title>eframe template</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>cogs</title>
 
     <!-- config for our rust wasm binary. go to https://trunkrs.dev/assets/#rust for more customization -->
     <link data-trunk rel="rust" data-wasm-opt="2" />
@@ -17,12 +13,12 @@
     <link data-trunk rel="icon" href="assets/favicon.ico">
 
 
-    <link data-trunk rel="copy-file" href="assets/sw.js"/>
-    <link data-trunk rel="copy-file" href="assets/manifest.json"/>
-    <link data-trunk rel="copy-file" href="assets/icon-1024.png" data-target-path="assets"/>
-    <link data-trunk rel="copy-file" href="assets/icon-256.png" data-target-path="assets"/>
-    <link data-trunk rel="copy-file" href="assets/icon_ios_touch_192.png" data-target-path="assets"/>
-    <link data-trunk rel="copy-file" href="assets/maskable_icon_x512.png" data-target-path="assets"/>
+    <link data-trunk rel="copy-file" href="assets/sw.js" />
+    <link data-trunk rel="copy-file" href="assets/manifest.json" />
+    <link data-trunk rel="copy-file" href="assets/icon-1024.png" data-target-path="assets" />
+    <link data-trunk rel="copy-file" href="assets/icon-256.png" data-target-path="assets" />
+    <link data-trunk rel="copy-file" href="assets/icon_ios_touch_192.png" data-target-path="assets" />
+    <link data-trunk rel="copy-file" href="assets/maskable_icon_x512.png" data-target-path="assets" />
 
 
     <link rel="manifest" href="manifest.json">
@@ -119,11 +115,11 @@
 </head>
 
 <body>
-    <!-- The WASM code will resize the canvas dynamically -->
-    <!-- the id is hardcoded in main.rs . so, make sure both match. -->
+    <!-- The WASM code will resize the canvas dynamically. -->
+    <!-- The id is hardcoded in main.rs. So, make sure both match. -->
     <canvas id="the_canvas_id"></canvas>
 
-    <!-- the loading spinner will be removed in main.rs -->
+    <!-- The loading spinner will be removed in main.rs. -->
     <div class="centered" id="loading_text">
         <p style="font-size:16px">
             Loading…
@@ -131,10 +127,10 @@
         <div class="lds-dual-ring"></div>
     </div>
 
-    <!--Register Service Worker. this will cache the wasm / js scripts for offline use (for PWA functionality). -->
-    <!-- Force refresh (Ctrl + F5) to load the latest files instead of cached files  -->
+    <!-- Register Service Worker. this will cache the wasm / js scripts for offline use (for PWA functionality). -->
+    <!-- Force refresh (Ctrl + F5) to load the latest files instead of cached files. -->
     <script>
-        // We disable caching during development so that we always view the latest version.
+        // We disable caching during development, so that we always view the latest version.
         if ('serviceWorker' in navigator && window.location.hash !== "#dev") {
             window.addEventListener('load', function () {
                 navigator.serviceWorker.register('sw.js');
@@ -144,5 +140,3 @@
 </body>
 
 </html>
-
-<!-- Powered by egui: https://github.com/emilk/egui/ -->
