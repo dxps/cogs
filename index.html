@@ -21,8 +21,8 @@
 
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="assets/icon-192x192.png">
-    <meta name="theme-color" media="(prefers-color-scheme: light)" content="white">
-    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#404040">
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#eff1f5">
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#303446">
 
     <style>
         html {
@@ -33,14 +33,14 @@
         body {
             /* Light mode background color for what is not covered by the egui canvas,
             or where the egui canvas is translucent. */
-            background: #909090;
+            background: #eff1f5;
         }
 
         @media (prefers-color-scheme: dark) {
             body {
                 /* Dark mode background color for what is not covered by the egui canvas,
                 or where the egui canvas is translucent. */
-                background: #404040;
+                background: #303446;
             }
         }
 
@@ -89,7 +89,7 @@
         }
 
         .lds-dual-ring:after {
-            content: " ";
+            content: "";
             display: block;
             width: 24px;
             height: 24px;
@@ -119,10 +119,10 @@
 
     <!-- The loading spinner will be removed in main.rs. -->
     <div class="centered" id="loading_text">
-        <p style="font-size:16px">
-            Loading…
-        </p>
         <div class="lds-dual-ring"></div>
+        <p style="font-size:16px">
+            Loading
+        </p>
     </div>
 
     <!-- Register Service Worker. this will cache the wasm / js scripts for offline use (for PWA functionality). -->
