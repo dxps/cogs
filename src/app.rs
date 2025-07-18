@@ -1,4 +1,7 @@
-use egui::{Color32, RichText};
+use egui::{
+    Color32, FontData, RichText,
+    epaint::text::{FontInsert, InsertFontFamily},
+};
 
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
 #[derive(serde::Deserialize, serde::Serialize)]
@@ -14,7 +17,7 @@ impl Default for CogsApp {
     fn default() -> Self {
         Self {
             label: "Hello World!".to_owned(),
-            value: 2.7,
+            value: 2.5,
         }
     }
 }
@@ -25,16 +28,34 @@ impl CogsApp {
         // This is also where you can customize the look and feel of egui using
         // `cc.egui_ctx.set_visuals` and `cc.egui_ctx.set_fonts`.
 
-        // Have a little zoom.
-        cc.egui_ctx.set_zoom_factor(1.3);
+        Self::setup_font(&cc.egui_ctx);
+
+        cc.egui_ctx.set_zoom_factor(1.2);
 
         // Load previous app state (if any).
-        // Note that you must enable the `persistence` feature for this to work.
+        // Note: The `persistence` feature must be enabled for this to work.
         if let Some(storage) = cc.storage {
             eframe::get_value(storage, eframe::APP_KEY).unwrap_or_default()
         } else {
             Default::default()
         }
+    }
+
+    fn setup_font(ctx: &egui::Context) {
+        ctx.add_font(FontInsert::new(
+            "Supreme",
+            FontData::from_static(include_bytes!("../assets/fonts/Supreme-Regular.ttf")),
+            vec![
+                InsertFontFamily {
+                    family: egui::FontFamily::Proportional,
+                    priority: egui::epaint::text::FontPriority::Highest,
+                },
+                InsertFontFamily {
+                    family: egui::FontFamily::Monospace,
+                    priority: egui::epaint::text::FontPriority::Lowest,
+                },
+            ],
+        ));
     }
 }
 
@@ -82,33 +103,24 @@ impl eframe::App for CogsApp {
             // The central panel the region left after adding TopPanel's and SidePanel's
             ui.heading("Cogs")
                 .on_hover_cursor(egui::CursorIcon::Help)
-                .on_hover_text(
-                    "Cogs is a cargo crate that lets you create a simple app with egui.",
-                );
+                .on_hover_text("Cogs is a cognitive platform for cognitive needs.");
 
             ui.add_space(10.0);
 
             ui.horizontal(|ui| {
-                ui.label("Enter label: ");
+                ui.label("Enter label:");
                 ui.text_edit_singleline(&mut self.label);
             });
 
             ui.add(egui::Slider::new(&mut self.value, 0.0..=10.0).text("value"));
 
             if ui.button("Increment").clicked() {
-                self.value += 1.0;
+                self.value += 0.5;
             }
 
             ui.horizontal(|ui| {
                 ui.label(RichText::new(format!("Label: {}", self.label)).color(Color32::MAGENTA));
             });
-
-            ui.separator();
-
-            ui.add(egui::github_link_file!(
-                "https://github.com/emilk/eframe_template/blob/main/",
-                "Source code."
-            ));
 
             ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
                 copyright_footer(ui);
