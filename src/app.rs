@@ -44,8 +44,14 @@ impl eframe::App for CogsApp {
     /// Called each time the UI needs repainting, which may be many times per second.
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         //
-        // Not yet usable. See https://github.com/catppuccin/egui/pull/77
-        //catppuccin_egui::set_theme(ctx, catppuccin_egui::MOCHA);
+        match ctx.theme() {
+            egui::Theme::Light => {
+                catppuccin_egui::set_theme(ctx, catppuccin_egui::LATTE);
+            }
+            egui::Theme::Dark => {
+                catppuccin_egui::set_theme(ctx, catppuccin_egui::FRAPPE);
+            }
+        }
 
         // Put your widgets into a `SidePanel`, `TopBottomPanel`, `CentralPanel`, `Window` or `Area`.
         // For inspiration and more examples, go to https://emilk.github.io/egui
@@ -73,9 +79,9 @@ impl eframe::App for CogsApp {
             // The central panel the region left after adding TopPanel's and SidePanel's
             ui.heading("Cogs")
                 .on_hover_cursor(egui::CursorIcon::Help)
-                .on_hover_text(format!(
-                    "Cogs is a cargo crate that lets you create a simple app with egui."
-                ));
+                .on_hover_text(
+                    "Cogs is a cargo crate that lets you create a simple app with egui.",
+                );
 
             ui.add_space(10.0);
 
