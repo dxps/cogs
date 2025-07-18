@@ -3,7 +3,7 @@
 #########
 
 name = "cogs"
-description = "_"
+description = "A cognitive platform for cognitive needs"
 version = "0.1.0"
 authors = ["Marius Ileana <dev@devisions.org>"]
 edition = "2024"
