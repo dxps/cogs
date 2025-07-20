@@ -119,7 +119,8 @@ impl eframe::App for CogsApp {
             }
 
             ui.horizontal(|ui| {
-                ui.label(RichText::new(format!("Label: {}", self.label)).color(Color32::MAGENTA));
+                ui.label(RichText::new("Label:"));
+                ui.label(RichText::new(self.label.to_owned()).code());
             });
 
             ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {

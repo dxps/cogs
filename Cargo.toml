@@ -8,7 +8,7 @@ version = "0.1.0"
 authors = ["Marius Ileana <dev@devisions.org>"]
 edition = "2024"
 include = ["LICENSE-APACHE", "LICENSE-MIT", "**/*.rs", "Cargo.toml"]
-rust-version = "1.85"
+rust-version = "1.88"
 
 
 ##########################
