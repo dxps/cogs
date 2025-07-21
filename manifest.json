@@ -1,0 +1,23 @@
+{
+	"name": "cogs",
+	"short_name": "cogs",
+	"description": "A cognitive platform for cognitive needs",
+	"icons": [
+		{
+			"src": "/assets/icon-192.png",
+			"sizes": "192x192",
+			"type": "image/png"
+		},
+		{
+			"src": "/assets/icon-512.png",
+			"sizes": "512x512",
+			"type": "image/png"
+		}
+	],
+	"lang": "en-US",
+	"id": "/index.html",
+	"start_url": "./index.html",
+	"display": "standalone",
+	"background_color": "#303030",
+	"theme_color": "white"
+}
