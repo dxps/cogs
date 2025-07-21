@@ -33,7 +33,7 @@ impl CogsApp {
         // This is also where you can customize the look and feel of egui using
         // `cc.egui_ctx.set_visuals` and `cc.egui_ctx.set_fonts`.
 
-        Self::setup_font(&cc.egui_ctx);
+        Self::init_font(&cc.egui_ctx);
 
         // Image loading init.
         egui_extras::install_image_loaders(&cc.egui_ctx);
@@ -49,7 +49,7 @@ impl CogsApp {
         }
     }
 
-    fn setup_font(ctx: &egui::Context) {
+    fn init_font(ctx: &egui::Context) {
         ctx.add_font(FontInsert::new(
             "Supreme",
             FontData::from_static(include_bytes!("../assets/fonts/Supreme-Regular-icons.ttf")),
@@ -64,6 +64,12 @@ impl CogsApp {
                 },
             ],
         ));
+    }
+
+    /// Further app init when running on web.
+    #[cfg(target_arch = "wasm32")]
+    pub fn init_web(&self, cc: &eframe::CreationContext<'_>) {
+        log::info!("[init web] {:#?}", cc.integration_info.web_info);
     }
 }
 
@@ -133,14 +139,14 @@ impl eframe::App for CogsApp {
             });
 
             ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
-                copyright_footer(ui);
+                footer(ui);
                 // egui::warn_if_debug_build(ui);
             });
         });
     }
 }
 
-fn copyright_footer(ui: &mut egui::Ui) {
+fn footer(ui: &mut egui::Ui) {
     ui.horizontal(|ui| {
         ui.spacing_mut().item_spacing.x = 0.0;
         ui.label("Powered by ");
@@ -150,6 +156,13 @@ fn copyright_footer(ui: &mut egui::Ui) {
             "eframe",
             "https://github.com/emilk/egui/tree/master/crates/eframe",
         );
-        ui.label(".");
+        ui.label(". ");
+        if ui
+            .label("Status")
+            .on_hover_cursor(egui::CursorIcon::PointingHand)
+            .clicked()
+        {
+            log::info!("[status] clicked");
+        }
     });
 }

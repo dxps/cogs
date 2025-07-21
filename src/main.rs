@@ -50,7 +50,11 @@ fn main() {
             .start(
                 canvas,
                 web_options,
-                Box::new(|cc| Ok(Box::new(cogs::CogsApp::new(cc)))),
+                Box::new(|cc| {
+                    let app = cogs::CogsApp::new(cc);
+                    app.init_web(&cc);
+                    Ok(Box::new(app))
+                }),
             )
             .await;
 
