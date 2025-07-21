@@ -13,6 +13,8 @@ As prerequisites to run this project, you need to have installed:
     Install it with `rustup target add wasm32-unknown-unknown`
 -   [trunk](https://trunkrs.dev/)\
     Install it with `cargo install --locked trunk`
+-   Clippy tool (to use it within `./check.sh` script for further code linting)\
+    Install it with `rustup component add clippy`
 
 <br/>
 
