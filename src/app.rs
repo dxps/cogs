@@ -1,7 +1,9 @@
 use egui::{
-    Color32, FontData, RichText,
+    FontData, RichText,
     epaint::text::{FontInsert, InsertFontFamily},
 };
+
+use crate::view::ViewType;
 
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
 #[derive(serde::Deserialize, serde::Serialize)]
@@ -11,6 +13,8 @@ pub struct CogsApp {
 
     #[serde(skip)] // This how you opt-out of serialization of a field
     value: f32,
+
+    pub(crate) view: ViewType,
 }
 
 impl Default for CogsApp {
@@ -18,6 +22,7 @@ impl Default for CogsApp {
         Self {
             label: "Hello World!".to_owned(),
             value: 2.5,
+            view: ViewType::Home,
         }
     }
 }
@@ -29,6 +34,9 @@ impl CogsApp {
         // `cc.egui_ctx.set_visuals` and `cc.egui_ctx.set_fonts`.
 
         Self::setup_font(&cc.egui_ctx);
+
+        // Image loading init.
+        egui_extras::install_image_loaders(&cc.egui_ctx);
 
         cc.egui_ctx.set_zoom_factor(1.2);
 
@@ -44,7 +52,7 @@ impl CogsApp {
     fn setup_font(ctx: &egui::Context) {
         ctx.add_font(FontInsert::new(
             "Supreme",
-            FontData::from_static(include_bytes!("../assets/fonts/Supreme-Regular.ttf")),
+            FontData::from_static(include_bytes!("../assets/fonts/Supreme-Regular-icons.ttf")),
             vec![
                 InsertFontFamily {
                     family: egui::FontFamily::Proportional,
@@ -80,23 +88,24 @@ impl eframe::App for CogsApp {
         // Put your widgets into a `SidePanel`, `TopBottomPanel`, `CentralPanel`, `Window` or `Area`.
         // For inspiration and more examples, go to https://emilk.github.io/egui
 
-        egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
-            // The top panel is often a good place for a menu bar:
-            egui::MenuBar::new().ui(ui, |ui| {
-                // NOTE: no File->Quit on web pages!
+        egui::TopBottomPanel::top("top_panel")
+            .show_separator_line(false)
+            .show(ctx, |ui| {
+                // The top panel is often a good place for a menu bar:
                 let is_web = cfg!(target_arch = "wasm32");
                 if !is_web {
-                    ui.menu_button("File", |ui| {
-                        if ui.button("Quit").clicked() {
-                            ctx.send_viewport_cmd(egui::ViewportCommand::Close);
-                        }
+                    egui::MenuBar::new().ui(ui, |ui| {
+                        // Note: There is no File->Quit on web pages.
+                        ui.menu_button("File", |ui| {
+                            if ui.button("Quit").clicked() {
+                                ctx.send_viewport_cmd(egui::ViewportCommand::Close);
+                            }
+                        });
+                        ui.add_space(16.0);
                     });
-                    ui.add_space(16.0);
                 }
-
-                egui::widgets::global_theme_preference_buttons(ui);
+                self.header(ui);
             });
-        });
 
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.add_space(10.0);

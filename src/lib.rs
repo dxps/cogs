@@ -2,3 +2,9 @@
 
 mod app;
 pub use app::CogsApp;
+
+mod header;
+
+mod icons;
+
+mod view;
