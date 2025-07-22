@@ -5,6 +5,10 @@
 #[cfg(not(target_arch = "wasm32"))]
 fn main() -> eframe::Result {
     env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
+    env_logger::Builder::new()
+        .filter_level(log::LevelFilter::Info)
+        .filter_module("cogs_ui", log::LevelFilter::Debug)
+        .build();
 
     let native_options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
@@ -12,7 +16,7 @@ fn main() -> eframe::Result {
             .with_min_inner_size([300.0, 220.0])
             .with_icon(
                 // Note: Adding an icon is optional
-                eframe::icon_data::from_png_bytes(&include_bytes!("../assets/icon-256.png")[..])
+                eframe::icon_data::from_png_bytes(&include_bytes!("../assets/icon-192.png")[..])
                     .expect("Failed to load icon"),
             ),
         ..Default::default()
@@ -51,7 +55,7 @@ fn main() {
                 canvas,
                 web_options,
                 Box::new(|cc| {
-                    let app = cogs::CogsApp::new(cc);
+                    let app = cogs_ui::CogsApp::new(cc);
                     app.init_web(&cc);
                     Ok(Box::new(app))
                 }),
