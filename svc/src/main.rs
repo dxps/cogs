@@ -109,4 +109,7 @@ async fn shutdown_signal() {
         _ = ctrl_c => {},
         _ = terminate => {},
     }
+
+    log::info!("Shutting down ...");
+    // TODO: Close the db connection pool and free any other resources.
 }
