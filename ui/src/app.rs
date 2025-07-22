@@ -162,7 +162,10 @@ fn footer(ui: &mut egui::Ui) {
             .on_hover_cursor(egui::CursorIcon::PointingHand)
             .clicked()
         {
-            log::info!("[status] clicked");
+            let req = ehttp::Request::get("http://localhost:9009/manifest.json");
+            ehttp::fetch(req, move |rsp| {
+                log::info!("[status] clicked. Test response: {:#?}", rsp);
+            });
         }
     });
 }
