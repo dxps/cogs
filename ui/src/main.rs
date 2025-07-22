@@ -20,7 +20,7 @@ fn main() -> eframe::Result {
     eframe::run_native(
         "Cogs",
         native_options,
-        Box::new(|cc| Ok(Box::new(cogs::CogsApp::new(cc)))),
+        Box::new(|cc| Ok(Box::new(cogs_ui::CogsApp::new(cc)))),
     )
 }
 

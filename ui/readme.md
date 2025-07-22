@@ -1,6 +1,6 @@
-# cogs
+# Cogs - The front-end side
 
-TODO: to-be-documented
+TODO: _to-be-documented_
 
 <br/>
 
