@@ -77,10 +77,10 @@ async fn main() {
         .layer(SessionLayer::new(session_store))
         .layer(Extension(state));
 
-    log::info!("Listening on http://{:?}", cfg.listenaddress);
+    log::info!("Listening on http://{}", cfg.listenaddress);
     let listener = tokio::net::TcpListener::bind(&cfg.listenaddress)
         .await
-        .expect("Failed to bind to address");
+        .expect(format!("Failed to bind to address {}", cfg.listenaddress).as_str());
     axum::serve(listener, app.into_make_service())
         .with_graceful_shutdown(shutdown_signal())
         .await

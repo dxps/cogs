@@ -3,8 +3,10 @@
 mod app;
 pub use app::CogsApp;
 
-mod header;
+mod header_footer;
 
-mod icons;
+mod home;
+
+mod constants;
 
 mod view;
