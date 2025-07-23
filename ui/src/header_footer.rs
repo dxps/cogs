@@ -1,8 +1,9 @@
 use const_format::concatcp;
+use egui::{Align, Layout};
 
 use crate::{
     CogsApp,
-    constants::{ICON_EXPLORE, ICON_HOME, ICON_SETTINGS},
+    constants::{ICON_EXPLORE, ICON_HOME, ICON_SETTINGS, ICON_USER},
 };
 
 impl CogsApp {
@@ -51,8 +52,14 @@ impl CogsApp {
                     concatcp!(ICON_SETTINGS, "  Settings "),
                 );
                 egui::global_theme_preference_switch(ui);
+                ui.with_layout(Layout::right_to_left(Align::LEFT), |ui| {
+                    ui.selectable_value(
+                        &mut self.view,
+                        crate::view::ViewType::Home,
+                        concatcp!(ICON_USER, "  Login "),
+                    );
+                });
             });
-            ui.add_space(10.0);
         });
     }
 }
