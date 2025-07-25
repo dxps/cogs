@@ -1,9 +1,9 @@
+use crate::{constants::APP_KEY, view::ViewType};
+use cogs_shared::{app::AppError, domain::model::UserAccount};
 use egui::{
     FontData,
     epaint::text::{FontInsert, InsertFontFamily},
 };
-
-use crate::{constants::APP_KEY, view::ViewType};
 
 #[derive(serde::Deserialize, serde::Serialize)] // so we can persist ui state on app shutdown.
 #[serde(default)] // if we add new fields, give them default values when deserializing old state.
@@ -14,6 +14,10 @@ pub struct CogsApp {
     pub(crate) value: f32,
 
     pub(crate) view: ViewType,
+
+    pub(crate) auth_session: Option<UserAccount>,
+
+    pub(crate) auth_error: Option<AppError>,
 }
 
 impl Default for CogsApp {
@@ -22,6 +26,8 @@ impl Default for CogsApp {
             label: "Hello World!".to_owned(),
             value: 2.5,
             view: ViewType::Home,
+            auth_session: None,
+            auth_error: None,
         }
     }
 }

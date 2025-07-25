@@ -923,6 +923,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "cogs_shared"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "serde",
+ "thiserror 2.0.12",
+]
+
+[[package]]
 name = "cogs_svc"
 version = "0.1.0"
 dependencies = [
@@ -952,6 +961,7 @@ name = "cogs_ui"
 version = "0.1.0"
 dependencies = [
  "catppuccin-egui",
+ "cogs_shared",
  "const_format",
  "eframe",
  "egui",

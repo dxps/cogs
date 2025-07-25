@@ -1,5 +1,5 @@
 use const_format::concatcp;
-use egui::{Align, Layout};
+use egui::{Align, Layout, Sense};
 
 use crate::{
     CogsApp,
@@ -53,11 +53,14 @@ impl CogsApp {
                 );
                 egui::global_theme_preference_switch(ui);
                 ui.with_layout(Layout::right_to_left(Align::LEFT), |ui| {
-                    ui.selectable_value(
-                        &mut self.view,
-                        crate::view::ViewType::Home,
-                        concatcp!(ICON_USER, "  Login "),
-                    );
+                    if ui
+                        .label(concatcp!(ICON_USER, "  Login "))
+                        .interact(Sense::click())
+                        .on_hover_cursor(egui::CursorIcon::PointingHand)
+                        .clicked()
+                    {
+                        log::info!("Login clicked")
+                    }
                 });
             });
         });

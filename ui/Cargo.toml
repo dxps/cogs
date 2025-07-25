@@ -23,6 +23,7 @@ targets = ["x86_64-unknown-linux-gnu", "wasm32-unknown-unknown"]
 [dependencies]
 ##############
 
+cogs_shared = { path = "../shared" }
 egui = { version="=0.32.0", features = [
     "persistence",   # Enable persistence of memory (window positions etc).
     "log",           # It makes egui log some errors using the `log` crate.
