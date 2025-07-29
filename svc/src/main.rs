@@ -28,7 +28,6 @@ async fn main() {
         .build()
         .unwrap();
 
-    log::debug!("Loaded config: {config:#?}");
     let cfg: SvcConfig = config.try_deserialize().unwrap();
 
     log::debug!("Loaded cfg: {cfg:#?}");

@@ -1,10 +1,10 @@
-use cogs_shared::domain::model::Id;
+use cogs_shared::domain::model::UserAccount;
 use const_format::concatcp;
-use egui::{Align, Color32, CursorIcon, Layout, Popup, Response, Sense, Shadow, Stroke, Window};
+use egui::{Align, CursorIcon, Layout, Popup, Response, Sense};
 
 use crate::{
     CogsApp,
-    constants::{ICON_EXPLORE, ICON_HOME, ICON_SETTINGS, ICON_USER},
+    constants::{ICON_EXPLORE, ICON_HOME, ICON_LOGIN, ICON_LOGOUT, ICON_SETTINGS, ICON_USER},
 };
 
 impl CogsApp {
@@ -58,17 +58,16 @@ impl CogsApp {
                         Some(_) => concatcp!(" ", ICON_USER, "  Login "),
                         None => concatcp!(" ", ICON_USER, "   "),
                     };
-                    // ui.selectable_value(&mut self.view, crate::view::ViewType::UserProfile, label);
                     ui.add_space(6.0);
                     let parent = ui
                         .label(label)
                         .interact(Sense::click())
                         .on_hover_cursor(egui::CursorIcon::PointingHand);
-                    self.user_profile.parent_widget = Some(parent);
-                    if self.user_profile.parent_widget.as_ref().unwrap().clicked() {
-                        self.user_profile.open_popup = true;
+                    self.user_widget.parent_widget = Some(parent);
+                    if self.user_widget.parent_widget.as_ref().unwrap().clicked() {
+                        self.user_widget.open_popup = true;
                     };
-                    self.user_profile.show_popup(ui);
+                    self.user_widget.show_popup(ui);
                 });
             });
         });
@@ -101,16 +100,16 @@ pub fn footer(ui: &mut egui::Ui) {
 
 #[derive(Default, serde::Deserialize, serde::Serialize)]
 #[serde(default)]
-pub struct UserProfileWidget {
+pub struct UserWidget {
     #[serde(skip)]
     pub parent_widget: Option<Response>,
-    pub username: String,
-    pub email: String,
+    #[serde(skip)]
+    pub auth_session: Option<UserAccount>,
     #[serde(skip)]
     pub open_popup: bool,
 }
 
-impl UserProfileWidget {
+impl UserWidget {
     fn show_popup(&mut self, ui: &mut egui::Ui) {
         let mut style = ui.style_mut().clone();
         style.visuals.window_fill = style.visuals.extreme_bg_color;
@@ -119,13 +118,13 @@ impl UserProfileWidget {
             .gap(5.0)
             .style(style)
             .show(|ui| {
-                ui.label("some")
-                    .on_hover_cursor(CursorIcon::PointingHand)
-                    .on_hover_text("some text");
-                ui.add_space(2.0);
-                ui.label("other")
-                    .on_hover_cursor(CursorIcon::PointingHand)
-                    .on_hover_text("other text");
+                if self.auth_session.is_none() {
+                    ui.label(concatcp!(" ", ICON_LOGIN, "  Login "))
+                        .on_hover_cursor(CursorIcon::PointingHand);
+                } else {
+                    ui.label(concatcp!(" ", ICON_LOGOUT, "  Logout "))
+                        .on_hover_cursor(CursorIcon::PointingHand);
+                }
             });
     }
 }

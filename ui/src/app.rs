@@ -1,4 +1,4 @@
-use crate::{constants::APP_KEY, header_footer::UserProfileWidget, view::ViewType};
+use crate::{constants::APP_KEY, header_footer::UserWidget, view::ViewType};
 use cogs_shared::{app::AppError, domain::model::UserAccount};
 use egui::{
     FontData,
@@ -17,7 +17,7 @@ pub struct CogsApp {
 
     pub(crate) auth_session: Option<UserAccount>,
     pub(crate) auth_error: Option<AppError>,
-    pub(crate) user_profile: UserProfileWidget,
+    pub(crate) user_widget: UserWidget,
 }
 
 impl Default for CogsApp {
@@ -28,7 +28,7 @@ impl Default for CogsApp {
             view: ViewType::Home,
             auth_session: None,
             auth_error: None,
-            user_profile: UserProfileWidget::default(),
+            user_widget: UserWidget::default(),
         }
     }
 }
