@@ -1,10 +1,14 @@
+use std::sync::{Arc, RwLock};
+
 use cogs_shared::domain::model::UserAccount;
 use const_format::concatcp;
 use egui::{Align, CursorIcon, Layout, Popup, Response, Sense};
 
 use crate::{
     CogsApp,
+    app::AppState,
     constants::{ICON_EXPLORE, ICON_HOME, ICON_LOGIN, ICON_LOGOUT, ICON_SETTINGS, ICON_USER},
+    view::ViewType,
 };
 
 impl CogsApp {
@@ -38,19 +42,14 @@ impl CogsApp {
                 ui.add(egui::Image::new(logo.clone()));
                 ui.add_space(10.0);
                 ui.selectable_value(
-                    &mut self.view,
-                    crate::view::ViewType::Home,
+                    &mut self.state.write().unwrap().view_type,
+                    ViewType::Home,
                     concatcp!(ICON_HOME, "  Home "),
                 );
                 ui.selectable_value(
-                    &mut self.view,
-                    crate::view::ViewType::Explore,
+                    &mut self.state.write().unwrap().view_type,
+                    ViewType::Explore,
                     concatcp!(ICON_EXPLORE, "  Explore "),
-                );
-                ui.selectable_value(
-                    &mut self.view,
-                    crate::view::ViewType::Settings,
-                    concatcp!(ICON_SETTINGS, "  Settings "),
                 );
                 egui::global_theme_preference_switch(ui);
                 ui.with_layout(Layout::right_to_left(Align::LEFT), |ui| {
@@ -98,30 +97,46 @@ pub fn footer(ui: &mut egui::Ui) {
     });
 }
 
-#[derive(Default, serde::Deserialize, serde::Serialize)]
-#[serde(default)]
 pub struct UserWidget {
-    #[serde(skip)]
     pub parent_widget: Option<Response>,
-    #[serde(skip)]
     pub auth_session: Option<UserAccount>,
-    #[serde(skip)]
     pub open_popup: bool,
+    pub state: Arc<RwLock<AppState>>,
 }
 
 impl UserWidget {
+    pub fn new(state: Arc<RwLock<AppState>>) -> Self {
+        Self {
+            parent_widget: None,
+            auth_session: None,
+            open_popup: false,
+            state,
+        }
+    }
     fn show_popup(&mut self, ui: &mut egui::Ui) {
         let mut style = ui.style_mut().clone();
         style.visuals.window_fill = style.visuals.extreme_bg_color;
         Popup::menu(self.parent_widget.as_ref().unwrap())
-            .id(egui::Id::new("user profile popup"))
+            .id(egui::Id::new("user widget popup"))
             .gap(5.0)
             .style(style)
             .show(|ui| {
                 if self.auth_session.is_none() {
-                    ui.label(concatcp!(" ", ICON_LOGIN, "  Login "))
-                        .on_hover_cursor(CursorIcon::PointingHand);
+                    if ui
+                        .label(concatcp!(ICON_LOGIN, "  Login "))
+                        .on_hover_cursor(CursorIcon::PointingHand)
+                        .clicked()
+                    {
+                        log::info!("[show_popup] Login clicked. Setting view_type to Login");
+                        self.state.write().unwrap().view_type = ViewType::Login;
+                        log::info!(
+                            "[show_popup] After that, view_type: {:#?}",
+                            self.state.read().unwrap().view_type
+                        );
+                    };
                 } else {
+                    ui.label(concatcp!(ICON_SETTINGS, "  Settings "))
+                        .on_hover_cursor(CursorIcon::PointingHand);
                     ui.label(concatcp!(" ", ICON_LOGOUT, "  Logout "))
                         .on_hover_cursor(CursorIcon::PointingHand);
                 }

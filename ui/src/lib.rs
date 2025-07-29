@@ -6,6 +6,7 @@ pub use app::CogsApp;
 mod header_footer;
 
 mod home;
+mod login;
 
 mod constants;
 
