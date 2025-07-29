@@ -1,4 +1,4 @@
-use std::sync::{Arc, RwLock};
+use std::sync::Arc;
 
 use cogs_shared::domain::model::UserAccount;
 use const_format::concatcp;
@@ -41,16 +41,22 @@ impl CogsApp {
                 let logo = egui::include_image!("../assets/logo_o.png");
                 ui.add(egui::Image::new(logo.clone()));
                 ui.add_space(10.0);
-                ui.selectable_value(
-                    &mut self.state.write().unwrap().view_type,
-                    ViewType::Home,
-                    concatcp!(ICON_HOME, "  Home "),
-                );
-                ui.selectable_value(
-                    &mut self.state.write().unwrap().view_type,
-                    ViewType::Explore,
-                    concatcp!(ICON_EXPLORE, "  Explore "),
-                );
+                if ui.button(concatcp!(ICON_HOME, "  Home ")).clicked() {
+                    *self.state.view_type.write().unwrap() = ViewType::Home;
+                }
+                if ui.button(concatcp!(ICON_EXPLORE, "  Explore ")).clicked() {
+                    *self.state.view_type.write().unwrap() = ViewType::Explore;
+                }
+                // ui.selectable_value(
+                //     &mut self.state.write().unwrap().view_type,
+                //     ViewType::Home,
+                //     concatcp!(ICON_HOME, "  Home "),
+                // );
+                // ui.selectable_value(
+                //     self.state.view_type.write().as_mut().unwrap(),
+                //     ViewType::Explore,
+                //     concatcp!(ICON_EXPLORE, "  Explore "),
+                // );
                 egui::global_theme_preference_switch(ui);
                 ui.with_layout(Layout::right_to_left(Align::LEFT), |ui| {
                     let label = match self.auth_session {
@@ -101,11 +107,11 @@ pub struct UserWidget {
     pub parent_widget: Option<Response>,
     pub auth_session: Option<UserAccount>,
     pub open_popup: bool,
-    pub state: Arc<RwLock<AppState>>,
+    pub state: Arc<AppState>,
 }
 
 impl UserWidget {
-    pub fn new(state: Arc<RwLock<AppState>>) -> Self {
+    pub fn new(state: Arc<AppState>) -> Self {
         Self {
             parent_widget: None,
             auth_session: None,
@@ -128,16 +134,16 @@ impl UserWidget {
                         .clicked()
                     {
                         log::info!("[show_popup] Login clicked. Setting view_type to Login");
-                        self.state.write().unwrap().view_type = ViewType::Login;
+                        *self.state.view_type.write().unwrap() = ViewType::Login;
                         log::info!(
                             "[show_popup] After that, view_type: {:#?}",
-                            self.state.read().unwrap().view_type
+                            self.state.view_type.read().unwrap()
                         );
                     };
                 } else {
                     ui.label(concatcp!(ICON_SETTINGS, "  Settings "))
                         .on_hover_cursor(CursorIcon::PointingHand);
-                    ui.label(concatcp!(" ", ICON_LOGOUT, "  Logout "))
+                    ui.label(concatcp!(ICON_LOGOUT, "  Logout "))
                         .on_hover_cursor(CursorIcon::PointingHand);
                 }
             });

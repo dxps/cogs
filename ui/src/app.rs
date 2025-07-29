@@ -14,7 +14,7 @@ use egui::{
 #[derive(Debug, Default, serde::Deserialize, serde::Serialize)]
 #[serde(default)]
 pub struct AppState {
-    pub view_type: ViewType,
+    pub view_type: RwLock<ViewType>,
 }
 
 #[derive(serde::Deserialize, serde::Serialize)] // so we can persist ui state on app shutdown.
@@ -25,7 +25,7 @@ pub struct CogsApp {
     #[serde(skip)] // don't serialize this field.
     pub(crate) value: f32,
 
-    pub(crate) state: Arc<RwLock<AppState>>,
+    pub(crate) state: Arc<AppState>,
 
     pub(crate) auth_session: Option<UserAccount>,
     pub(crate) auth_error: Option<AppError>,
@@ -35,7 +35,7 @@ pub struct CogsApp {
 
 impl Default for CogsApp {
     fn default() -> Self {
-        let state = Arc::new(RwLock::new(AppState::default()));
+        let state = Arc::new(AppState::default());
         Self {
             label: "Hello World!".to_owned(),
             value: 2.5,
@@ -116,9 +116,14 @@ impl eframe::App for CogsApp {
 
         self.top_header(ctx);
 
+        log::info!(
+            "self.state view_type: {:#?}",
+            self.state.view_type.read().unwrap(),
+        );
+
         let state = self.state.clone();
-        log::info!("view_type: {:#?}", state.read().unwrap().view_type);
-        match state.read().unwrap().view_type {
+        log::info!("view_type: {:#?}", state.view_type.read().unwrap(),);
+        match *state.view_type.read().unwrap() {
             ViewType::Home => self.home(ctx),
             ViewType::Explore => self.home(ctx),
             ViewType::Settings => self.home(ctx),
