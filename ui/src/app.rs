@@ -13,6 +13,8 @@ use egui::{
 #[serde(default)]
 pub struct AppState {
     pub view_type: ViewType,
+    pub user: String,
+    pub pass: String,
 }
 
 #[derive(serde::Deserialize, serde::Serialize)] // so we can persist ui state on app shutdown.
