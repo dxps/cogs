@@ -1,4 +1,8 @@
-use crate::{constants::APP_KEY, header_footer::footer, view::ViewType};
+use crate::{
+    comps::{AppComponent, Footer, Header},
+    consts::APP_KEY,
+    views::{AppView, Home, Login, ViewType},
+};
 use cogs_shared::{app::AppError, domain::model::UserAccount};
 use egui::{
     FontData,
@@ -101,22 +105,22 @@ impl eframe::App for CogsApp {
             }
         }
 
-        // Put your widgets into a `SidePanel`, `TopBottomPanel`, `CentralPanel`, `Window` or `Area`.
-        // For inspiration and more examples, go to https://emilk.github.io/egui
+        // put your widgets into a `SidePanel`, `TopBottomPanel`, `CentralPanel`, `Window` or `Area`.
+        // for inspiration and more examples, go to https://emilk.github.io/egui
 
-        self.top_header(ctx);
+        Header::show(self, ctx);
 
         match self.state.view_type {
-            ViewType::Home => self.home(ctx),
-            ViewType::Explore => self.home(ctx),
-            ViewType::Settings => self.home(ctx),
-            ViewType::Login => self.login(ctx),
+            ViewType::Home => Home::show(self, ctx),
+            ViewType::Explore => Home::show(self, ctx),
+            ViewType::Settings => Home::show(self, ctx),
+            ViewType::Login => Login::show(self, ctx),
         }
 
         egui::TopBottomPanel::bottom("footer_panel")
             .show_separator_line(false)
             .show(ctx, |ui| {
-                footer(ui);
+                Footer::show(self, ui);
             });
     }
 }
