@@ -1,4 +1,9 @@
-use crate::{CogsApp, views::AppView};
+use crate::{
+    CogsApp,
+    comps::{AppComponent, PasswordInput},
+    views::AppView,
+};
+use cogs_shared::dtos::LoginRequest;
 use egui::{Align2, RichText, Shadow, Stroke};
 
 pub struct Login {}
@@ -44,14 +49,14 @@ impl AppView for Login {
                 ui.horizontal(|ui| {
                     ui.label(" Password: ");
                     ui.add_space(4.0);
-                    // ui.text_edit_singleline(&mut ctx.state.pass);
-                    ui.add(password_text_edit_singleline(&mut ctx.state.pass));
+                    PasswordInput::show_input(ui, &mut ctx.state.pass);
                 });
 
                 ui.vertical_centered(|ui| {
                     ui.add_space(20.0);
                     if ui.button("  Login  ").clicked() {
-                        log::info!("Login w/ user: {} pass: {}", ctx.state.user, ctx.state.pass);
+                        log::info!("Logging in w/ user: {} pass: {}", ctx.state.user, ctx.state.pass);
+                        login(ctx.state.user.clone(), ctx.state.pass.clone());
                     };
                     ui.add_space(10.0);
                 });
@@ -60,47 +65,24 @@ impl AppView for Login {
     }
 }
 
-pub fn password_text_edit_singleline(pass: &mut String) -> impl egui::Widget + '_ {
-    move |ui: &mut egui::Ui| password_ui(ui, pass)
-}
-
-fn password_ui(ui: &mut egui::Ui, pass: &mut String) -> egui::Response {
-    // This widget has its own state — show or hide password characters (`show_plaintext`).
-    // In this case we use a simple `bool`, but you can also declare your own type.
-    // It must implement at least `Clone` and be `'static`.
-    // If you use the `persistence` feature, it also must implement `serde::{Deserialize, Serialize}`.
-
-    // Generate an id for the state
-    let state_id = ui.id().with("show_plaintext");
-
-    // Get state for this widget.
-    // You should get state by value, not by reference to avoid borrowing of [`Memory`].
-    let mut show_plaintext = ui.data_mut(|d| d.get_temp::<bool>(state_id).unwrap_or(false));
-
-    // Process ui, change a local copy of the state
-    // We want TextEdit to fill entire space, and have button after that, so in that case we can
-    // change direction to right_to_left.
-    let result = ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-        // Toggle the `show_plaintext` bool with a button:
-        let response = ui
-            .selectable_label(show_plaintext, "👁")
-            .on_hover_text("Show/hide password");
-
-        if response.clicked() {
-            show_plaintext = !show_plaintext;
+fn login(username: String, password: String) {
+    let req_body = LoginRequest::new(username, password);
+    let mut req = ehttp::Request::post(
+        "http://localhost:9010/login",
+        req_body.as_json().as_bytes().to_vec(),
+    );
+    req.headers.insert("Content-Type", "application/json".to_string());
+    ehttp::fetch(req, move |rsp| {
+        match rsp {
+            Ok(rsp) => {
+                if rsp.status == 200 {
+                    log::info!("Login successful!");
+                } else {
+                    log::info!("Login failed!");
+                }
+            }
+            Err(e) => log::info!("Login failed! Error: {}", e),
         }
-
-        // Show the password field:
-        ui.add_sized(
-            ui.available_size(),
-            egui::TextEdit::singleline(pass).password(!show_plaintext),
-        );
+        // log::info!("[login] API response: {:#?}", rsp);
     });
-
-    // Store the (possibly changed) state:
-    ui.data_mut(|d| d.insert_temp(state_id, show_plaintext));
-
-    // All done! Return the interaction response so the user can check what happened
-    // (hovered, clicked, …) and maybe show a tooltip:
-    result.response
 }

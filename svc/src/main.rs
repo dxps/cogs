@@ -10,6 +10,7 @@ use cogs_svc::{
 use config::{Config, Environment};
 use std::sync::Arc;
 use tokio::signal;
+use tower_http::cors::{Any, CorsLayer};
 
 pub use axum::{
     Router,
@@ -68,13 +69,19 @@ async fn main() {
         }
     }
 
+    let cors = CorsLayer::new()
+        .allow_origin(Any)
+        .allow_methods(Any)
+        .allow_headers(Any);
+
     let app = Router::new()
         // The server function handlers are normally set up by `.leptos_routes()`.
         // Here, we're not actually doing server side rendering, but setting up
         // a manual handler for the server fns.
         .layer(AuthSessionLayer::new(Some(dbcp)).with_config(auth_config))
         .layer(SessionLayer::new(session_store))
-        .layer(Extension(state));
+        .layer(Extension(state))
+        .layer(cors);
 
     log::info!("Listening on http://{}", cfg.listenaddress);
     let listener = tokio::net::TcpListener::bind(&cfg.listenaddress)
