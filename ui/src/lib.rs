@@ -5,6 +5,7 @@ pub use app::CogsApp;
 
 mod header_footer;
 
+mod comps;
 mod home;
 mod login;
 

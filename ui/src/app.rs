@@ -1,10 +1,4 @@
-use std::sync::{Arc, RwLock};
-
-use crate::{
-    constants::APP_KEY,
-    header_footer::{UserWidget, footer},
-    view::ViewType,
-};
+use crate::{constants::APP_KEY, header_footer::footer, view::ViewType};
 use cogs_shared::{app::AppError, domain::model::UserAccount};
 use egui::{
     FontData,
@@ -14,7 +8,7 @@ use egui::{
 #[derive(Debug, Default, serde::Deserialize, serde::Serialize)]
 #[serde(default)]
 pub struct AppState {
-    pub view_type: RwLock<ViewType>,
+    pub view_type: ViewType,
 }
 
 #[derive(serde::Deserialize, serde::Serialize)] // so we can persist ui state on app shutdown.
@@ -25,24 +19,20 @@ pub struct CogsApp {
     #[serde(skip)] // don't serialize this field.
     pub(crate) value: f32,
 
-    pub(crate) state: Arc<AppState>,
+    pub(crate) state: AppState,
 
     pub(crate) auth_session: Option<UserAccount>,
     pub(crate) auth_error: Option<AppError>,
-    #[serde(skip)]
-    pub(crate) user_widget: UserWidget,
 }
 
 impl Default for CogsApp {
     fn default() -> Self {
-        let state = Arc::new(AppState::default());
         Self {
             label: "Hello World!".to_owned(),
             value: 2.5,
-            state: state.clone(),
+            state: AppState::default(),
             auth_session: None,
             auth_error: None,
-            user_widget: UserWidget::new(state),
         }
     }
 }
@@ -116,24 +106,13 @@ impl eframe::App for CogsApp {
 
         self.top_header(ctx);
 
-        log::info!(
-            "self.state view_type: {:#?}",
-            self.state.view_type.read().unwrap(),
-        );
-
-        let state = self.state.clone();
-        log::info!("view_type: {:#?}", state.view_type.read().unwrap(),);
-        match *state.view_type.read().unwrap() {
+        match self.state.view_type {
             ViewType::Home => self.home(ctx),
             ViewType::Explore => self.home(ctx),
             ViewType::Settings => self.home(ctx),
             ViewType::Login => self.login(ctx),
         }
 
-        // ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
-        // footer(ui);
-        // egui::warn_if_debug_build(ui);
-        // });
         egui::TopBottomPanel::bottom("footer_panel")
             .show_separator_line(false)
             .show(ctx, |ui| {

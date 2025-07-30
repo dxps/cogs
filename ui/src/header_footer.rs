@@ -1,15 +1,11 @@
-use std::sync::Arc;
-
-use cogs_shared::domain::model::UserAccount;
-use const_format::concatcp;
-use egui::{Align, CursorIcon, Layout, Popup, Response, Sense};
-
 use crate::{
     CogsApp,
-    app::AppState,
+    comps::AppComponent,
     constants::{ICON_EXPLORE, ICON_HOME, ICON_LOGIN, ICON_LOGOUT, ICON_SETTINGS, ICON_USER},
     view::ViewType,
 };
+use const_format::concatcp;
+use egui::{Align, CursorIcon, Layout, Popup, Sense};
 
 impl CogsApp {
     pub fn top_header(&mut self, ctx: &egui::Context) {
@@ -37,42 +33,24 @@ impl CogsApp {
         ui.vertical(|ui| {
             ui.add_space(10.0);
             ui.horizontal(|ui| {
-                ui.add_space(10.0);
+                ui.add_space(6.0);
                 let logo = egui::include_image!("../assets/logo_o.png");
-                ui.add(egui::Image::new(logo.clone()));
+                ui.add(egui::Image::new(logo.clone()).fit_to_original_size(0.04));
                 ui.add_space(10.0);
-                if ui.button(concatcp!(ICON_HOME, "  Home ")).clicked() {
-                    *self.state.view_type.write().unwrap() = ViewType::Home;
-                }
-                if ui.button(concatcp!(ICON_EXPLORE, "  Explore ")).clicked() {
-                    *self.state.view_type.write().unwrap() = ViewType::Explore;
-                }
-                // ui.selectable_value(
-                //     &mut self.state.write().unwrap().view_type,
-                //     ViewType::Home,
-                //     concatcp!(ICON_HOME, "  Home "),
-                // );
-                // ui.selectable_value(
-                //     self.state.view_type.write().as_mut().unwrap(),
-                //     ViewType::Explore,
-                //     concatcp!(ICON_EXPLORE, "  Explore "),
-                // );
+                ui.selectable_value(
+                    &mut self.state.view_type,
+                    ViewType::Home,
+                    concatcp!(ICON_HOME, "  Home "),
+                );
+                ui.selectable_value(
+                    &mut self.state.view_type,
+                    ViewType::Explore,
+                    concatcp!(ICON_EXPLORE, "  Explore "),
+                );
                 egui::global_theme_preference_switch(ui);
                 ui.with_layout(Layout::right_to_left(Align::LEFT), |ui| {
-                    let label = match self.auth_session {
-                        Some(_) => concatcp!(" ", ICON_USER, "  Login "),
-                        None => concatcp!(" ", ICON_USER, "   "),
-                    };
                     ui.add_space(6.0);
-                    let parent = ui
-                        .label(label)
-                        .interact(Sense::click())
-                        .on_hover_cursor(egui::CursorIcon::PointingHand);
-                    self.user_widget.parent_widget = Some(parent);
-                    if self.user_widget.parent_widget.as_ref().unwrap().clicked() {
-                        self.user_widget.open_popup = true;
-                    };
-                    self.user_widget.show_popup(ui);
+                    UserWidget::show(self, ui);
                 });
             });
         });
@@ -103,49 +81,44 @@ pub fn footer(ui: &mut egui::Ui) {
     });
 }
 
-pub struct UserWidget {
-    pub parent_widget: Option<Response>,
-    pub auth_session: Option<UserAccount>,
-    pub open_popup: bool,
-    pub state: Arc<AppState>,
-}
+pub struct UserWidget {}
 
-impl UserWidget {
-    pub fn new(state: Arc<AppState>) -> Self {
-        Self {
-            parent_widget: None,
-            auth_session: None,
-            open_popup: false,
-            state,
-        }
-    }
-    fn show_popup(&mut self, ui: &mut egui::Ui) {
+impl AppComponent for UserWidget {
+    type Context = CogsApp;
+
+    fn show(ctx: &mut Self::Context, ui: &mut eframe::egui::Ui) {
         let mut style = ui.style_mut().clone();
         style.visuals.window_fill = style.visuals.extreme_bg_color;
-        Popup::menu(self.parent_widget.as_ref().unwrap())
-            .id(egui::Id::new("user widget popup"))
-            .gap(5.0)
-            .style(style)
-            .show(|ui| {
-                if self.auth_session.is_none() {
-                    if ui
-                        .label(concatcp!(ICON_LOGIN, "  Login "))
-                        .on_hover_cursor(CursorIcon::PointingHand)
-                        .clicked()
-                    {
-                        log::info!("[show_popup] Login clicked. Setting view_type to Login");
-                        *self.state.view_type.write().unwrap() = ViewType::Login;
-                        log::info!(
-                            "[show_popup] After that, view_type: {:#?}",
-                            self.state.view_type.read().unwrap()
-                        );
-                    };
-                } else {
-                    ui.label(concatcp!(ICON_SETTINGS, "  Settings "))
-                        .on_hover_cursor(CursorIcon::PointingHand);
-                    ui.label(concatcp!(ICON_LOGOUT, "  Logout "))
-                        .on_hover_cursor(CursorIcon::PointingHand);
-                }
-            });
+        let label = match ctx.auth_session {
+            Some(_) => concatcp!(" ", ICON_USER, "  tbd "),
+            None => concatcp!(" ", ICON_USER, "  "),
+        };
+        let parent = ui
+            .label(label)
+            .interact(Sense::click())
+            .on_hover_cursor(egui::CursorIcon::PointingHand);
+        ui.with_layout(Layout::right_to_left(Align::LEFT), |ui| {
+            ui.add_space(6.0);
+            Popup::menu(&parent)
+                .id(egui::Id::new("user widget popup"))
+                .gap(5.0)
+                .style(style)
+                .show(|ui| {
+                    if ctx.auth_session.is_none() {
+                        if ui
+                            .label(concatcp!(ICON_LOGIN, "  Login "))
+                            .on_hover_cursor(CursorIcon::PointingHand)
+                            .clicked()
+                        {
+                            ctx.state.view_type = ViewType::Login;
+                        };
+                    } else {
+                        ui.label(concatcp!(ICON_SETTINGS, "  Settings "))
+                            .on_hover_cursor(CursorIcon::PointingHand);
+                        ui.label(concatcp!(ICON_LOGOUT, "  Logout "))
+                            .on_hover_cursor(CursorIcon::PointingHand);
+                    }
+                });
+        });
     }
 }

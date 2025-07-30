@@ -7,7 +7,7 @@ impl CogsApp {
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.add_space(10.0);
             // The central panel the region left after adding TopPanel's and SidePanel's
-            ui.heading("Cogs")
+            ui.heading("Home")
                 .on_hover_cursor(egui::CursorIcon::Help)
                 .on_hover_text("Cogs is a cognitive platform for cognitive needs.");
 
