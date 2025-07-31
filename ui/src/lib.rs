@@ -7,3 +7,5 @@ mod consts;
 
 mod comps;
 mod views;
+
+pub mod messages;

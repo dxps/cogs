@@ -46,7 +46,6 @@ egui_extras       = { version = "=0.32.0", features = [ "all_loaders" ] }
 const_format      = { version = "=0.2.34" }
 ehttp             = { version = "=0.5.0", features = [ "json" ] }
 serde_json        = { version = "=1.0.141" }
-poll-promise      = { version = "=0.3.0", default-features = false }
 
 
 # Native deps
