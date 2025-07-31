@@ -1,3 +1,6 @@
+mod api_utils;
+pub use api_utils::*;
+
 mod auth;
 pub use auth::*;
 
@@ -14,6 +17,9 @@ pub mod model;
 
 mod db;
 pub use db::*;
+
+mod routes;
+pub use routes::*;
 
 mod state;
 pub use state::*;

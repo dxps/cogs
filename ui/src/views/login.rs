@@ -1,10 +1,11 @@
 use crate::{
     CogsApp,
     comps::{AppComponent, PasswordInput},
-    views::AppView,
+    views::{AppView, ViewType},
 };
-use cogs_shared::dtos::LoginRequest;
+use cogs_shared::{app::AppError, domain::model::UserAccount, dtos::LoginRequest};
 use egui::{Align2, RichText, Shadow, Stroke};
+use poll_promise::{Promise, Sender};
 
 pub struct Login {}
 
@@ -17,7 +18,7 @@ impl AppView for Login {
             let frame = egui::Frame::new()
                 .corner_radius(6.0)
                 .inner_margin(20.0)
-                .stroke(Stroke::new(1.0, ui.style().visuals.extreme_bg_color))
+                .stroke(Stroke::new(1.0, ui.style().visuals.faint_bg_color))
                 .shadow(Shadow::NONE);
 
             let window = egui::Window::new("")
@@ -54,9 +55,27 @@ impl AppView for Login {
 
                 ui.vertical_centered(|ui| {
                     ui.add_space(20.0);
-                    if ui.button("  Login  ").clicked() {
+                    let login_btn = ui.button("  Login  ");
+                    if login_btn.clicked() {
                         log::info!("Logging in w/ user: {} pass: {}", ctx.state.user, ctx.state.pass);
-                        login(ctx.state.user.clone(), ctx.state.pass.clone());
+
+                        let (sender, promise) = Promise::<Result<UserAccount, AppError>>::new();
+                        ctx.state.promise = Some(promise);
+
+                        handle_login(ctx.state.user.clone(), ctx.state.pass.clone(), sender);
+                        log::info!("Login promise set. is_some: {:?}", ctx.state.promise.is_some());
+
+                        if let Some(promise) = &ctx.state.promise {
+                            log::info!("Waiting for login promise.");
+                            if let Some(res) = promise.ready() {
+                                log::info!("Login promise ready.");
+                                if let Ok(account) = res {
+                                    log::info!("Remembering user account and going to home view.");
+                                    ctx.state.user_account = Some(account.clone());
+                                    ctx.state.view_type = ViewType::Home;
+                                }
+                            }
+                        }
                     };
                     ui.add_space(10.0);
                 });
@@ -65,24 +84,23 @@ impl AppView for Login {
     }
 }
 
-fn login(username: String, password: String) {
-    let req_body = LoginRequest::new(username, password);
+fn handle_login(user: String, pass: String, sender: Sender<Result<UserAccount, AppError>>) {
+    let req_body = LoginRequest::new(user, pass);
     let mut req = ehttp::Request::post(
-        "http://localhost:9010/login",
+        "http://localhost:9010/api/login",
         req_body.as_json().as_bytes().to_vec(),
     );
     req.headers.insert("Content-Type", "application/json".to_string());
-    ehttp::fetch(req, move |rsp| {
-        match rsp {
-            Ok(rsp) => {
-                if rsp.status == 200 {
-                    log::info!("Login successful!");
-                } else {
-                    log::info!("Login failed!");
-                }
+    ehttp::fetch(req, move |rsp| match rsp {
+        Ok(rsp) => {
+            if rsp.status == 200 {
+                log::info!("Login successful!");
+                let account = serde_json::from_slice::<UserAccount>(rsp.bytes.as_slice()).unwrap();
+                sender.send(Ok(account));
+            } else {
+                log::info!("Login failed!");
             }
-            Err(e) => log::info!("Login failed! Error: {}", e),
         }
-        // log::info!("[login] API response: {:#?}", rsp);
+        Err(e) => log::info!("Login failed! Error: {}", e),
     });
 }

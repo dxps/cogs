@@ -8,13 +8,22 @@ use egui::{
     FontData,
     epaint::text::{FontInsert, InsertFontFamily},
 };
+use poll_promise::Promise;
 
-#[derive(Debug, Default, serde::Deserialize, serde::Serialize)]
+#[derive(Default, serde::Deserialize, serde::Serialize)]
 #[serde(default)]
 pub struct AppState {
     pub view_type: ViewType,
+
     pub user: String,
+
+    #[serde(skip)]
     pub pass: String,
+
+    pub user_account: Option<UserAccount>,
+
+    #[serde(skip)]
+    pub promise: Option<Promise<Result<UserAccount, AppError>>>,
 }
 
 #[derive(serde::Deserialize, serde::Serialize)] // so we can persist ui state on app shutdown.

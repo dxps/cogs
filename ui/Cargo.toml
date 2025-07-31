@@ -24,7 +24,7 @@ targets = ["x86_64-unknown-linux-gnu", "wasm32-unknown-unknown"]
 ##############
 
 cogs_shared = { path = "../shared" }
-egui = { version="=0.32.0", features = [
+egui = { version = "=0.32.0", features = [
     "persistence",   # Enable persistence of memory (window positions etc).
     "log",           # It makes egui log some errors using the `log` crate.
     "serde",         # Allow serialization using `serde`.
@@ -41,11 +41,12 @@ catppuccin-egui = { version = "=5.6.0", default-features = false, features = ["e
 
 log = "=0.4.27"
 
-# You only need serde if you want app persistence:
-serde = { version = "=1.0.219", features = ["derive"] }
-egui_extras = { version="=0.32.0", features = [ "all_loaders" ] }
-const_format = "0.2.34"
-ehttp = { version="=0.5.0", features = [ "json" ] }
+serde             = { version = "=1.0.219", features = [ "derive" ] }      # for the app persistence.
+egui_extras       = { version = "=0.32.0", features = [ "all_loaders" ] }
+const_format      = { version = "=0.2.34" }
+ehttp             = { version = "=0.5.0", features = [ "json" ] }
+serde_json        = { version = "=1.0.141" }
+poll-promise      = { version = "=0.3.0", default-features = false }
 
 
 # Native deps
@@ -53,7 +54,7 @@ ehttp = { version="=0.5.0", features = [ "json" ] }
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 ########################################################
 
-env_logger = "=0.11.8"
+env_logger = { version =  "=0.11.8" }
 
 
 # Web deps
@@ -61,7 +62,7 @@ env_logger = "=0.11.8"
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 ###################################################
 
-wasm-bindgen-futures = "=0.4.50"
-web-sys = "=0.3.77"              # to access the DOM (to hide the loading text)
+wasm-bindgen-futures = { version = "=0.4.50" }
+web-sys              = { version = "=0.3.77" }      # to access the DOM (to hide the loading text)
 
 

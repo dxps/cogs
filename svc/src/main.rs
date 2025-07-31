@@ -1,16 +1,14 @@
-use axum::Extension;
 use axum_session::{SessionConfig, SessionLayer};
 use axum_session_auth::AuthConfig;
 use axum_session_sqlx::SessionPgSessionStore;
 use cogs_svc::{
     AppError,
     domain::model::Id,
-    server::{self, AuthSessionLayer, ServerState, SvcConfig, init_logging},
+    server::{self, AuthSessionLayer, ServerState, SvcConfig, create_router, init_logging},
 };
 use config::{Config, Environment};
 use std::sync::Arc;
 use tokio::signal;
-use tower_http::cors::{Any, CorsLayer};
 
 pub use axum::{
     Router,
@@ -20,6 +18,7 @@ pub use axum::{
 #[tokio::main]
 async fn main() {
     init_logging();
+
     dotenvy::dotenv().unwrap();
     let config = Config::builder()
         .add_source(
@@ -40,7 +39,7 @@ async fn main() {
     log::info!("Connected to database.");
 
     let session_config = SessionConfig::default()
-        .with_session_name("user_dir_lap_session")
+        .with_session_name("cogs_session")
         .with_table_name("user_sessions");
     let session_store = SessionPgSessionStore::new(Some(dbcp.clone().into()), session_config)
         .await
@@ -69,25 +68,16 @@ async fn main() {
         }
     }
 
-    let cors = CorsLayer::new()
-        .allow_origin(Any)
-        .allow_methods(Any)
-        .allow_headers(Any);
-
-    let app = Router::new()
-        // The server function handlers are normally set up by `.leptos_routes()`.
-        // Here, we're not actually doing server side rendering, but setting up
-        // a manual handler for the server fns.
+    let router = create_router(state)
         .layer(AuthSessionLayer::new(Some(dbcp)).with_config(auth_config))
-        .layer(SessionLayer::new(session_store))
-        .layer(Extension(state))
-        .layer(cors);
+        .layer(SessionLayer::new(session_store));
 
     log::info!("Listening on http://{}", cfg.listenaddress);
     let listener = tokio::net::TcpListener::bind(&cfg.listenaddress)
         .await
         .expect(format!("Failed to bind to address {}", cfg.listenaddress).as_str());
-    axum::serve(listener, app.into_make_service())
+
+    axum::serve(listener, router.into_make_service())
         .with_graceful_shutdown(shutdown_signal())
         .await
         .unwrap();

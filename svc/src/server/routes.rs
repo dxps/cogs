@@ -1,0 +1,23 @@
+use axum::{Router, routing::post};
+use tower_http::{
+    cors::{Any, CorsLayer},
+    trace::TraceLayer,
+};
+
+use crate::server::{ServerState, login_user};
+
+pub fn create_router(state: ServerState) -> Router {
+    //
+    let tracing_layer = TraceLayer::new_for_http();
+    let cors_layer = CorsLayer::new()
+        .allow_origin(Any)
+        .allow_methods(Any)
+        .allow_headers(Any);
+
+    Router::new()
+        // .route("/api/healthcheck", get(health_check))
+        .route("/api/login", post(login_user))
+        .layer(tracing_layer)
+        .layer(cors_layer)
+        .with_state(state)
+}
