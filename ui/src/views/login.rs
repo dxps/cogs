@@ -62,6 +62,7 @@ impl AppView for Login {
                             ctx.state.user.clone(),
                             ctx.state.pass.clone(),
                             ctx.state.send.clone(),
+                            ectx.clone(),
                         );
                     };
                     ui.add_space(10.0);
@@ -71,11 +72,11 @@ impl AppView for Login {
     }
 }
 
-fn handle_login(user: String, pass: String, sender: Sender<UiMessage>) {
-    let req_body = LoginRequest::new(user, pass);
+fn handle_login(user: String, pass: String, sender: Sender<UiMessage>, ectx: egui::Context) {
+    let body = LoginRequest::new(user, pass);
     let mut req = ehttp::Request::post(
         "http://localhost:9010/api/login",
-        req_body.as_json().as_bytes().to_vec(),
+        body.as_json().as_bytes().to_vec(),
     );
     req.headers.insert("Content-Type", "application/json".to_string());
     ehttp::fetch(req, move |rsp| match rsp {
@@ -83,11 +84,12 @@ fn handle_login(user: String, pass: String, sender: Sender<UiMessage>) {
             if rsp.status == 200 {
                 log::info!("Login successful!");
                 let account = serde_json::from_slice::<UserAccount>(rsp.bytes.as_slice()).unwrap();
+                ectx.request_repaint(); // wake up UI thread
                 if let Err(e) = sender.send(UiMessage::Login(Ok(account))) {
                     log::info!("Failed to send Login message. Error: {e}");
                 }
             } else {
-                log::info!("Login failed!");
+                log::info!("Login failed! HTTP status code: {}", rsp.status);
             }
         }
         Err(e) => log::info!("Login failed! Error: {}", e),
