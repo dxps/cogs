@@ -2,12 +2,12 @@ use std::sync::mpsc::Sender;
 
 use crate::{
     CogsApp,
-    comps::{AppComponent, PasswordInput},
+    comps::{AppComponent, Modal, PasswordInput},
     messages::UiMessage,
     views::AppView,
 };
-use cogs_shared::{domain::model::UserAccount, dtos::LoginRequest};
-use egui::{Align2, RichText, Shadow, Stroke};
+use cogs_shared::{app::AppError, domain::model::UserAccount, dtos::LoginRequest};
+use egui::{Align2, Id, RichText, Shadow, Stroke};
 
 pub struct Login {}
 
@@ -67,6 +67,13 @@ impl AppView for Login {
                     };
                     ui.add_space(10.0);
                 });
+
+                if let Some(login_err) = &ctx.state.login_error {
+                    if *login_err == AppError::LoginWrongCredentials {
+                        ectx.request_repaint();
+                        Modal::show(ctx, ui);
+                    }
+                }
             });
         });
     }
@@ -79,19 +86,38 @@ fn handle_login(user: String, pass: String, sender: Sender<UiMessage>, ectx: egu
         body.as_json().as_bytes().to_vec(),
     );
     req.headers.insert("Content-Type", "application/json".to_string());
-    ehttp::fetch(req, move |rsp| match rsp {
-        Ok(rsp) => {
-            if rsp.status == 200 {
-                log::info!("Login successful!");
-                let account = serde_json::from_slice::<UserAccount>(rsp.bytes.as_slice()).unwrap();
-                ectx.request_repaint(); // wake up UI thread
-                if let Err(e) = sender.send(UiMessage::Login(Ok(account))) {
-                    log::info!("Failed to send Login message. Error: {e}");
+    ehttp::fetch(req, move |rsp| {
+        match rsp {
+            Ok(rsp) => {
+                if rsp.status == 200 {
+                    log::info!("[handle_login] Login successful!");
+                    let account = serde_json::from_slice::<UserAccount>(rsp.bytes.as_slice()).unwrap();
+                    ectx.request_repaint(); // wake up UI thread
+                    if let Err(e) = sender.send(UiMessage::Login(Ok(Some(account)))) {
+                        log::info!("[handle_login] Failed to send Login message. Error: {e}");
+                    }
+                } else {
+                    ectx.data_mut(|data| {
+                        data.insert_temp(
+                            Id::from("testkey"),
+                            format!("testvalue: HTTP status code: {}", rsp.status),
+                        );
+                    });
+                    log::info!("[handle_login] Login failed! HTTP status code: {}", rsp.status);
+                    if rsp.status == 401 {
+                        let aerr = AppError::LoginWrongCredentials;
+                        if let Err(e) = sender.send(UiMessage::Login(Err(aerr))) {
+                            log::info!("[handle_login] Failed to send Login message. Error: {e}");
+                        }
+                    } else {
+                        let aerr = AppError::from(format!("{}", rsp.status));
+                        if let Err(e) = sender.send(UiMessage::Login(Err(aerr))) {
+                            log::info!("[handle_login] Failed to send Login message. Error: {e}");
+                        }
+                    }
                 }
-            } else {
-                log::info!("Login failed! HTTP status code: {}", rsp.status);
             }
+            Err(e) => log::info!("[handle_login] Login failed! Error: {}", e),
         }
-        Err(e) => log::info!("Login failed! Error: {}", e),
     });
 }

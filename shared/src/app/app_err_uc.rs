@@ -8,7 +8,7 @@ pub type AppResult<T> = std::result::Result<T, AppError>;
 // AppError //
 //////////////
 
-#[derive(Clone, Debug, Error, Serialize, Deserialize)]
+#[derive(Clone, Debug, Error, PartialEq, Eq, Serialize, Deserialize)]
 pub enum AppError {
     //
     #[error("{0} already exists")]
@@ -24,6 +24,9 @@ pub enum AppError {
 
     #[error("internal error")]
     InternalErr,
+
+    #[error("login wrong credentials")]
+    LoginWrongCredentials,
 
     /// Generic error.
     #[error("{0}")]

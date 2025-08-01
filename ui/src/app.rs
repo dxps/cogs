@@ -126,10 +126,16 @@ impl eframe::App for CogsApp {
             log::info!("Received {:#?}", res);
             match res {
                 UiMessage::Login(account) => match account {
-                    Ok(account) => {
-                        self.state.user_account = Some(account);
-                        self.state.view_type = ViewType::Home;
-                    }
+                    Ok(account) => match account {
+                        Some(account) => {
+                            self.state.user_account = Some(account);
+                            self.state.view_type = ViewType::Home;
+                        }
+                        None => {
+                            self.state.login_error = None;
+                            self.state.user_account = None;
+                        }
+                    },
                     Err(err) => {
                         self.state.login_error = Some(err);
                     }

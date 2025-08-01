@@ -1,11 +1,17 @@
 mod header;
 pub use header::*;
+
 mod password_input;
 pub use password_input::*;
+
 mod user_widget;
 pub use user_widget::*;
+
 mod footer;
 pub use footer::*;
+
+mod modal;
+pub use modal::*;
 
 use eframe::egui::Ui;
 
