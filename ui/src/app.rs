@@ -123,7 +123,7 @@ impl eframe::App for CogsApp {
         Header::show(self, ctx);
 
         if let Ok(res) = self.recvr.try_recv() {
-            log::info!("Received {:#?}", res);
+            log::info!("[app.update] Received msg {:?}", res);
             match res {
                 UiMessage::Login(account) => match account {
                     Ok(account) => match account {

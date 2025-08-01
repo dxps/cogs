@@ -3,6 +3,7 @@ use std::sync::mpsc::Sender;
 use crate::{
     CogsApp,
     comps::{AppComponent, Modal, PasswordInput},
+    consts::{MODAL_BTN_LABEL, MODAL_BTN_MSG, MODAL_CONTENT, MODAL_TITLE},
     messages::UiMessage,
     views::AppView,
 };
@@ -57,7 +58,7 @@ impl AppView for Login {
 
                 ui.vertical_centered(|ui| {
                     ui.add_space(20.0);
-                    if ui.button("  Login  ").clicked() {
+                    if ui.button("   Login   ").clicked() {
                         handle_login(
                             ctx.state.user.clone(),
                             ctx.state.pass.clone(),
@@ -70,6 +71,18 @@ impl AppView for Login {
 
                 if let Some(login_err) = &ctx.state.login_error {
                     if *login_err == AppError::LoginWrongCredentials {
+                        ectx.data_mut(|data| {
+                            data.insert_temp::<String>(
+                                Id::new(MODAL_TITLE),
+                                "Authentication failed".to_string(),
+                            );
+                            data.insert_temp::<String>(
+                                Id::new(MODAL_CONTENT),
+                                "Invalid username or password. Please try again.".to_string(),
+                            );
+                            data.insert_temp::<String>(Id::new(MODAL_BTN_LABEL), "   Close   ".to_string());
+                            data.insert_temp::<UiMessage>(Id::new(MODAL_BTN_MSG), UiMessage::Login(Ok(None)));
+                        });
                         ectx.request_repaint();
                         Modal::show(ctx, ui);
                     }
