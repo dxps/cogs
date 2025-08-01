@@ -5,6 +5,7 @@ use crate::{
     CogsApp,
     comps::AppComponent,
     consts::{ICON_LOGIN, ICON_LOGOUT, ICON_SETTINGS, ICON_USER},
+    messages::UiMessage,
     views::ViewType,
 };
 
@@ -16,9 +17,11 @@ impl AppComponent for UserWidget {
     fn show(ctx: &mut Self::Context, ui: &mut eframe::egui::Ui) {
         let mut style = ui.style_mut().clone();
         style.visuals.window_fill = style.visuals.extreme_bg_color;
-        let label = match ctx.auth_session {
-            Some(_) => concatcp!(" ", ICON_USER, "  tbd "),
-            None => concatcp!(" ", ICON_USER, "  "),
+        let label = match &ctx.state.user_account {
+            Some(account) => {
+                format!(" {}  {}", ICON_USER, account.name)
+            }
+            None => format!(" {}", ICON_USER,),
         };
         let parent = ui
             .label(label)
@@ -31,19 +34,30 @@ impl AppComponent for UserWidget {
                 .gap(5.0)
                 .style(style)
                 .show(|ui| {
-                    if ctx.auth_session.is_none() {
+                    if ctx.state.user_account.is_none() {
                         if ui
-                            .label(concatcp!(ICON_LOGIN, "  Login "))
+                            .label(concatcp!(" ", ICON_LOGIN, "  Login "))
                             .on_hover_cursor(CursorIcon::PointingHand)
                             .clicked()
                         {
                             ctx.state.view_type = ViewType::Login;
                         };
                     } else {
-                        ui.label(concatcp!(ICON_SETTINGS, "  Settings "))
-                            .on_hover_cursor(CursorIcon::PointingHand);
-                        ui.label(concatcp!(ICON_LOGOUT, "  Logout "))
-                            .on_hover_cursor(CursorIcon::PointingHand);
+                        if ui
+                            .label(concatcp!(" ", ICON_SETTINGS, "  Settings "))
+                            .on_hover_cursor(CursorIcon::PointingHand)
+                            .clicked()
+                        {
+                            ctx.sendr.send(UiMessage::Settings).unwrap();
+                        };
+                        ui.add_space(6.0);
+                        if ui
+                            .label(concatcp!(" ", ICON_LOGOUT, "  Logout "))
+                            .on_hover_cursor(CursorIcon::PointingHand)
+                            .clicked()
+                        {
+                            ctx.sendr.send(UiMessage::Logout).unwrap();
+                        }
                     }
                 });
         });

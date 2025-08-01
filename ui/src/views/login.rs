@@ -61,7 +61,7 @@ impl AppView for Login {
                         handle_login(
                             ctx.state.user.clone(),
                             ctx.state.pass.clone(),
-                            ctx.state.send.clone(),
+                            ctx.sendr.clone(),
                             ectx.clone(),
                         );
                     };

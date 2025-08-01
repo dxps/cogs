@@ -4,4 +4,5 @@ use cogs_shared::{app::AppError, domain::model::UserAccount};
 pub enum UiMessage {
     Login(Result<UserAccount, AppError>),
     Logout,
+    Settings,
 }

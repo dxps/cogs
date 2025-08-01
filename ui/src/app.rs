@@ -4,7 +4,7 @@ use crate::{
     comps::{AppComponent, Footer, Header},
     consts::APP_KEY,
     messages::UiMessage,
-    views::{AppView, Home, Login, ViewType},
+    views::{AppView, Explore, Home, Login, Settings, ViewType},
 };
 use cogs_shared::{app::AppError, domain::model::UserAccount};
 use egui::{
@@ -12,60 +12,43 @@ use egui::{
     epaint::text::{FontInsert, InsertFontFamily},
 };
 
-#[derive(serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Default, Debug, serde::Deserialize, serde::Serialize)]
 #[serde(default)]
 pub struct AppState {
     pub view_type: ViewType,
 
     pub user: String,
 
-    // #[serde(skip)]  // todo: temporary stored, will be removed
+    // #[serde(skip)]  // todo: temporary stored, during development
     pub pass: String,
 
     pub login_error: Option<AppError>,
     pub user_account: Option<UserAccount>,
-
-    #[serde(skip)]
-    pub send: Sender<UiMessage>,
-    #[serde(skip)]
-    pub recv: Receiver<UiMessage>,
-}
-
-impl Default for AppState {
-    fn default() -> Self {
-        let (send, recv) = channel();
-        Self {
-            view_type: Default::default(),
-            user: "".into(),
-            pass: "".into(),
-            login_error: None,
-            user_account: None,
-            send,
-            recv,
-        }
-    }
 }
 
 #[derive(serde::Deserialize, serde::Serialize)] // so we can persist ui state on app shutdown.
 #[serde(default)] // if we add new fields, give them default values when deserializing old state.
 pub struct CogsApp {
-    pub(crate) label: String,
-
-    #[serde(skip)] // don't serialize this field.
-    pub(crate) value: f32,
-
     pub(crate) state: AppState,
-
     pub(crate) auth_session: Option<UserAccount>,
+
+    #[serde(skip)]
+    /// Sender for UI messages.
+    pub sendr: Sender<UiMessage>,
+
+    #[serde(skip)]
+    /// Receiver for UI messages.
+    pub recvr: Receiver<UiMessage>,
 }
 
 impl Default for CogsApp {
     fn default() -> Self {
+        let (sendr, recvr) = channel();
         Self {
-            label: "Hello World!".to_owned(),
-            value: 2.5,
             state: AppState::default(),
             auth_session: None,
+            sendr,
+            recvr,
         }
     }
 }
@@ -139,27 +122,32 @@ impl eframe::App for CogsApp {
 
         Header::show(self, ctx);
 
-        if let Ok(res) = self.state.recv.try_recv() {
+        if let Ok(res) = self.recvr.try_recv() {
             log::info!("Received {:#?}", res);
             match res {
                 UiMessage::Login(account) => match account {
                     Ok(account) => {
                         self.state.user_account = Some(account);
                         self.state.view_type = ViewType::Home;
-                        ctx.request_repaint();
                     }
                     Err(err) => {
                         self.state.login_error = Some(err);
                     }
                 },
-                UiMessage::Logout => todo!(),
+                UiMessage::Logout => {
+                    self.state.user_account = None;
+                    self.state.view_type = ViewType::Home;
+                }
+                UiMessage::Settings => {
+                    self.state.view_type = ViewType::Settings;
+                }
             }
         }
 
         match self.state.view_type {
             ViewType::Home => Home::show(self, ctx),
-            ViewType::Explore => Home::show(self, ctx),
-            ViewType::Settings => Home::show(self, ctx),
+            ViewType::Explore => Explore::show(self, ctx),
+            ViewType::Settings => Settings::show(self, ctx),
             ViewType::Login => Login::show(self, ctx),
         }
 
