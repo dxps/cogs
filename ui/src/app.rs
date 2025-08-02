@@ -4,7 +4,7 @@ use crate::{
     comps::{AppComponent, Footer, Header},
     consts::APP_KEY,
     messages::UiMessage,
-    views::{AppView, Explore, Home, Login, Settings, ViewType},
+    views::{AppView, Explore, ExploreCategory, Home, Login, Settings, ViewType},
 };
 use cogs_shared::{app::AppError, domain::model::UserAccount};
 use egui::{
@@ -24,6 +24,8 @@ pub struct AppState {
 
     pub login_error: Option<AppError>,
     pub user_account: Option<UserAccount>,
+
+    pub explore_category: ExploreCategory,
 }
 
 #[derive(serde::Deserialize, serde::Serialize)] // so we can persist ui state on app shutdown.
