@@ -46,22 +46,22 @@ impl AppView for Login {
                 ui.horizontal(|ui| {
                     ui.label("Username: ");
                     ui.add_space(4.0);
-                    ui.text_edit_singleline(&mut ctx.state.user);
+                    ui.text_edit_singleline(&mut ctx.state.auth.user);
                     ui.add_space(20.0);
                 });
                 ui.add_space(10.0);
                 ui.horizontal(|ui| {
                     ui.label(" Password: ");
                     ui.add_space(4.0);
-                    PasswordInput::show_input(ui, &mut ctx.state.pass);
+                    PasswordInput::show_input(ui, &mut ctx.state.auth.pass);
                 });
 
                 ui.vertical_centered(|ui| {
                     ui.add_space(20.0);
                     if ui.button("   Login   ").clicked() {
                         handle_login(
-                            ctx.state.user.clone(),
-                            ctx.state.pass.clone(),
+                            ctx.state.auth.user.clone(),
+                            ctx.state.auth.pass.clone(),
                             ctx.sendr.clone(),
                             ectx.clone(),
                         );
@@ -69,7 +69,7 @@ impl AppView for Login {
                     ui.add_space(10.0);
                 });
 
-                if let Some(login_err) = &ctx.state.login_error {
+                if let Some(login_err) = &ctx.state.auth.login_error {
                     if *login_err == AppError::LoginWrongCredentials {
                         ectx.data_mut(|data| {
                             data.insert_temp::<String>(

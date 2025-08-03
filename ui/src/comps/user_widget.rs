@@ -17,7 +17,7 @@ impl AppComponent for UserWidget {
     fn show(ctx: &mut Self::Context, ui: &mut eframe::egui::Ui) {
         let mut style = ui.style_mut().clone();
         style.visuals.window_fill = style.visuals.extreme_bg_color;
-        let label = match &ctx.state.user_account {
+        let label = match &ctx.state.auth.user_account {
             Some(account) => {
                 format!(" {}  {}", ICON_USER, account.name)
             }
@@ -34,7 +34,7 @@ impl AppComponent for UserWidget {
                 .gap(5.0)
                 .style(style)
                 .show(|ui| {
-                    if ctx.state.user_account.is_none() {
+                    if ctx.state.auth.user_account.is_none() {
                         if ui
                             .label(concatcp!(" ", ICON_LOGIN, "  Login "))
                             .on_hover_cursor(CursorIcon::PointingHand)

@@ -1,32 +1,17 @@
 use std::sync::mpsc::{Receiver, Sender, channel};
 
 use crate::{
+    AppState,
     comps::{AppComponent, Footer, Header},
     consts::APP_KEY,
     messages::UiMessage,
-    views::{AppView, Explore, ExploreCategory, Home, Login, Settings, ViewType},
+    views::{AppView, Explore, Home, Login, Settings, ViewType},
 };
-use cogs_shared::{app::AppError, domain::model::UserAccount};
+use cogs_shared::domain::model::UserAccount;
 use egui::{
     FontData,
     epaint::text::{FontInsert, InsertFontFamily},
 };
-
-#[derive(Clone, Default, Debug, serde::Deserialize, serde::Serialize)]
-#[serde(default)]
-pub struct AppState {
-    pub view_type: ViewType,
-
-    pub user: String,
-
-    // #[serde(skip)]  // todo: temporary stored, during development
-    pub pass: String,
-
-    pub login_error: Option<AppError>,
-    pub user_account: Option<UserAccount>,
-
-    pub explore_category: ExploreCategory,
-}
 
 #[derive(serde::Deserialize, serde::Serialize)] // so we can persist ui state on app shutdown.
 #[serde(default)] // if we add new fields, give them default values when deserializing old state.
@@ -61,12 +46,23 @@ impl CogsApp {
         // This is also where you can customize the look and feel of egui using
         // `cc.egui_ctx.set_visuals` and `cc.egui_ctx.set_fonts`.
 
-        Self::init_font(&cc.egui_ctx);
+        let ectx = &cc.egui_ctx;
+        Self::init_font(&ectx);
 
         // Image loading init.
-        egui_extras::install_image_loaders(&cc.egui_ctx);
+        egui_extras::install_image_loaders(ectx);
 
-        cc.egui_ctx.set_zoom_factor(1.2);
+        // Zoom setting.
+        ectx.set_zoom_factor(1.2);
+
+        match ectx.theme() {
+            egui::Theme::Light => {
+                catppuccin_egui::set_theme(ectx, catppuccin_egui::LATTE);
+            }
+            egui::Theme::Dark => {
+                catppuccin_egui::set_theme(ectx, catppuccin_egui::FRAPPE);
+            }
+        }
 
         // Load previous app state (if any).
         // Note: The `persistence` feature must be enabled for this to work.
@@ -102,6 +98,8 @@ impl CogsApp {
 }
 
 impl eframe::App for CogsApp {
+    //
+
     /// Called by the framework to save state before shutdown.
     fn save(&mut self, storage: &mut dyn eframe::Storage) {
         eframe::set_value(storage, APP_KEY, self);
@@ -110,15 +108,6 @@ impl eframe::App for CogsApp {
     /// Called each time the UI needs repainting, which may be many times per second.
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         //
-        match ctx.theme() {
-            egui::Theme::Light => {
-                catppuccin_egui::set_theme(ctx, catppuccin_egui::LATTE);
-            }
-            egui::Theme::Dark => {
-                catppuccin_egui::set_theme(ctx, catppuccin_egui::FRAPPE);
-            }
-        }
-
         // put your widgets into a `SidePanel`, `TopBottomPanel`, `CentralPanel`, `Window` or `Area`.
         // for inspiration and more examples, go to https://emilk.github.io/egui
 
@@ -130,20 +119,20 @@ impl eframe::App for CogsApp {
                 UiMessage::Login(account) => match account {
                     Ok(account) => match account {
                         Some(account) => {
-                            self.state.user_account = Some(account);
+                            self.state.auth.user_account = Some(account);
                             self.state.view_type = ViewType::Home;
                         }
                         None => {
-                            self.state.login_error = None;
-                            self.state.user_account = None;
+                            self.state.auth.login_error = None;
+                            self.state.auth.user_account = None;
                         }
                     },
                     Err(err) => {
-                        self.state.login_error = Some(err);
+                        self.state.auth.login_error = Some(err);
                     }
                 },
                 UiMessage::Logout => {
-                    self.state.user_account = None;
+                    self.state.auth.user_account = None;
                     self.state.view_type = ViewType::Home;
                 }
                 UiMessage::Settings => {
