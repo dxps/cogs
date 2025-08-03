@@ -5,7 +5,7 @@ use crate::{
     comps::{AppComponent, Footer, Header},
     consts::APP_KEY,
     messages::UiMessage,
-    views::{AppView, Explore, Home, Login, Settings, ViewType},
+    views::{AppView, Explore, ExploreCategory, ExploreKind, Home, Login, Settings, ViewType},
 };
 use cogs_shared::domain::model::UserAccount;
 use egui::{
@@ -108,8 +108,15 @@ impl eframe::App for CogsApp {
     /// Called each time the UI needs repainting, which may be many times per second.
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         //
-        // put your widgets into a `SidePanel`, `TopBottomPanel`, `CentralPanel`, `Window` or `Area`.
-        // for inspiration and more examples, go to https://emilk.github.io/egui
+
+        // State related logistics.
+        if self.state.explore.category != ExploreCategory::Templates {
+            self.state.explore.kind = ExploreKind::All;
+        }
+
+        // Visually, put your widgets into one of the following containers:
+        // `SidePanel`, `TopBottomPanel`, `CentralPanel`, `Window` or `Area`.
+        // For inspiration and more examples, go to https://emilk.github.io/egui
 
         Header::show(self, ctx);
 

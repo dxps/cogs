@@ -25,7 +25,7 @@ pub struct Explore {}
 impl AppView for Explore {
     type Context = CogsApp;
 
-    fn show(_ctx: &mut Self::Context, ectx: &egui::Context) {
+    fn show(ctx: &mut Self::Context, ectx: &egui::Context) {
         egui::CentralPanel::default().show(ectx, |ui| {
             // The central panel is the region left after adding TopPanel's and SidePanel's
 
@@ -42,7 +42,7 @@ impl AppView for Explore {
                         ui.vertical(|ui| {
                             ui.horizontal(|ui| {
                                 ui.label("Category:");
-                                let sel_categ = match _ctx.state.explore.category {
+                                let sel_categ = match ctx.state.explore.category {
                                     ExploreCategory::All => RichText::new("all").italics(),
                                     ExploreCategory::Items => RichText::new("Items"),
                                     ExploreCategory::Templates => RichText::new("Templates"),
@@ -51,17 +51,17 @@ impl AppView for Explore {
                                     .selected_text(sel_categ)
                                     .show_ui(ui, |ui| {
                                         ui.selectable_value(
-                                            &mut _ctx.state.explore.kind,
-                                            ExploreKind::All,
+                                            &mut ctx.state.explore.category,
+                                            ExploreCategory::All,
                                             RichText::new("all").italics(),
                                         );
                                         ui.selectable_value(
-                                            &mut _ctx.state.explore.category,
+                                            &mut ctx.state.explore.category,
                                             ExploreCategory::Items,
                                             "Items",
                                         );
                                         ui.selectable_value(
-                                            &mut _ctx.state.explore.category,
+                                            &mut ctx.state.explore.category,
                                             ExploreCategory::Templates,
                                             "Templates",
                                         );
@@ -69,7 +69,7 @@ impl AppView for Explore {
                                 ui.add_space(10.0);
 
                                 ui.label("Kind:");
-                                let sel_kind = match _ctx.state.explore.kind {
+                                let sel_kind = match ctx.state.explore.kind {
                                     ExploreKind::All => RichText::new("all").italics(),
                                     ExploreKind::Item => RichText::new("Item"),
                                     ExploreKind::Attribute => RichText::new("Attribute"),
@@ -78,20 +78,22 @@ impl AppView for Explore {
                                     .selected_text(sel_kind)
                                     .show_ui(ui, |ui| {
                                         ui.selectable_value(
-                                            &mut _ctx.state.explore.kind,
+                                            &mut ctx.state.explore.kind,
                                             ExploreKind::All,
                                             RichText::new("all").italics(),
                                         );
-                                        ui.selectable_value(
-                                            &mut _ctx.state.explore.kind,
-                                            ExploreKind::Item,
-                                            "Item",
-                                        );
-                                        ui.selectable_value(
-                                            &mut _ctx.state.explore.kind,
-                                            ExploreKind::Attribute,
-                                            "Attribute",
-                                        );
+                                        if ctx.state.explore.category == ExploreCategory::Templates {
+                                            ui.selectable_value(
+                                                &mut ctx.state.explore.kind,
+                                                ExploreKind::Item,
+                                                "Item",
+                                            );
+                                            ui.selectable_value(
+                                                &mut ctx.state.explore.kind,
+                                                ExploreKind::Attribute,
+                                                "Attribute",
+                                            );
+                                        }
                                     });
 
                                 ui.add_space(10.0);
