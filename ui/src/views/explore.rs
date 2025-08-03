@@ -1,4 +1,4 @@
-use egui::{ComboBox, Layout};
+use egui::{ComboBox, Layout, RichText};
 use egui_extras::{Size, StripBuilder};
 use serde::{Deserialize, Serialize};
 
@@ -7,8 +7,17 @@ use crate::{CogsApp, views::AppView};
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub enum ExploreCategory {
     #[default]
+    All,
     Items,
     Templates,
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+pub enum ExploreKind {
+    #[default]
+    All,
+    Attribute,
+    Item,
 }
 
 pub struct Explore {}
@@ -32,23 +41,63 @@ impl AppView for Explore {
                     strip.cell(|ui| {
                         ui.vertical(|ui| {
                             ui.horizontal(|ui| {
-                                ui.label("Items type: ");
-                                let sel = match _ctx.state.explore_category {
-                                    ExploreCategory::Items => "Items",
-                                    ExploreCategory::Templates => "Templates",
+                                ui.label("Category:");
+                                let sel_categ = match _ctx.state.explore.category {
+                                    ExploreCategory::All => RichText::new("all").italics(),
+                                    ExploreCategory::Items => RichText::new("Items"),
+                                    ExploreCategory::Templates => RichText::new("Templates"),
                                 };
-                                ComboBox::from_label("").selected_text(sel).show_ui(ui, |ui| {
-                                    ui.selectable_value(
-                                        &mut _ctx.state.explore_category,
-                                        ExploreCategory::Items,
-                                        "Items",
-                                    );
-                                    ui.selectable_value(
-                                        &mut _ctx.state.explore_category,
-                                        ExploreCategory::Templates,
-                                        "Templates",
-                                    );
-                                });
+                                ComboBox::from_id_salt("xplore_categ")
+                                    .selected_text(sel_categ)
+                                    .show_ui(ui, |ui| {
+                                        ui.selectable_value(
+                                            &mut _ctx.state.explore.kind,
+                                            ExploreKind::All,
+                                            RichText::new("all").italics(),
+                                        );
+                                        ui.selectable_value(
+                                            &mut _ctx.state.explore.category,
+                                            ExploreCategory::Items,
+                                            "Items",
+                                        );
+                                        ui.selectable_value(
+                                            &mut _ctx.state.explore.category,
+                                            ExploreCategory::Templates,
+                                            "Templates",
+                                        );
+                                    });
+                                ui.add_space(10.0);
+
+                                ui.label("Kind:");
+                                let sel_kind = match _ctx.state.explore.kind {
+                                    ExploreKind::All => RichText::new("all").italics(),
+                                    ExploreKind::Item => RichText::new("Item"),
+                                    ExploreKind::Attribute => RichText::new("Attribute"),
+                                };
+                                ComboBox::from_id_salt("xplore_kind")
+                                    .selected_text(sel_kind)
+                                    .show_ui(ui, |ui| {
+                                        ui.selectable_value(
+                                            &mut _ctx.state.explore.kind,
+                                            ExploreKind::All,
+                                            RichText::new("all").italics(),
+                                        );
+                                        ui.selectable_value(
+                                            &mut _ctx.state.explore.kind,
+                                            ExploreKind::Item,
+                                            "Item",
+                                        );
+                                        ui.selectable_value(
+                                            &mut _ctx.state.explore.kind,
+                                            ExploreKind::Attribute,
+                                            "Attribute",
+                                        );
+                                    });
+
+                                ui.add_space(10.0);
+                                if ui.button(" + ").clicked() {
+                                    //
+                                }
                             })
                         });
                     });
@@ -57,13 +106,13 @@ impl AppView for Explore {
                         builder.sizes(Size::remainder(), 2).horizontal(|mut strip| {
                             strip.cell(|ui| {
                                 ui.vertical(|ui| {
-                                    ui.label("Item Properties");
+                                    ui.label("Attributes");
                                 });
                             });
 
                             strip.cell(|ui| {
                                 ui.with_layout(Layout::right_to_left(egui::Align::Min), |ui| {
-                                    ui.label("Other Properties");
+                                    ui.label("Links");
                                 });
                             });
                         });

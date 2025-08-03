@@ -1,26 +1,27 @@
 use std::{fmt::Display, str::FromStr};
 
 #[derive(Debug, Default, Clone, Hash, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
-pub struct Id(pub String);
+pub struct Id(pub u128);
 
 impl Id {
-    pub fn new_from(id: String) -> Self {
+    pub fn new_from(id: u128) -> Self {
         Self(id)
     }
 
-    pub fn new_from_opt(id: &str) -> Option<Self> {
-        if id.is_empty() {
+    pub fn new_from_opt(s: &str) -> Option<Self> {
+        if s.is_empty() {
             return None;
         }
-        Some(Self(id.to_string()))
+        let val = u128::from_str(s).ok()?;
+        Some(Self(val))
     }
 
-    pub fn as_str(&self) -> &str {
-        &self.0
+    pub fn to_string(&self) -> String {
+        self.0.to_string()
     }
 
-    pub fn is_empty(&self) -> bool {
-        self.0.is_empty()
+    pub fn is_zero(&self) -> bool {
+        self.0 == 0
     }
 }
 
@@ -32,13 +33,17 @@ impl Display for Id {
 
 impl From<&str> for Id {
     fn from(s: &str) -> Self {
-        Self(s.to_string())
+        let val = u128::from_str(s);
+        if val.is_err() {
+            log::error!("Invalid provided id: {}", s);
+        }
+        Self(val.unwrap())
     }
 }
 
 impl From<String> for Id {
     fn from(s: String) -> Self {
-        Self(s)
+        Self::from(s.as_str())
     }
 }
 
@@ -46,6 +51,6 @@ impl FromStr for Id {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(Self(s.to_string()))
+        Ok(Self::from(s))
     }
 }

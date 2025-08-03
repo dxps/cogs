@@ -45,7 +45,7 @@ serde             = { version = "=1.0.219", features = [ "derive" ] }      # for
 egui_extras       = { version = "=0.32.0", features = [ "all_loaders" ] }
 const_format      = { version = "=0.2.34" }
 ehttp             = { version = "=0.5.0", features = [ "json" ] }
-serde_json        = { version = "=1.0.141" }
+serde_json        = { version = "=1.0.142" }
 
 
 # Native deps
