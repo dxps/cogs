@@ -17,6 +17,7 @@ impl AppComponent for UserWidget {
     fn show(ctx: &mut Self::Context, ui: &mut eframe::egui::Ui) {
         let mut style = ui.style_mut().clone();
         style.visuals.window_fill = style.visuals.extreme_bg_color;
+
         let label = match &ctx.state.auth.user_account {
             Some(account) => {
                 format!(" {}  {}", ICON_USER, account.name)
@@ -27,8 +28,8 @@ impl AppComponent for UserWidget {
             .label(label)
             .interact(Sense::click())
             .on_hover_cursor(egui::CursorIcon::PointingHand);
-        ui.with_layout(Layout::right_to_left(Align::LEFT), |ui| {
-            ui.add_space(6.0);
+
+        ui.with_layout(Layout::right_to_left(Align::LEFT), |_ui| {
             Popup::menu(&parent)
                 .id(egui::Id::new("user widget popup"))
                 .gap(5.0)

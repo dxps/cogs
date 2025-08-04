@@ -1,8 +1,13 @@
-use egui::{ComboBox, Layout, RichText};
+use cogs_shared::domain::model::meta::Kind;
+use egui::{ComboBox, CursorIcon, Layout, Popup, RichText};
 use egui_extras::{Size, StripBuilder};
 use serde::{Deserialize, Serialize};
 
-use crate::{CogsApp, views::AppView};
+use crate::{
+    CogsApp,
+    comps::{AppComponent, AttrTemplateForm},
+    views::AppView,
+};
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub enum ExploreCategory {
@@ -76,11 +81,7 @@ impl AppView for Explore {
                                             RichText::new("all").italics(),
                                         );
                                         if ctx.state.explore.category == ExploreCategory::Templates {
-                                            ui.selectable_value(
-                                                &mut ctx.state.explore.kind,
-                                                ExploreKind::Item,
-                                                "Item",
-                                            );
+                                            ui.selectable_value(&mut ctx.state.explore.kind, ExploreKind::Item, "Item");
                                             ui.selectable_value(
                                                 &mut ctx.state.explore.kind,
                                                 ExploreKind::Attribute,
@@ -90,12 +91,39 @@ impl AppView for Explore {
                                     });
 
                                 ui.add_space(10.0);
-                                if ui.button(" + ").clicked() {
-                                    //
-                                }
+                                let btn = ui.button(" + ");
+                                ui.horizontal_top(|_ui| {
+                                    Popup::menu(&btn).id(egui::Id::new("xplore popup")).gap(5.0).show(|ui| {
+                                        if ui.label("Item").on_hover_cursor(CursorIcon::PointingHand).clicked() {
+                                            ctx.state.explore.add_kind = Some(Kind::Item);
+                                        };
+                                        ui.separator();
+                                        ui.menu_button("Template", |ui| {
+                                            if ui
+                                                .label("Item Template")
+                                                .on_hover_cursor(CursorIcon::PointingHand)
+                                                .clicked()
+                                            {
+                                                ctx.state.explore.add_kind = Some(Kind::ItemTemplate);
+                                            };
+                                            if ui
+                                                .label("Attribute Template")
+                                                .on_hover_cursor(CursorIcon::PointingHand)
+                                                .clicked()
+                                            {
+                                                ctx.state.explore.add_kind = Some(Kind::AttributeTemplate);
+                                            };
+                                        });
+                                    });
+                                });
                             })
                         });
+
+                        if let Some(Kind::AttributeTemplate) = ctx.state.explore.add_kind {
+                            AttrTemplateForm::show(ctx, ui);
+                        }
                     });
+
                     // The bottom/right cell. It contains a nested strip.
                     strip.strip(|builder| {
                         builder.sizes(Size::remainder(), 2).horizontal(|mut strip| {

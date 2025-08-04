@@ -55,14 +55,7 @@ impl CogsApp {
         // Zoom setting.
         ectx.set_zoom_factor(1.2);
 
-        match ectx.theme() {
-            egui::Theme::Light => {
-                catppuccin_egui::set_theme(ectx, catppuccin_egui::LATTE);
-            }
-            egui::Theme::Dark => {
-                catppuccin_egui::set_theme(ectx, catppuccin_egui::FRAPPE);
-            }
-        }
+        ui_init_cosmetics(ectx);
 
         // Load previous app state (if any).
         // Note: The `persistence` feature must be enabled for this to work.
@@ -109,6 +102,7 @@ impl eframe::App for CogsApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         //
 
+        log::info!("[app.update]");
         // State related logistics.
         if self.state.explore.category != ExploreCategory::Templates {
             self.state.explore.kind = ExploreKind::All;
@@ -161,4 +155,17 @@ impl eframe::App for CogsApp {
                 Footer::show(self, ui);
             });
     }
+}
+
+fn ui_init_cosmetics(ctx: &egui::Context) {
+    match ctx.theme() {
+        egui::Theme::Light => {
+            catppuccin_egui::set_theme(ctx, catppuccin_egui::LATTE);
+        }
+        egui::Theme::Dark => {
+            catppuccin_egui::set_theme(ctx, catppuccin_egui::FRAPPE);
+        }
+    }
+    // let vs = Visuals::dark();
+    // ctx.set_visuals(vs);
 }

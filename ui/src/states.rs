@@ -1,7 +1,7 @@
 use crate::views::{ExploreCategory, ExploreKind, ViewType};
 use cogs_shared::{
     app::AppError,
-    domain::model::{UserAccount, meta::ItemTemplate},
+    domain::model::{UserAccount, meta::Kind},
 };
 
 #[derive(Clone, Default, Debug, serde::Deserialize, serde::Serialize)]
@@ -27,5 +27,5 @@ pub struct AuthState {
 pub struct ExploreViewState {
     pub category: ExploreCategory,
     pub kind: ExploreKind,
-    pub template: Option<ItemTemplate>,
+    pub add_kind: Option<Kind>,
 }

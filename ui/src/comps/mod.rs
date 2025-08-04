@@ -1,17 +1,20 @@
+mod attr_tmpl_form;
+pub use attr_tmpl_form::*;
+
 mod header;
 pub use header::*;
-
-mod password_input;
-pub use password_input::*;
-
-mod user_widget;
-pub use user_widget::*;
 
 mod footer;
 pub use footer::*;
 
 mod modal;
 pub use modal::*;
+
+mod password_input;
+pub use password_input::*;
+
+mod user_widget;
+pub use user_widget::*;
 
 use eframe::egui::Ui;
 
