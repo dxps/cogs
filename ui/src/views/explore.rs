@@ -7,7 +7,6 @@ use crate::{CogsApp, views::AppView};
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub enum ExploreCategory {
     #[default]
-    All,
     Items,
     Templates,
 }
@@ -43,18 +42,12 @@ impl AppView for Explore {
                             ui.horizontal(|ui| {
                                 ui.label("Category:");
                                 let sel_categ = match ctx.state.explore.category {
-                                    ExploreCategory::All => RichText::new("all").italics(),
                                     ExploreCategory::Items => RichText::new("Items"),
                                     ExploreCategory::Templates => RichText::new("Templates"),
                                 };
                                 ComboBox::from_id_salt("xplore_categ")
                                     .selected_text(sel_categ)
                                     .show_ui(ui, |ui| {
-                                        ui.selectable_value(
-                                            &mut ctx.state.explore.category,
-                                            ExploreCategory::All,
-                                            RichText::new("all").italics(),
-                                        );
                                         ui.selectable_value(
                                             &mut ctx.state.explore.category,
                                             ExploreCategory::Items,
