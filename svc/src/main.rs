@@ -44,8 +44,7 @@ async fn main() {
     let session_store = SessionPgSessionStore::new(Some(dbcp.clone().into()), session_config)
         .await
         .unwrap();
-    let auth_config =
-        AuthConfig::<Id>::default().with_anonymous_user_id(Some(7358393070828179456.into()));
+    let auth_config = AuthConfig::<Id>::default().with_anonymous_user_id(Some(0.into()));
 
     let state = ServerState::new(Arc::new(dbcp.clone()));
 
