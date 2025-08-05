@@ -176,7 +176,7 @@ impl FromRow<'_, PgRow> for UserEntry {
     fn from_row(row: &PgRow) -> Result<Self, sqlx::Error> {
         Ok(Self {
             user: UserAccount {
-                id: Id::from(row.try_get::<i64, _>("id").unwrap_or_default()),
+                id: row.try_get::<i64, _>("id").unwrap_or_default().into(),
                 email: row.get("email"),
                 username: row.get("username"),
                 name: row.get("name"),
@@ -204,7 +204,7 @@ impl FromRow<'_, PgRow> for UserAccount {
     //
     fn from_row(row: &PgRow) -> Result<Self, sqlx::Error> {
         Ok(Self {
-            id: Id::from(row.get::<i64, _>("id")),
+            id: row.get::<i64, _>("id").into(),
             email: row.get("email"),
             username: row.get("username"),
             name: row.get("name"),

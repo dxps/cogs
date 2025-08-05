@@ -10,8 +10,6 @@ pub use config::*;
 mod logging;
 pub use logging::*;
 
-pub mod model;
-
 mod db;
 pub use db::*;
 
