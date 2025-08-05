@@ -102,13 +102,12 @@ impl eframe::App for CogsApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         //
 
-        log::info!("[app.update]");
         // State related logistics.
         if self.state.explore.category != ExploreCategory::Templates {
             self.state.explore.kind = ExploreKind::All;
         }
 
-        // Visually, put your widgets into one of the following containers:
+        // Note: Put your widgets into one of the following containers:
         // `SidePanel`, `TopBottomPanel`, `CentralPanel`, `Window` or `Area`.
         // For inspiration and more examples, go to https://emilk.github.io/egui
 
@@ -166,6 +165,4 @@ fn ui_init_cosmetics(ctx: &egui::Context) {
             catppuccin_egui::set_theme(ctx, catppuccin_egui::FRAPPE);
         }
     }
-    // let vs = Visuals::dark();
-    // ctx.set_visuals(vs);
 }

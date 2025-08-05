@@ -15,10 +15,8 @@ pub struct UserAccount {
 
 impl Default for UserAccount {
     fn default() -> Self {
-        use crate::server::generate_id;
-
         Self {
-            id: generate_id(),
+            id: Id::default(),
             is_anonymous: true,
             username: "Guest".into(),
             email: "".into(),

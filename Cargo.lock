@@ -958,6 +958,7 @@ dependencies = [
  "serde",
  "serde_json",
  "simple_logger",
+ "snowflake-ng",
  "sqlx",
  "thiserror 2.0.12",
  "tokio",
@@ -1912,6 +1913,12 @@ name = "futures-task"
 version = "0.3.31"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f90f7dce0722e95104fcb095585910c0977252f286e354b5e3bd38902cd99988"
+
+[[package]]
+name = "futures-timer"
+version = "3.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f288b0a4f20f9a56b5d1da57e2227c661b7b16168e2f72365f57b63326e29b24"
 
 [[package]]
 name = "futures-util"
@@ -4149,6 +4156,20 @@ name = "snowflake"
 version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "27207bb65232eda1f588cf46db2fee75c0808d557f6b3cf19a75f5d6d7c94df1"
+
+[[package]]
+name = "snowflake-ng"
+version = "0.1.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d1b3ab5d6227ef42f0e405c9e028f833d58f19e9d0abb90b08a2b4a5be115bfe"
+dependencies = [
+ "chrono",
+ "futures",
+ "futures-timer",
+ "rand",
+ "serde",
+ "time",
+]
 
 [[package]]
 name = "socket2"

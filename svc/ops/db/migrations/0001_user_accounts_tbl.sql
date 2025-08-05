@@ -1,5 +1,5 @@
 CREATE TABLE user_accounts (
-    id              CHAR(10)                 PRIMARY KEY                ,
+    id              BIGINT                   PRIMARY KEY                ,
     name            VARCHAR(128)             NOT NULL                   ,
     email           VARCHAR(64)              NOT NULL     UNIQUE        ,
     username        VARCHAR(48)              NOT NULL     UNIQUE        ,
