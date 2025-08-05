@@ -1,5 +1,5 @@
 use cogs_shared::domain::model::meta::Kind;
-use egui::{ComboBox, CursorIcon, Layout, Popup, RichText};
+use egui::{ComboBox, CursorIcon, Layout, Popup, RichText, Style, style::StyleModifier};
 use egui_extras::{Size, StripBuilder};
 use serde::{Deserialize, Serialize};
 
@@ -93,28 +93,31 @@ impl AppView for Explore {
                                 ui.add_space(10.0);
                                 let btn = ui.button(" + ");
                                 ui.horizontal_top(|_ui| {
-                                    Popup::menu(&btn).id(egui::Id::new("xplore popup")).gap(5.0).show(|ui| {
-                                        if ui.label("Item").on_hover_cursor(CursorIcon::PointingHand).clicked() {
-                                            ctx.state.explore.add_kind = Some(Kind::Item);
-                                        };
-                                        ui.separator();
-                                        ui.menu_button("Template", |ui| {
-                                            if ui
-                                                .label("Item Template")
-                                                .on_hover_cursor(CursorIcon::PointingHand)
-                                                .clicked()
-                                            {
-                                                ctx.state.explore.add_kind = Some(Kind::ItemTemplate);
+                                    Popup::menu(&btn)
+                                        .id(egui::Id::new("xplore_add_popup"))
+                                        .gap(5.0)
+                                        .show(|ui| {
+                                            if ui.label(" Item ").on_hover_cursor(CursorIcon::PointingHand).clicked() {
+                                                ctx.state.explore.add_kind = Some(Kind::Item);
                                             };
-                                            if ui
-                                                .label("Attribute Template")
-                                                .on_hover_cursor(CursorIcon::PointingHand)
-                                                .clicked()
-                                            {
-                                                ctx.state.explore.add_kind = Some(Kind::AttributeTemplate);
-                                            };
+                                            ui.separator();
+                                            ui.menu_button("Template", |ui| {
+                                                if ui
+                                                    .label("Item Template")
+                                                    .on_hover_cursor(CursorIcon::PointingHand)
+                                                    .clicked()
+                                                {
+                                                    ctx.state.explore.add_kind = Some(Kind::ItemTemplate);
+                                                };
+                                                if ui
+                                                    .label("Attribute Template")
+                                                    .on_hover_cursor(CursorIcon::PointingHand)
+                                                    .clicked()
+                                                {
+                                                    ctx.state.explore.add_kind = Some(Kind::AttributeTemplate);
+                                                };
+                                            });
                                         });
-                                    });
                                 });
                             })
                         });

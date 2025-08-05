@@ -22,7 +22,7 @@ impl AppComponent for UserWidget {
             Some(account) => {
                 format!(" {}  {}", ICON_USER, account.name)
             }
-            None => format!(" {}", ICON_USER,),
+            None => format!(" {}", ICON_USER),
         };
         let parent = ui
             .label(label)

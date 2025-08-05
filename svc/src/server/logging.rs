@@ -6,11 +6,13 @@ pub fn init_logging() {
         .with_module_level("sqlx", Warn)
         .with_module_level("tungstenite", Info)
         .with_module_level("tokio_tungstenite", Info)
-        .with_module_level("axum_session", Info)
-        .with_module_level("axum_session_auth", Warn)
+        .with_module_level("axum_session", Debug)
+        .with_module_level("axum_session_auth", Debug)
         .with_module_level("axum", Info)
+        .with_module_level("tower_http", Warn)
         .with_module_level("warnings", Warn)
         .with_module_level("tracing", Warn)
+        .with_local_timestamps()
         .init()
         .unwrap();
 }

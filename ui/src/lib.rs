@@ -3,8 +3,8 @@
 mod app;
 pub use app::CogsApp;
 
-mod states;
-pub use states::*;
+mod ui_state;
+pub use ui_state::*;
 
 mod consts;
 

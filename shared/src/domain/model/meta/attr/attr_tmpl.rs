@@ -9,5 +9,4 @@ pub struct AttrTemplate {
     pub value_type: AttributeValueType,
     pub default_value: String,
     pub is_required: bool,
-    pub tag_id: Option<Id>,
 }

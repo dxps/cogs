@@ -1,10 +1,10 @@
 use std::{fmt::Display, str::FromStr};
 
 #[derive(Debug, Default, Clone, Hash, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
-pub struct Id(pub u128);
+pub struct Id(pub i64);
 
 impl Id {
-    pub fn new_from(id: u128) -> Self {
+    pub fn new_from(id: i64) -> Self {
         Self(id)
     }
 
@@ -12,7 +12,7 @@ impl Id {
         if s.is_empty() {
             return None;
         }
-        let val = u128::from_str(s).ok()?;
+        let val = i64::from_str(s).ok()?;
         Some(Self(val))
     }
 
@@ -33,7 +33,7 @@ impl Display for Id {
 
 impl From<&str> for Id {
     fn from(s: &str) -> Self {
-        let val = u128::from_str(s);
+        let val = i64::from_str(s);
         if val.is_err() {
             log::error!("Invalid provided id: {}", s);
         }
