@@ -25,21 +25,22 @@ sqlx              = { version = "=0.8.6", features = [
     "runtime-tokio-rustls",
 ]}
 
-axum_session      = { version = "=0.16.0" }
+axum_session      = { version = "=0.16.0"  }
 axum_session_auth = { version = "=0.16.0", features = [ "advanced" ] }
 axum_session_sqlx = { version = "=0.5.0",  features = [ "postgres", "tls-rustls" ] }
-async-trait       = { version = "=0.1.88" }
+async-trait       = { version = "=0.1.88"  }
 
-thiserror         = { version = "=2.0.12" }
-anyhow            = { version = "=1.0.98" }
-log               = { version = "=0.4.27" }
-simple_logger     = { version = "=5.0.0"  }
+thiserror         = { version = "=2.0.12"  }
+anyhow            = { version = "=1.0.98"  }
+log               = { version = "=0.4.27"  }
+simple_logger     = { version = "=5.0.0"   }
 
-dotenvy           = { version = "=0.15.7" }
-randoid           = { version = "=0.3.0"  }
-md5               = { version = "=0.8.0"  }
+dotenvy           = { version = "=0.15.7"  }
+randoid           = { version = "=0.3.0"   }
+md5               = { version = "=0.8.0"   }
 config            = { version = "=0.15.13" }
-snowflake-ng      = { version = "=0.1.5"  }
+snowflake-ng      = { version = "=0.1.5"   }
+chrono            = { version = "=0.4.41"  }
 
 #######
 [lints]

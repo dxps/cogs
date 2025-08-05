@@ -40,7 +40,9 @@ async fn main() {
 
     let session_config = SessionConfig::default()
         .with_session_name("cogs_session")
-        .with_table_name("user_sessions");
+        .with_table_name("user_sessions")
+        .with_lifetime(chrono::Duration::hours(24))
+        .with_purge_database_update(chrono::Duration::minutes(5));
     let session_store = SessionPgSessionStore::new(Some(dbcp.clone().into()), session_config)
         .await
         .unwrap();
