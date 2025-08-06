@@ -1,5 +1,3 @@
-use std::sync::mpsc::Sender;
-
 use crate::{
     CogsApp,
     comps::{AppComponent, Modal, PasswordInput},
@@ -9,6 +7,7 @@ use crate::{
 };
 use cogs_shared::{app::AppError, domain::model::UserAccount, dtos::LoginRequest};
 use egui::{Align2, Id, RichText, Shadow, Stroke};
+use std::sync::mpsc::Sender;
 
 pub struct Login {}
 
@@ -21,7 +20,7 @@ impl AppView for Login {
             let frame = egui::Frame::new()
                 .corner_radius(6.0)
                 .inner_margin(20.0)
-                .stroke(Stroke::new(1.0, ui.style().visuals.faint_bg_color))
+                .stroke(Stroke::new(1.0, ui.style().visuals.code_bg_color))
                 .shadow(Shadow::NONE);
 
             let window = egui::Window::new("")
@@ -35,9 +34,8 @@ impl AppView for Login {
             window.show(ectx, |ui| {
                 ui.horizontal(|ui| {
                     ui.vertical(|ui| {
-                        ui.add_space(10.0);
                         ui.label(RichText::new("Login").heading());
-                        ui.add_space(8.0);
+                        ui.add_space(20.0);
                         ui.label("Provide the credentials below to authenticate into the system.");
                         ui.add_space(20.0);
                     });
@@ -46,7 +44,11 @@ impl AppView for Login {
                 ui.horizontal(|ui| {
                     ui.label("Username: ");
                     ui.add_space(4.0);
-                    ui.text_edit_singleline(&mut ctx.state.auth.user);
+                    let user_input = ui.text_edit_singleline(&mut ctx.state.auth.user);
+                    if ctx.state.auth.login_user_focus {
+                        user_input.request_focus();
+                        ctx.state.auth.login_user_focus = false;
+                    }
                     ui.add_space(20.0);
                 });
                 ui.add_space(10.0);
@@ -72,10 +74,7 @@ impl AppView for Login {
                 if let Some(login_err) = &ctx.state.auth.login_error {
                     if *login_err == AppError::LoginWrongCredentials {
                         ectx.data_mut(|data| {
-                            data.insert_temp::<String>(
-                                Id::new(MODAL_TITLE),
-                                "Authentication failed".to_string(),
-                            );
+                            data.insert_temp::<String>(Id::new(MODAL_TITLE), "Authentication failed".to_string());
                             data.insert_temp::<String>(
                                 Id::new(MODAL_CONTENT),
                                 "Invalid username or password. Please try again.".to_string(),
@@ -94,10 +93,7 @@ impl AppView for Login {
 
 fn handle_login(user: String, pass: String, sender: Sender<UiMessage>, ectx: egui::Context) {
     let body = LoginRequest::new(user, pass);
-    let mut req = ehttp::Request::post(
-        "http://localhost:9010/api/login",
-        body.as_json().as_bytes().to_vec(),
-    );
+    let mut req = ehttp::Request::post("http://localhost:9010/api/login", body.as_json().as_bytes().to_vec());
     req.headers.insert("Content-Type", "application/json".to_string());
     ehttp::fetch(req, move |rsp| {
         match rsp {
@@ -110,12 +106,6 @@ fn handle_login(user: String, pass: String, sender: Sender<UiMessage>, ectx: egu
                         log::info!("[handle_login] Failed to send Login message. Error: {e}");
                     }
                 } else {
-                    ectx.data_mut(|data| {
-                        data.insert_temp(
-                            Id::from("testkey"),
-                            format!("testvalue: HTTP status code: {}", rsp.status),
-                        );
-                    });
                     log::info!("[handle_login] Login failed! HTTP status code: {}", rsp.status);
                     if rsp.status == 401 {
                         let aerr = AppError::LoginWrongCredentials;

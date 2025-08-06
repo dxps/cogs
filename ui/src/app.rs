@@ -120,7 +120,7 @@ impl eframe::App for CogsApp {
                     Ok(account) => match account {
                         Some(account) => {
                             self.state.auth.user_account = Some(account);
-                            self.state.view_type = ViewType::Home;
+                            self.state.curr_view_type = ViewType::Home;
                         }
                         None => {
                             self.state.auth.login_error = None;
@@ -133,19 +133,23 @@ impl eframe::App for CogsApp {
                 },
                 UiMessage::Logout => {
                     self.state.auth.user_account = None;
-                    self.state.view_type = ViewType::Home;
+                    self.state.curr_view_type = ViewType::Home;
                 }
-                UiMessage::Settings => {
-                    self.state.view_type = ViewType::Settings;
-                }
+                UiMessage::Settings => {}
             }
         }
 
-        match self.state.view_type {
+        match self.state.curr_view_type {
             ViewType::Home => Home::show(self, ctx),
             ViewType::Explore => Explore::show(self, ctx),
             ViewType::Settings => Settings::show(self, ctx),
-            ViewType::Login => Login::show(self, ctx),
+            ViewType::Login => {
+                if self.state.prev_view_type != ViewType::Login {
+                    self.state.auth.login_user_focus = true;
+                    self.state.prev_view_type = ViewType::Login;
+                }
+                Login::show(self, ctx);
+            }
         }
 
         egui::TopBottomPanel::bottom("footer_panel")

@@ -41,7 +41,8 @@ impl AppComponent for UserWidget {
                             .on_hover_cursor(CursorIcon::PointingHand)
                             .clicked()
                         {
-                            ctx.state.view_type = ViewType::Login;
+                            ctx.state.prev_view_type = ctx.state.curr_view_type.clone();
+                            ctx.state.curr_view_type = ViewType::Login;
                         };
                     } else {
                         if ui

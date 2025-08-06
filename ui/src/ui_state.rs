@@ -14,20 +14,36 @@ use cogs_shared::{
 #[derive(Clone, Default, Debug, serde::Deserialize, serde::Serialize)]
 #[serde(default)]
 pub struct AppState {
-    pub view_type: ViewType,
+    pub curr_view_type: ViewType,
+    #[serde(skip)]
+    pub prev_view_type: ViewType,
     pub auth: AuthState,
     pub explore: ExploreViewState,
     pub data_mgmt: DataMgmtState,
 }
 
-#[derive(Clone, Default, Debug, serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 #[serde(default)]
 pub struct AuthState {
     pub user: String,
     // #[serde(skip)]  // todo: temporary stored, during development
     pub pass: String,
+    #[serde(skip)]
+    pub login_user_focus: bool,
     pub login_error: Option<AppError>,
     pub user_account: Option<UserAccount>,
+}
+
+impl Default for AuthState {
+    fn default() -> Self {
+        Self {
+            user: Default::default(),
+            pass: Default::default(),
+            login_user_focus: true,
+            login_error: Default::default(),
+            user_account: Default::default(),
+        }
+    }
 }
 
 #[derive(Clone, Default, Debug, serde::Deserialize, serde::Serialize)]
