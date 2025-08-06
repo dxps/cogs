@@ -6,7 +6,7 @@ pub use app::CogsApp;
 mod ui_state;
 pub use ui_state::*;
 
-mod consts;
+mod constants;
 
 mod comps;
 mod views;

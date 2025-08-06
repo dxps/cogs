@@ -7,11 +7,14 @@ pub use auth::*;
 mod config;
 pub use config::*;
 
-mod logging;
-pub use logging::*;
+mod data_mgmt;
+pub use data_mgmt::*;
 
 mod db;
 pub use db::*;
+
+mod logging;
+pub use logging::*;
 
 mod routes;
 pub use routes::*;

@@ -54,3 +54,9 @@ impl FromStr for Id {
         Ok(Self::from(s))
     }
 }
+
+impl From<i64> for Id {
+    fn from(value: i64) -> Self {
+        Self { 0: value }
+    }
+}

@@ -1,4 +1,4 @@
-use crate::server::{UserAccountsRepo, UserMgmt};
+use crate::server::{AttrTemplateRepo, DataMgmt, UserAccountsRepo, UserMgmt};
 use axum::extract::{FromRef, FromRequestParts};
 use http::{StatusCode, request::Parts};
 use sqlx::PgPool;
@@ -7,6 +7,7 @@ use std::sync::Arc;
 #[derive(Clone, Debug)]
 pub struct ServerState {
     pub user_mgmt: Arc<UserMgmt>,
+    pub data_mgmt: Arc<DataMgmt>,
 }
 
 impl ServerState {
@@ -15,7 +16,14 @@ impl ServerState {
         let user_mgmt = Arc::new(UserMgmt::new(Arc::new(UserAccountsRepo::new(
             db_pool.clone(),
         ))));
-        Self { user_mgmt }
+        let data_mgmt = Arc::new(DataMgmt::new(Arc::new(AttrTemplateRepo::new(
+            db_pool.clone(),
+        ))));
+
+        Self {
+            user_mgmt,
+            data_mgmt,
+        }
     }
 }
 

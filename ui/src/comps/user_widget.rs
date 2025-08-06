@@ -4,7 +4,7 @@ use egui::{Align, CursorIcon, Layout, Popup, Sense};
 use crate::{
     CogsApp,
     comps::AppComponent,
-    consts::{ICON_LOGIN, ICON_LOGOUT, ICON_SETTINGS, ICON_USER},
+    constants::{ICON_LOGIN, ICON_LOGOUT, ICON_SETTINGS, ICON_USER},
     messages::UiMessage,
     views::ViewType,
 };

@@ -4,7 +4,7 @@ use egui::{Align, Layout};
 use crate::{
     CogsApp,
     comps::{AppComponent, UserWidget},
-    consts::{ICON_EXPLORE, ICON_HOME},
+    constants::{ICON_EXPLORE, ICON_HOME},
     views::{AppView, ViewType},
 };
 

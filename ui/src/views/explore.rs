@@ -1,11 +1,12 @@
 use cogs_shared::domain::model::meta::Kind;
-use egui::{ComboBox, CursorIcon, Layout, Popup, RichText, Style, style::StyleModifier};
+use egui::{ComboBox, CursorIcon, Layout, Popup, RichText};
 use egui_extras::{Size, StripBuilder};
 use serde::{Deserialize, Serialize};
 
 use crate::{
     CogsApp,
     comps::{AppComponent, AttrTemplateForm},
+    constants::ATTR_TEMPL_NEW_ID,
     views::AppView,
 };
 
@@ -123,7 +124,13 @@ impl AppView for Explore {
                         });
 
                         if let Some(Kind::AttributeTemplate) = ctx.state.explore.add_kind {
-                            AttrTemplateForm::show(ctx, ui);
+                            match ectx.data_mut(|d| d.remove_temp::<i64>(ATTR_TEMPL_NEW_ID.into())) {
+                                Some(_) => {
+                                    ctx.state.data_mgmt.curr_attr_template.reset();
+                                    ctx.state.explore.add_kind = None;
+                                }
+                                None => AttrTemplateForm::show(ctx, ui),
+                            }
                         }
                     });
 

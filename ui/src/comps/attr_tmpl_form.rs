@@ -67,7 +67,7 @@ impl AppComponent for AttrTemplateForm {
                     ui.with_layout(Layout::right_to_left(Align::Min), |ui| {
                         ui.add_space(18.0);
                         if ui.button("    Save    ").clicked() {
-                            // ctx.state.data_mgmt.save_attr_template();
+                            ctx.state.data_mgmt.save_attr_template(ui.ctx());
                         }
                         ui.add_space(8.0);
                         if ui.button("  Cancel  ").clicked() {

@@ -3,7 +3,7 @@ use std::sync::mpsc::Sender;
 use crate::{
     CogsApp,
     comps::{AppComponent, Modal, PasswordInput},
-    consts::{MODAL_BTN_LABEL, MODAL_BTN_MSG, MODAL_CONTENT, MODAL_TITLE},
+    constants::{MODAL_BTN_LABEL, MODAL_BTN_MSG, MODAL_CONTENT, MODAL_TITLE},
     messages::UiMessage,
     views::AppView,
 };

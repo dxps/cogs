@@ -4,7 +4,7 @@ use tower_http::{
     trace::TraceLayer,
 };
 
-use crate::server::{ServerState, login_user};
+use crate::server::{ServerState, login_user, upsert_attr_templ};
 
 pub fn create_router(state: ServerState) -> Router {
     //
@@ -17,6 +17,7 @@ pub fn create_router(state: ServerState) -> Router {
     Router::new()
         // .route("/api/healthcheck", get(health_check))
         .route("/api/login", post(login_user))
+        .route("/api/attribute_templates", post(upsert_attr_templ))
         .layer(tracing_layer)
         .layer(cors_layer)
         .with_state(state)

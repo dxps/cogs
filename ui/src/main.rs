@@ -5,10 +5,6 @@
 #[cfg(not(target_arch = "wasm32"))]
 fn main() -> eframe::Result {
     env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
-    env_logger::Builder::new()
-        .filter_level(log::LevelFilter::Info)
-        .filter_module("cogs_ui", log::LevelFilter::Debug)
-        .build();
 
     let native_options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
@@ -39,10 +35,7 @@ fn main() {
     let web_options = eframe::WebOptions::default();
 
     wasm_bindgen_futures::spawn_local(async {
-        let document = web_sys::window()
-            .expect("No window")
-            .document()
-            .expect("No document");
+        let document = web_sys::window().expect("No window").document().expect("No document");
 
         let canvas = document
             .get_element_by_id("the_canvas_id")
@@ -69,9 +62,7 @@ fn main() {
                     loading_text.remove();
                 }
                 Err(e) => {
-                    loading_text.set_inner_html(
-                        "<p> The app has crashed. See the developer console for details. </p>",
-                    );
+                    loading_text.set_inner_html("<p> The app has crashed. See the developer console for details. </p>");
                     panic!("Failed to start eframe: {e:?}");
                 }
             }

@@ -3,7 +3,7 @@ use egui::{Id, RichText, Shadow, Stroke};
 use crate::{
     CogsApp,
     comps::AppComponent,
-    consts::{MODAL_BTN_LABEL, MODAL_BTN_MSG, MODAL_CONTENT, MODAL_TITLE},
+    constants::{MODAL_BTN_LABEL, MODAL_BTN_MSG, MODAL_CONTENT, MODAL_TITLE},
     messages::UiMessage,
 };
 
@@ -17,9 +17,7 @@ impl AppComponent for Modal {
     /// **Note:** It expects 4 values (`MODAL_TITLE`, `MODAL_CONTENT`, `MODAL_BTN_LABEL`, `MODAL_BTN_MSG`) in provided `ui`'s `.data()`.
     fn show(ctx: &mut Self::Context, ui: &mut eframe::egui::Ui) {
         //
-        let title = ui
-            .data(|data| data.get_temp::<String>(Id::from(MODAL_TITLE)))
-            .unwrap();
+        let title = ui.data(|data| data.get_temp::<String>(Id::from(MODAL_TITLE))).unwrap();
         let content = ui
             .data(|data| data.get_temp::<String>(Id::from(MODAL_CONTENT)))
             .unwrap();

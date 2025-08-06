@@ -3,7 +3,7 @@ use std::sync::mpsc::{Receiver, Sender, channel};
 use crate::{
     AppState,
     comps::{AppComponent, Footer, Header},
-    consts::APP_KEY,
+    constants::APP_KEY,
     messages::UiMessage,
     views::{AppView, Explore, ExploreCategory, ExploreKind, Home, Login, Settings, ViewType},
 };
