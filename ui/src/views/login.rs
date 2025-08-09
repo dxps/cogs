@@ -55,7 +55,11 @@ impl AppView for Login {
                 ui.horizontal(|ui| {
                     ui.label(" Password: ");
                     ui.add_space(4.0);
-                    PasswordInput::show_input(ui, &mut ctx.state.auth.pass);
+                    PasswordInput::show_input_entered(
+                        ui,
+                        &mut ctx.state.auth.pass,
+                        &mut ctx.state.auth.login_pass_enter,
+                    );
                 });
 
                 ui.vertical_centered(|ui| {
@@ -70,6 +74,16 @@ impl AppView for Login {
                     };
                     ui.add_space(10.0);
                 });
+
+                if ctx.state.auth.login_pass_enter && !ctx.state.auth.login_user_focus {
+                    ctx.state.auth.login_pass_enter = false;
+                    handle_login(
+                        ctx.state.auth.user.clone(),
+                        ctx.state.auth.pass.clone(),
+                        ctx.sendr.clone(),
+                        ectx.clone(),
+                    );
+                }
 
                 if let Some(login_err) = &ctx.state.auth.login_error {
                     if *login_err == AppError::LoginWrongCredentials {

@@ -26,4 +26,7 @@ pub trait AppComponent {
 
     #[allow(unused)]
     fn show_input(ui: &mut Ui, value: &mut String) {}
+
+    #[allow(unused)]
+    fn show_input_entered(ui: &mut Ui, value: &mut String, entered: &mut bool) {}
 }
