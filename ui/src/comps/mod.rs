@@ -1,6 +1,9 @@
 mod attr_tmpl_form;
 pub use attr_tmpl_form::*;
 
+mod explore_table;
+pub use explore_table::*;
+
 mod header;
 pub use header::*;
 

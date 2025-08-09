@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     CogsApp,
-    comps::{AppComponent, AttrTemplateForm},
+    comps::{AppComponent, AttrTemplateForm, ExploreTable},
     constants::ATTR_TEMPL_NEW_ID,
     views::AppView,
 };
@@ -36,7 +36,7 @@ impl AppView for Explore {
 
             ui.add_space(10.0);
             ui.heading("Explore");
-            ui.add_space(10.0);
+            ui.add_space(20.0);
 
             StripBuilder::new(ui)
                 .size(Size::remainder().at_least(200.0)) // top/left cell
@@ -122,6 +122,8 @@ impl AppView for Explore {
                                 });
                             })
                         });
+
+                        ExploreTable::show(ctx, ui);
 
                         if let Some(Kind::AttributeTemplate) = ctx.state.explore.add_kind {
                             match ectx.data_mut(|d| d.remove_temp::<i64>(ATTR_TEMPL_NEW_ID.into())) {
