@@ -1,14 +1,13 @@
-use cogs_shared::domain::model::meta::Kind;
-use egui::{ComboBox, CursorIcon, Layout, Popup, RichText};
-use egui_extras::{Size, StripBuilder};
-use serde::{Deserialize, Serialize};
-
 use crate::{
     CogsApp,
     comps::{AppComponent, AttrTemplateForm, ExploreTable},
     constants::ATTR_TEMPL_NEW_ID,
     views::AppView,
 };
+use cogs_shared::domain::model::meta::Kind;
+use egui::{ComboBox, CursorIcon, Layout, Popup, RichText};
+use egui_extras::{Size, StripBuilder};
+use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub enum ExploreCategory {

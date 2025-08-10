@@ -21,3 +21,14 @@ pub async fn upsert_attr_templ(
         Err(err) => respond_not_found(err),
     }
 }
+
+pub async fn get_all_attr_templ(
+    _auth_session: AuthSession,
+    State(state): State<ServerState>,
+) -> impl IntoResponse {
+    //
+    match state.data_mgmt.get_all_attr_templ().await {
+        Ok(attr_templs) => (StatusCode::OK, Json(json!(attr_templs))),
+        Err(err) => respond_not_found(err),
+    }
+}

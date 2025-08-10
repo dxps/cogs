@@ -9,14 +9,16 @@ impl AppComponent for ExploreTable {
 
     fn show(ctx: &mut Self::Context, ui: &mut Ui) {
         //
-        match ctx.state.explore.category {
-            crate::views::ExploreCategory::Items => {
-                //
-                // ctx.state.data_mgmt.get_all_items(ectx);
-            }
-            crate::views::ExploreCategory::Templates => {
-                //
-                // ctx.state.data_mgmt.get_all_attr_templates(ectx);
+        if !ctx.state.data_mgmt.fetch_done {
+            match ctx.state.explore.category {
+                crate::views::ExploreCategory::Items => {
+                    // TODO
+                    // ctx.state.data_mgmt.get_all_items(ectx);
+                }
+                crate::views::ExploreCategory::Templates => {
+                    // TODO
+                    ctx.state.data_mgmt.get_all_attr_template();
+                }
             }
         }
 

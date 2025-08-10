@@ -27,4 +27,8 @@ impl DataMgmt {
         self.attr_templ_repo.upsert_attr_templ(&attr_templ).await?;
         Ok(attr_templ.id)
     }
+
+    pub async fn get_all_attr_templ(&self) -> AppResult<Vec<AttrTemplate>> {
+        self.attr_templ_repo.get_all().await
+    }
 }

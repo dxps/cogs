@@ -62,6 +62,8 @@ pub struct ExploreViewState {
 #[serde(default)]
 pub struct DataMgmtState {
     pub curr_attr_template: ManagedAttrTemplate,
+    pub fetch_done: bool,
+    pub fetched_attr_templates: Vec<ManagedAttrTemplate>,
 }
 
 impl DataMgmtState {
@@ -77,11 +79,26 @@ impl DataMgmtState {
         req.headers.insert("content-type", "application/json");
         let ectx = ectx.clone();
         ehttp::fetch(req, move |rsp| {
-            log::info!("[status] clicked. Test response: {:#?}", rsp);
+            log::info!("[save_attr_template] Response: {:#?}", rsp);
             if let Ok(rsp) = rsp {
                 let dto: IdDto = serde_json::from_str(rsp.text().unwrap_or_default()).unwrap();
-                log::debug!("Saved attribute template. Got id: {}", dto.id);
+                log::debug!("[save_attr_template] Got saved id: {}", dto.id);
                 ectx.data_mut(|data| data.insert_temp(ATTR_TEMPL_NEW_ID.into(), dto.id));
+            }
+        });
+    }
+
+    pub fn get_all_attr_template(&mut self) {
+        //
+        let mut req = ehttp::Request::get("http://localhost:9010/api/attribute_templates");
+        req.headers.insert("content-type", "application/json");
+        let mut dm = self.clone();
+        ehttp::fetch(req, move |rsp| {
+            if let Ok(rsp) = rsp {
+                let data: Vec<ManagedAttrTemplate> = serde_json::from_str(rsp.text().unwrap_or_default()).unwrap();
+                log::info!("[get_all_attr_template] Got {} entries.", data.len());
+                dm.fetch_done = true;
+                dm.fetched_attr_templates = data;
             }
         });
     }
