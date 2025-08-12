@@ -28,7 +28,10 @@ pub async fn get_all_attr_templ(
 ) -> impl IntoResponse {
     //
     match state.data_mgmt.get_all_attr_templ().await {
-        Ok(attr_templs) => (StatusCode::OK, Json(json!(attr_templs))),
+        Ok(attr_templs) => {
+            log::info!("[get_all_attr_templ] Got {} entries.", attr_templs.len());
+            (StatusCode::OK, Json(json!(attr_templs)))
+        }
         Err(err) => respond_not_found(err),
     }
 }

@@ -17,7 +17,7 @@ impl AppComponent for ExploreTable {
                 }
                 crate::views::ExploreCategory::Templates => {
                     // TODO
-                    ctx.state.data_mgmt.get_all_attr_template();
+                    ctx.state.data_mgmt.get_all_attr_template(ui.ctx(), ctx.sendr.clone());
                 }
             }
         }
@@ -37,7 +37,7 @@ impl AppComponent for ExploreTable {
                 .min_scrolled_height(0.0)
                 .max_scroll_height(available_height);
 
-            table.header(20.0, |mut header| {
+            let table = table.header(20.0, |mut header| {
                 header.col(|ui| {
                     ui.label("type");
                 });
@@ -51,6 +51,32 @@ impl AppComponent for ExploreTable {
                     ui.label("description");
                 });
             });
+
+            match ctx.state.explore.category {
+                crate::views::ExploreCategory::Items => {
+                    // TODO
+                }
+                crate::views::ExploreCategory::Templates => {
+                    table.body(|mut body| {
+                        for template in &ctx.state.data_mgmt.fetched_attr_templates {
+                            body.row(20.0, |mut row| {
+                                row.col(|ui| {
+                                    ui.label("attribute template");
+                                });
+                                row.col(|ui| {
+                                    ui.label(format!("{}", template.name));
+                                });
+                                row.col(|ui| {
+                                    ui.label(format!("{}", template.value_type));
+                                });
+                                row.col(|ui| {
+                                    ui.label(format!("{}", template.description));
+                                });
+                            });
+                        }
+                    });
+                }
+            }
         });
     }
 }

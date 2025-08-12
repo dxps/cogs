@@ -1,5 +1,8 @@
+use std::sync::mpsc::Sender;
+
 use crate::{
     constants::ATTR_TEMPL_NEW_ID,
+    messages::UiMessage,
     views::{ExploreCategory, ExploreKind, ViewType},
 };
 use cogs_shared::{
@@ -62,7 +65,9 @@ pub struct ExploreViewState {
 #[serde(default)]
 pub struct DataMgmtState {
     pub curr_attr_template: ManagedAttrTemplate,
+    #[serde(skip)]
     pub fetch_done: bool,
+    #[serde(skip)]
     pub fetched_attr_templates: Vec<ManagedAttrTemplate>,
 }
 
@@ -88,22 +93,25 @@ impl DataMgmtState {
         });
     }
 
-    pub fn get_all_attr_template(&mut self) {
+    pub fn get_all_attr_template(&mut self, ectx: &egui::Context, sender: Sender<UiMessage>) {
         //
         let mut req = ehttp::Request::get("http://localhost:9010/api/attribute_templates");
         req.headers.insert("content-type", "application/json");
-        let mut dm = self.clone();
+        let ectx = ectx.clone();
         ehttp::fetch(req, move |rsp| {
             if let Ok(rsp) = rsp {
                 let data: Vec<ManagedAttrTemplate> = serde_json::from_str(rsp.text().unwrap_or_default()).unwrap();
                 log::info!("[get_all_attr_template] Got {} entries.", data.len());
-                dm.fetch_done = true;
-                dm.fetched_attr_templates = data;
+                ectx.request_repaint(); // wake up UI thread
+                if let Err(e) = sender.send(UiMessage::AttrTemplatesFetched(Ok(data))) {
+                    log::info!("[get_all_attr_template] Failed to send AttrTemplatesFetched message. Error: {e}");
+                }
             }
         });
     }
 }
 
+/// The attribute template to be created or edited.
 #[derive(Debug, Default, PartialEq, Clone, serde::Serialize, serde::Deserialize)]
 pub struct ManagedAttrTemplate {
     pub id: Id,

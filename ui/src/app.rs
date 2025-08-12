@@ -114,7 +114,7 @@ impl eframe::App for CogsApp {
         Header::show(self, ctx);
 
         if let Ok(res) = self.recvr.try_recv() {
-            log::info!("[app.update] Received msg {:?}", res);
+            log::info!("[app][update] Received msg {:?}", res);
             match res {
                 UiMessage::Login(account) => match account {
                     Ok(account) => match account {
@@ -136,6 +136,17 @@ impl eframe::App for CogsApp {
                     self.state.curr_view_type = ViewType::Home;
                 }
                 UiMessage::Settings => {}
+                UiMessage::AttrTemplatesFetched(managed_attr_templates) => {
+                    self.state.data_mgmt.fetch_done = true;
+                    match managed_attr_templates {
+                        Ok(managed_attr_templates) => {
+                            self.state.data_mgmt.fetched_attr_templates = managed_attr_templates;
+                        }
+                        Err(err) => {
+                            log::error!("[app.update] Error fetching attr templates: {}", err);
+                        }
+                    }
+                }
             }
         }
 
