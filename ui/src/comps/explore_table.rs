@@ -1,5 +1,6 @@
 use crate::{CogsApp, comps::AppComponent};
-use egui::Ui;
+use catppuccin_egui::Theme;
+use egui::{Color32, RichText, Ui};
 use egui_extras::{Column, TableBuilder};
 
 pub struct ExploreTable {}
@@ -31,7 +32,7 @@ impl AppComponent for ExploreTable {
                 .resizable(true)
                 .cell_layout(egui::Layout::left_to_right(egui::Align::Center))
                 .column(Column::auto())
-                .column(Column::remainder().at_least(100.0).clip(true).resizable(true))
+                .column(Column::auto().at_least(200.0).clip(true).resizable(true))
                 .column(Column::auto())
                 .column(Column::remainder())
                 .min_scrolled_height(0.0)
@@ -39,16 +40,16 @@ impl AppComponent for ExploreTable {
 
             let table = table.header(20.0, |mut header| {
                 header.col(|ui| {
-                    ui.label("type");
+                    ui.label(RichText::new("type").color(Color32::GRAY));
                 });
                 header.col(|ui| {
-                    ui.label("name");
+                    ui.label(RichText::new("name").color(Color32::GRAY));
                 });
                 header.col(|ui| {
-                    ui.label("value type");
+                    ui.label(RichText::new("value type").color(Color32::GRAY));
                 });
                 header.col(|ui| {
-                    ui.label("description");
+                    ui.label(RichText::new("description").color(Color32::GRAY));
                 });
             });
 
@@ -61,7 +62,7 @@ impl AppComponent for ExploreTable {
                         for template in &ctx.state.data_mgmt.fetched_attr_templates {
                             body.row(20.0, |mut row| {
                                 row.col(|ui| {
-                                    ui.label("attribute template");
+                                    ui.label(RichText::new("attribute template").color(Color32::GRAY));
                                 });
                                 row.col(|ui| {
                                     ui.label(format!("{}", template.name));
