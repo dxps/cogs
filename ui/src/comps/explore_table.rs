@@ -1,4 +1,5 @@
 use crate::{CogsApp, comps::AppComponent};
+use cogs_shared::domain::model::meta::Kind;
 use egui::{Color32, CursorIcon, RichText, Sense, Ui};
 use egui_extras::{Column, TableBuilder};
 
@@ -57,23 +58,30 @@ impl AppComponent for ExploreTable {
                     // TODO
                 }
                 crate::views::ExploreCategory::Templates => {
+                    // TODO: attribute template is hard-coded below (twice).
                     table.body(|mut body| {
-                        for template in &ctx.state.data.fetched_attr_templates {
+                        for elem in &ctx.state.data.fetched_attr_templates {
                             body.row(20.0, |mut row| {
                                 row.col(|ui| {
                                     ui.label(RichText::new("attribute template").color(Color32::GRAY));
                                 });
                                 row.col(|ui| {
-                                    ui.label(format!("{}", template.name));
+                                    ui.label(format!("{}", elem.name));
                                 });
                                 row.col(|ui| {
-                                    ui.label(format!("{}", template.value_type));
+                                    ui.label(format!("{}", elem.value_type));
                                 });
                                 row.col(|ui| {
-                                    ui.label(format!("{}", template.description));
+                                    ui.label(format!("{}", elem.description));
                                 });
 
                                 row.response().on_hover_cursor(CursorIcon::PointingHand);
+                                if row.response().double_clicked() {
+                                    log::debug!("[explore_table] Double clicked on row elem.id: {}", elem.id);
+                                    let elem = elem.clone();
+                                    ctx.state.explore.curr_sel_row_elem_id = Some(elem.id);
+                                    ctx.state.explore.curr_sel_row_elem_type = Some(Kind::AttributeTemplate);
+                                }
                             });
                         }
                     });

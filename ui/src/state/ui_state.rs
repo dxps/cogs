@@ -5,11 +5,16 @@ use std::sync::mpsc::Sender;
 #[serde(default)]
 pub struct UiState {
     pub curr_view_type: ViewType,
+
     #[serde(skip)]
     pub prev_view_type: ViewType,
+
     pub auth: AuthState,
+
     pub explore: ExploreViewState,
+
     pub data: DataState,
+
     #[serde(skip)]
     sender: Option<Sender<UiMessage>>,
 }

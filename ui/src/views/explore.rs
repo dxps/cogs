@@ -124,8 +124,16 @@ impl AppView for Explore {
 
                         ExploreTable::show(ctx, ui);
 
+                        // If some type of element is selected (when clicking the "+"" button), show the form window.
                         if let Some(Kind::AttributeTemplate) = ctx.state.explore.add_kind {
                             AttrTemplateForm::show(ctx, ui)
+                        }
+
+                        // If a specific element is double-clicked, show it in the form window.
+                        if let Some(_) = ctx.state.explore.curr_sel_row_elem_id.as_ref() {
+                            if let Some(Kind::AttributeTemplate) = ctx.state.explore.curr_sel_row_elem_type {
+                                AttrTemplateForm::show(ctx, ui)
+                            }
                         }
                     });
 

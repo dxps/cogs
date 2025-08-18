@@ -9,7 +9,12 @@ impl AppComponent for AttrTemplateForm {
 
     fn show(ctx: &mut Self::Context, ui: &mut Ui) {
         //
-        let title = "New Attribute Template";
+        // let title = "New Attribute Template";
+        let title = match ctx.state.explore.curr_sel_row_elem_id.as_ref() {
+            Some(_) => "Edit Attribute Template",
+            None => "New Attribute Template",
+        };
+
         Window::new("AttrTemplateForm")
             .title_bar(false)
             .resizable(false)
