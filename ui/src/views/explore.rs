@@ -1,11 +1,10 @@
 use crate::{
     CogsApp,
     comps::{AppComponent, AttrTemplateForm, ExploreTable},
-    constants::ATTR_TEMPL_NEW_ID,
     views::AppView,
 };
-use cogs_shared::domain::model::meta::Kind;
-use egui::{ComboBox, CursorIcon, Layout, Popup, RichText};
+use cogs_shared::domain::model::{Id, meta::Kind};
+use egui::{ComboBox, CursorIcon, Layout, Popup, RichText, Sense};
 use egui_extras::{Size, StripBuilder};
 use serde::{Deserialize, Serialize};
 
@@ -91,7 +90,8 @@ impl AppView for Explore {
                                     });
 
                                 ui.add_space(10.0);
-                                let btn = ui.button(" + ");
+
+                                let btn = ui.button(" + ").interact(Sense::click());
                                 ui.horizontal_top(|_ui| {
                                     Popup::menu(&btn)
                                         .id(egui::Id::new("xplore_add_popup"))
@@ -125,13 +125,7 @@ impl AppView for Explore {
                         ExploreTable::show(ctx, ui);
 
                         if let Some(Kind::AttributeTemplate) = ctx.state.explore.add_kind {
-                            match ectx.data_mut(|d| d.remove_temp::<i64>(ATTR_TEMPL_NEW_ID.into())) {
-                                Some(_) => {
-                                    ctx.state.data_mgmt.curr_attr_template.reset();
-                                    ctx.state.explore.add_kind = None;
-                                }
-                                None => AttrTemplateForm::show(ctx, ui),
-                            }
+                            AttrTemplateForm::show(ctx, ui)
                         }
                     });
 

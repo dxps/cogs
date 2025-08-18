@@ -1,5 +1,4 @@
 use crate::{CogsApp, comps::AppComponent};
-use catppuccin_egui::Theme;
 use egui::{Color32, RichText, Ui};
 use egui_extras::{Column, TableBuilder};
 
@@ -33,7 +32,7 @@ impl AppComponent for ExploreTable {
                 .cell_layout(egui::Layout::left_to_right(egui::Align::Center))
                 .column(Column::auto())
                 .column(Column::auto().at_least(200.0).clip(true).resizable(true))
-                .column(Column::auto())
+                .column(Column::auto().at_least(80.0))
                 .column(Column::remainder())
                 .min_scrolled_height(0.0)
                 .max_scroll_height(available_height);

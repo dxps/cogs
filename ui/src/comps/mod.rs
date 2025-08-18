@@ -1,4 +1,6 @@
 mod attr_tmpl_form;
+use std::sync::mpsc::Sender;
+
 pub use attr_tmpl_form::*;
 
 mod explore_table;
@@ -21,6 +23,8 @@ pub use user_widget::*;
 
 use eframe::egui::Ui;
 
+use crate::messages::UiMessage;
+
 pub trait AppComponent {
     type Context;
 
@@ -32,4 +36,7 @@ pub trait AppComponent {
 
     #[allow(unused)]
     fn show_input_entered(ui: &mut Ui, value: &mut String, entered: &mut bool) {}
+
+    #[allow(unused)]
+    fn show_send(ctx: &mut Self::Context, ui: &mut Ui, sendr: Sender<UiMessage>) {}
 }

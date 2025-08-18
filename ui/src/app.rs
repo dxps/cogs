@@ -147,6 +147,13 @@ impl eframe::App for CogsApp {
                         }
                     }
                 }
+                UiMessage::AttrTemplateUpserted(_) => {
+                    self.state.explore.add_kind = None;
+                    self.state.data_mgmt.curr_attr_template.reset();
+                    self.state.data_mgmt.get_all_attr_template(ctx, self.sendr.clone());
+                    self.state.data_mgmt.fetch_done = true;
+                    ctx.request_repaint();
+                }
             }
         }
 

@@ -1,7 +1,4 @@
-use std::sync::mpsc::Sender;
-
 use crate::{
-    constants::ATTR_TEMPL_NEW_ID,
     messages::UiMessage,
     views::{ExploreCategory, ExploreKind, ViewType},
 };
@@ -13,6 +10,7 @@ use cogs_shared::{
     },
     dtos::IdDto,
 };
+use std::sync::mpsc::Sender;
 
 #[derive(Clone, Default, Debug, serde::Deserialize, serde::Serialize)]
 #[serde(default)]
@@ -23,6 +21,8 @@ pub struct AppState {
     pub auth: AuthState,
     pub explore: ExploreViewState,
     pub data_mgmt: DataMgmtState,
+    #[serde(skip)]
+    sender: Option<Sender<UiMessage>>,
 }
 
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
@@ -53,6 +53,18 @@ impl Default for AuthState {
     }
 }
 
+impl AppState {
+    pub fn set_sender(&mut self, sender: Sender<UiMessage>) {
+        self.sender = Some(sender);
+    }
+
+    pub fn send(&self, msg: UiMessage) {
+        if let Err(e) = self.sender.as_ref().unwrap().send(msg) {
+            log::info!("[AppState] Failed to send message. Error: {e}");
+        }
+    }
+}
+
 #[derive(Clone, Default, Debug, serde::Deserialize, serde::Serialize)]
 #[serde(default)]
 pub struct ExploreViewState {
@@ -72,9 +84,8 @@ pub struct DataMgmtState {
 }
 
 impl DataMgmtState {
-    pub fn save_attr_template(&self, ectx: &egui::Context) {
+    pub fn save_attr_template(&self, ectx: &egui::Context, sender: Sender<UiMessage>) {
         //
-        log::debug!("Saving attribute template: {self:#?}");
         let mut req = ehttp::Request::post(
             "http://localhost:9010/api/attribute_templates",
             serde_json::json!(self.curr_attr_template.clone())
@@ -88,7 +99,10 @@ impl DataMgmtState {
             if let Ok(rsp) = rsp {
                 let dto: IdDto = serde_json::from_str(rsp.text().unwrap_or_default()).unwrap();
                 log::debug!("[save_attr_template] Got saved id: {}", dto.id);
-                ectx.data_mut(|data| data.insert_temp(ATTR_TEMPL_NEW_ID.into(), dto.id));
+                if let Err(e) = sender.send(UiMessage::AttrTemplateUpserted(Ok(dto.id))) {
+                    log::info!("[save_attr_template] Failed to send AttrTemplateUpserted message. Error: {e}");
+                }
+                ectx.request_repaint();
             }
         });
     }
@@ -105,6 +119,7 @@ impl DataMgmtState {
                 ectx.request_repaint(); // wake up UI thread
                 if let Err(e) = sender.send(UiMessage::AttrTemplatesFetched(Ok(data))) {
                     log::info!("[get_all_attr_template] Failed to send AttrTemplatesFetched message. Error: {e}");
+                    return;
                 }
             }
         });

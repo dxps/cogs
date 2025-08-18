@@ -1,4 +1,6 @@
+use crate::domain::model::Id;
+
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct IdDto {
-    pub id: i64,
+    pub id: Id,
 }

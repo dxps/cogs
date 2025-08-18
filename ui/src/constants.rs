@@ -26,5 +26,3 @@ pub const MODAL_TITLE: &str = "cogs_modal_title";
 pub const MODAL_CONTENT: &str = "cogs_modal_content";
 pub const MODAL_BTN_LABEL: &str = "cogs_modal_btn_label";
 pub const MODAL_BTN_MSG: &str = "cogs_modal_btn_msg";
-
-pub const ATTR_TEMPL_NEW_ID: &str = "cogs_attr_tmpl_new_id";

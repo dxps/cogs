@@ -1,6 +1,8 @@
-use cogs_shared::{app::AppError, domain::model::UserAccount};
-
 use crate::ManagedAttrTemplate;
+use cogs_shared::{
+    app::AppError,
+    domain::model::{Id, UserAccount},
+};
 
 #[derive(Clone, Debug)]
 pub enum UiMessage {
@@ -8,4 +10,5 @@ pub enum UiMessage {
     Logout,
     Settings,
     AttrTemplatesFetched(Result<Vec<ManagedAttrTemplate>, AppError>),
+    AttrTemplateUpserted(Result<Id, AppError>),
 }
