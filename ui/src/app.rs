@@ -1,5 +1,3 @@
-use std::sync::mpsc::{Receiver, Sender, channel};
-
 use crate::{
     AppState,
     comps::{AppComponent, Footer, Header},
@@ -12,6 +10,7 @@ use egui::{
     FontData,
     epaint::text::{FontInsert, InsertFontFamily},
 };
+use std::sync::mpsc::{Receiver, Sender, channel};
 
 #[derive(serde::Deserialize, serde::Serialize)] // so we can persist ui state on app shutdown.
 #[serde(default)] // if we add new fields, give them default values when deserializing old state.
@@ -53,7 +52,7 @@ impl CogsApp {
         egui_extras::install_image_loaders(ectx);
 
         // Zoom setting.
-        ectx.set_zoom_factor(1.2);
+        ectx.set_zoom_factor(1.25);
 
         ui_init_cosmetics(ectx);
 

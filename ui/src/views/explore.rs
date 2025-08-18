@@ -3,7 +3,7 @@ use crate::{
     comps::{AppComponent, AttrTemplateForm, ExploreTable},
     views::AppView,
 };
-use cogs_shared::domain::model::{Id, meta::Kind};
+use cogs_shared::domain::model::meta::Kind;
 use egui::{ComboBox, CursorIcon, Layout, Popup, RichText, Sense};
 use egui_extras::{Size, StripBuilder};
 use serde::{Deserialize, Serialize};

@@ -1,5 +1,5 @@
 use crate::{CogsApp, comps::AppComponent};
-use egui::{Color32, RichText, Ui};
+use egui::{Color32, CursorIcon, RichText, Sense, Ui};
 use egui_extras::{Column, TableBuilder};
 
 pub struct ExploreTable {}
@@ -27,15 +27,15 @@ impl AppComponent for ExploreTable {
 
             let available_height = ui.available_height();
             let table = TableBuilder::new(ui)
-                .striped(false)
-                .resizable(true)
+                .striped(true)
+                .resizable(false)
                 .cell_layout(egui::Layout::left_to_right(egui::Align::Center))
-                .column(Column::auto())
-                .column(Column::auto().at_least(200.0).clip(true).resizable(true))
-                .column(Column::auto().at_least(80.0))
-                .column(Column::remainder())
-                .min_scrolled_height(0.0)
-                .max_scroll_height(available_height);
+                .column(Column::auto()) // type
+                .column(Column::auto().at_least(200.0)) // name
+                .column(Column::auto().at_least(80.0)) // value type
+                .column(Column::remainder().resizable(true)) // description
+                .max_scroll_height(available_height)
+                .sense(Sense::click());
 
             let table = table.header(20.0, |mut header| {
                 header.col(|ui| {
@@ -72,6 +72,8 @@ impl AppComponent for ExploreTable {
                                 row.col(|ui| {
                                     ui.label(format!("{}", template.description));
                                 });
+
+                                row.response().on_hover_cursor(CursorIcon::PointingHand);
                             });
                         }
                     });
