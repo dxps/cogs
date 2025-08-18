@@ -32,33 +32,33 @@ impl AppComponent for AttrTemplateForm {
                             .num_columns(2)
                             .show(ui, |ui| {
                                 ui.label("            Name");
-                                ui.text_edit_singleline(&mut ctx.state.data_mgmt.curr_attr_template.name);
+                                ui.text_edit_singleline(&mut ctx.state.data.curr_attr_template.name);
                                 ui.end_row();
                                 ui.label("   Description");
-                                ui.text_edit_singleline(&mut ctx.state.data_mgmt.curr_attr_template.description);
+                                ui.text_edit_singleline(&mut ctx.state.data.curr_attr_template.description);
                                 ui.end_row();
                                 ui.label("    Value Type");
                                 ComboBox::from_id_salt("attr_templ_val_type")
                                     .width(287.0)
-                                    .selected_text(ctx.state.data_mgmt.curr_attr_template.value_type.to_string())
+                                    .selected_text(ctx.state.data.curr_attr_template.value_type.to_string())
                                     .show_ui(ui, |ui| {
                                         ui.selectable_value(
-                                            &mut ctx.state.data_mgmt.curr_attr_template.value_type,
+                                            &mut ctx.state.data.curr_attr_template.value_type,
                                             AttributeValueType::Text,
                                             AttributeValueType::Text.to_string(),
                                         );
                                         ui.selectable_value(
-                                            &mut ctx.state.data_mgmt.curr_attr_template.value_type,
+                                            &mut ctx.state.data.curr_attr_template.value_type,
                                             AttributeValueType::SmallInteger,
                                             AttributeValueType::SmallInteger.to_string(),
                                         );
                                     });
                                 ui.end_row();
                                 ui.label("Default value");
-                                ui.text_edit_singleline(&mut ctx.state.data_mgmt.curr_attr_template.default_value);
+                                ui.text_edit_singleline(&mut ctx.state.data.curr_attr_template.default_value);
                                 ui.end_row();
                                 ui.label("    Mandatory");
-                                ui.checkbox(&mut ctx.state.data_mgmt.curr_attr_template.is_required, "");
+                                ui.checkbox(&mut ctx.state.data.curr_attr_template.is_required, "");
                                 ui.end_row();
                             });
                         ui.add_space(8.0);
@@ -69,11 +69,11 @@ impl AppComponent for AttrTemplateForm {
                     ui.with_layout(Layout::right_to_left(Align::Min), |ui| {
                         ui.add_space(18.0);
                         if ui.button("    Save    ").clicked() {
-                            ctx.state.data_mgmt.save_attr_template(ui.ctx(), ctx.sendr.clone());
+                            ctx.state.data.save_attr_template(ui.ctx(), ctx.sendr.clone());
                         }
                         ui.add_space(8.0);
                         if ui.button("  Cancel  ").clicked() {
-                            ctx.state.data_mgmt.curr_attr_template = ManagedAttrTemplate::default();
+                            ctx.state.data.curr_attr_template = ManagedAttrTemplate::default();
                             ctx.state.explore.add_kind = None;
                         }
                     });

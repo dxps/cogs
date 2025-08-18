@@ -1,5 +1,5 @@
 use crate::{
-    AppState,
+    UiState,
     comps::{AppComponent, Footer, Header},
     constants::APP_KEY,
     messages::UiMessage,
@@ -15,7 +15,7 @@ use std::sync::mpsc::{Receiver, Sender, channel};
 #[derive(serde::Deserialize, serde::Serialize)] // so we can persist ui state on app shutdown.
 #[serde(default)] // if we add new fields, give them default values when deserializing old state.
 pub struct CogsApp {
-    pub(crate) state: AppState,
+    pub(crate) state: UiState,
     pub(crate) auth_session: Option<UserAccount>,
 
     #[serde(skip)]
@@ -31,7 +31,7 @@ impl Default for CogsApp {
     fn default() -> Self {
         let (sendr, recvr) = channel();
         Self {
-            state: AppState::default(),
+            state: UiState::default(),
             auth_session: None,
             sendr,
             recvr,
@@ -91,7 +91,6 @@ impl CogsApp {
 
 impl eframe::App for CogsApp {
     //
-
     /// Called by the framework to save state before shutdown.
     fn save(&mut self, storage: &mut dyn eframe::Storage) {
         eframe::set_value(storage, APP_KEY, self);
@@ -136,10 +135,10 @@ impl eframe::App for CogsApp {
                 }
                 UiMessage::Settings => {}
                 UiMessage::AttrTemplatesFetched(managed_attr_templates) => {
-                    self.state.data_mgmt.fetch_done = true;
+                    self.state.data.fetch_done = true;
                     match managed_attr_templates {
                         Ok(managed_attr_templates) => {
-                            self.state.data_mgmt.fetched_attr_templates = managed_attr_templates;
+                            self.state.data.fetched_attr_templates = managed_attr_templates;
                         }
                         Err(err) => {
                             log::error!("[app.update] Error fetching attr templates: {}", err);
@@ -148,9 +147,9 @@ impl eframe::App for CogsApp {
                 }
                 UiMessage::AttrTemplateUpserted(_) => {
                     self.state.explore.add_kind = None;
-                    self.state.data_mgmt.curr_attr_template.reset();
-                    self.state.data_mgmt.get_all_attr_template(ctx, self.sendr.clone());
-                    self.state.data_mgmt.fetch_done = true;
+                    self.state.data.curr_attr_template.reset();
+                    self.state.data.get_all_attr_template(ctx, self.sendr.clone());
+                    self.state.data.fetch_done = true;
                     ctx.request_repaint();
                 }
             }

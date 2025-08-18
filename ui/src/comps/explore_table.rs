@@ -9,7 +9,7 @@ impl AppComponent for ExploreTable {
 
     fn show(ctx: &mut Self::Context, ui: &mut Ui) {
         //
-        if !ctx.state.data_mgmt.fetch_done {
+        if !ctx.state.data.fetch_done {
             match ctx.state.explore.category {
                 crate::views::ExploreCategory::Items => {
                     // TODO
@@ -17,7 +17,7 @@ impl AppComponent for ExploreTable {
                 }
                 crate::views::ExploreCategory::Templates => {
                     // TODO
-                    ctx.state.data_mgmt.get_all_attr_template(ui.ctx(), ctx.sendr.clone());
+                    ctx.state.data.get_all_attr_template(ui.ctx(), ctx.sendr.clone());
                 }
             }
         }
@@ -58,7 +58,7 @@ impl AppComponent for ExploreTable {
                 }
                 crate::views::ExploreCategory::Templates => {
                     table.body(|mut body| {
-                        for template in &ctx.state.data_mgmt.fetched_attr_templates {
+                        for template in &ctx.state.data.fetched_attr_templates {
                             body.row(20.0, |mut row| {
                                 row.col(|ui| {
                                     ui.label(RichText::new("attribute template").color(Color32::GRAY));
