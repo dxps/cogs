@@ -40,7 +40,7 @@ impl DataState {
         });
     }
 
-    pub fn get_all_attr_template(&mut self, ectx: &egui::Context, sender: Sender<UiMessage>) {
+    pub fn get_all_attr_templates(&mut self, ectx: &egui::Context, sender: Sender<UiMessage>) {
         //
         let mut req = ehttp::Request::get("http://localhost:9010/api/attribute_templates");
         req.headers.insert("content-type", "application/json");

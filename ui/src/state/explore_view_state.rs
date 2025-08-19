@@ -11,8 +11,6 @@ pub struct ExploreViewState {
 
     pub kind: ExploreKind,
 
-    pub add_kind: Option<Kind>,
-
     /// The id of the element that is currently selected row in the Explore's table.
     #[serde(skip)]
     pub curr_sel_row_elem_id: Option<Id>,

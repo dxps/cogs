@@ -20,11 +20,6 @@ impl AppComponent for AttrTemplateForm {
         let title: &str;
         let mut element = ManagedAttrTemplate::default();
 
-        log::debug!(
-            "[AttrTemplateForm] Got ectx.data attribute template: {:#?}",
-            ectx.data(|d| d.get_temp::<ManagedAttrTemplate>(egui::Id::from("attr_template")))
-        );
-
         match ectx.data(|d| d.get_temp::<ManagedAttrTemplate>(egui::Id::from("attr_template"))) {
             Some(at) => {
                 id = at.id.clone();

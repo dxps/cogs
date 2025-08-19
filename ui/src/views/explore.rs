@@ -98,7 +98,10 @@ impl AppView for Explore {
                                         .gap(5.0)
                                         .show(|ui| {
                                             if ui.label(" Item ").on_hover_cursor(CursorIcon::PointingHand).clicked() {
-                                                ctx.state.explore.add_kind = Some(Kind::Item);
+                                                ctx.state
+                                                    .explore
+                                                    .open_windows
+                                                    .insert((Kind::Item, Id::default()), "".into());
                                             };
                                             ui.separator();
                                             ui.menu_button("Template", |ui| {
@@ -132,6 +135,7 @@ impl AppView for Explore {
 
                         for ((kind, _id), elem_str) in ctx.state.explore.open_windows.clone().iter() {
                             match kind {
+                                // TODO
                                 // Kind::ItemTemplate => ItemTemplateForm::show(ctx, ui, id),
                                 Kind::AttributeTemplate => {
                                     let element = ManagedAttrTemplate::from(elem_str);

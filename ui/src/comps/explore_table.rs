@@ -17,8 +17,8 @@ impl AppComponent for ExploreTable {
                     // ctx.state.data_mgmt.get_all_items(ectx);
                 }
                 crate::views::ExploreCategory::Templates => {
-                    // TODO
-                    ctx.state.data.get_all_attr_template(ui.ctx(), ctx.sendr.clone());
+                    // TODO: get_all_item_templates
+                    ctx.state.data.get_all_attr_templates(ui.ctx(), ctx.sendr.clone());
                 }
             }
         }
@@ -58,7 +58,6 @@ impl AppComponent for ExploreTable {
                     // TODO
                 }
                 crate::views::ExploreCategory::Templates => {
-                    // TODO: attribute template is hard-coded below (twice).
                     table.body(|mut body| {
                         for elem in &ctx.state.data.fetched_attr_templates {
                             body.row(20.0, |mut row| {
@@ -78,13 +77,11 @@ impl AppComponent for ExploreTable {
                                 row.response().on_hover_cursor(CursorIcon::PointingHand);
                                 if row.response().double_clicked() {
                                     log::debug!("[explore_table] Double clicked on row elem.id: {}", elem.id);
-                                    let elem = elem.clone();
-                                    // ctx.state.explore.curr_sel_row_elem_id = Some(elem.id);
-                                    // ctx.state.explore.curr_sel_row_elem_type = Some(Kind::AttributeTemplate);
-                                    ctx.state.explore.open_windows.insert(
-                                        (Kind::AttributeTemplate, elem.id.clone()),
-                                        serde_json::json!(elem).to_string(),
-                                    );
+                                    let id = elem.id.clone();
+                                    ctx.state
+                                        .explore
+                                        .open_windows
+                                        .insert((Kind::AttributeTemplate, id), serde_json::json!(elem).to_string());
                                 }
                             });
                         }
