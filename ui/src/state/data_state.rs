@@ -1,6 +1,9 @@
 use crate::messages::UiMessage;
 use cogs_shared::{
-    domain::model::{Id, meta::AttributeValueType},
+    domain::model::{
+        Id,
+        meta::{AttrTemplate, AttributeValueType},
+    },
     dtos::IdDto,
 };
 use std::sync::mpsc::Sender;
@@ -8,21 +11,19 @@ use std::sync::mpsc::Sender;
 #[derive(Clone, Default, Debug, serde::Deserialize, serde::Serialize)]
 #[serde(default)]
 pub struct DataState {
-    pub curr_attr_template: ManagedAttrTemplate,
     #[serde(skip)]
     pub fetch_done: bool,
+
     #[serde(skip)]
     pub fetched_attr_templates: Vec<ManagedAttrTemplate>,
 }
 
 impl DataState {
-    pub fn save_attr_template(&self, ectx: &egui::Context, sender: Sender<UiMessage>) {
+    pub fn save_attr_template(&self, element: ManagedAttrTemplate, ectx: &egui::Context, sender: Sender<UiMessage>) {
         //
         let mut req = ehttp::Request::post(
             "http://localhost:9010/api/attribute_templates",
-            serde_json::json!(self.curr_attr_template.clone())
-                .to_string()
-                .into_bytes(),
+            serde_json::json!(element).to_string().into_bytes(),
         );
         req.headers.insert("content-type", "application/json");
         let ectx = ectx.clone();
@@ -77,5 +78,24 @@ impl ManagedAttrTemplate {
         self.value_type = AttributeValueType::Text;
         self.default_value = "".into();
         self.is_required = false;
+    }
+}
+
+impl From<AttrTemplate> for ManagedAttrTemplate {
+    fn from(val: AttrTemplate) -> Self {
+        Self {
+            id: val.id,
+            name: val.name,
+            description: val.description.unwrap_or_default(),
+            value_type: val.value_type,
+            default_value: val.default_value,
+            is_required: val.is_required,
+        }
+    }
+}
+
+impl From<&String> for ManagedAttrTemplate {
+    fn from(value: &String) -> Self {
+        serde_json::from_str::<Self>(value.as_str()).unwrap_or_default()
     }
 }

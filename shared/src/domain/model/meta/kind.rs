@@ -1,4 +1,4 @@
-#[derive(Clone, Default, Debug, serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Default, PartialEq, Eq, Hash, Debug, serde::Deserialize, serde::Serialize)]
 pub enum Kind {
     #[default]
     Item,

@@ -1,9 +1,9 @@
 use crate::{
-    CogsApp,
+    CogsApp, ManagedAttrTemplate,
     comps::{AppComponent, AttrTemplateForm, ExploreTable},
     views::AppView,
 };
-use cogs_shared::domain::model::meta::Kind;
+use cogs_shared::domain::model::{Id, meta::Kind};
 use egui::{ComboBox, CursorIcon, Layout, Popup, RichText, Sense};
 use egui_extras::{Size, StripBuilder};
 use serde::{Deserialize, Serialize};
@@ -29,9 +29,9 @@ impl AppView for Explore {
     type Context = CogsApp;
 
     fn show(ctx: &mut Self::Context, ectx: &egui::Context) {
+        //
+        // The central panel is the region left after adding TopPanel's and SidePanel's
         egui::CentralPanel::default().show(ectx, |ui| {
-            // The central panel is the region left after adding TopPanel's and SidePanel's
-
             ui.add_space(10.0);
             ui.heading("Explore");
             ui.add_space(20.0);
@@ -107,14 +107,20 @@ impl AppView for Explore {
                                                     .on_hover_cursor(CursorIcon::PointingHand)
                                                     .clicked()
                                                 {
-                                                    ctx.state.explore.add_kind = Some(Kind::ItemTemplate);
+                                                    ctx.state
+                                                        .explore
+                                                        .open_windows
+                                                        .insert((Kind::ItemTemplate, Id::default()), "".into());
                                                 };
                                                 if ui
                                                     .label("Attribute Template")
                                                     .on_hover_cursor(CursorIcon::PointingHand)
                                                     .clicked()
                                                 {
-                                                    ctx.state.explore.add_kind = Some(Kind::AttributeTemplate);
+                                                    ctx.state
+                                                        .explore
+                                                        .open_windows
+                                                        .insert((Kind::AttributeTemplate, Id::default()), "".into());
                                                 };
                                             });
                                         });
@@ -124,15 +130,16 @@ impl AppView for Explore {
 
                         ExploreTable::show(ctx, ui);
 
-                        // If some type of element is selected (when clicking the "+"" button), show the form window.
-                        if let Some(Kind::AttributeTemplate) = ctx.state.explore.add_kind {
-                            AttrTemplateForm::show(ctx, ui)
-                        }
-
-                        // If a specific element is double-clicked, show it in the form window.
-                        if let Some(_) = ctx.state.explore.curr_sel_row_elem_id.as_ref() {
-                            if let Some(Kind::AttributeTemplate) = ctx.state.explore.curr_sel_row_elem_type {
-                                AttrTemplateForm::show(ctx, ui)
+                        for ((kind, _id), elem_str) in ctx.state.explore.open_windows.clone().iter() {
+                            match kind {
+                                // Kind::ItemTemplate => ItemTemplateForm::show(ctx, ui, id),
+                                Kind::AttributeTemplate => {
+                                    let element = ManagedAttrTemplate::from(elem_str);
+                                    log::debug!("[explore.show] opening AttrTemplateForm for element: {:?}", element);
+                                    ectx.data_mut(|d| d.insert_temp(egui::Id::from("attr_template"), element));
+                                    AttrTemplateForm::show(ctx, ui);
+                                }
+                                _ => {}
                             }
                         }
                     });

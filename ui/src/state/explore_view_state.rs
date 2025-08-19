@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use cogs_shared::domain::model::{Id, meta::Kind};
 
 use crate::views::{ExploreCategory, ExploreKind};
@@ -11,10 +13,11 @@ pub struct ExploreViewState {
 
     pub add_kind: Option<Kind>,
 
-    #[serde(skip)]
     /// The id of the element that is currently selected row in the Explore's table.
-    pub curr_sel_row_elem_id: Option<Id>,
     #[serde(skip)]
-    /// The kind (type) of the element that is currently selected row in the Explore's table.
-    pub curr_sel_row_elem_type: Option<Kind>,
+    pub curr_sel_row_elem_id: Option<Id>,
+
+    /// The open windows.
+    #[serde(skip)]
+    pub open_windows: HashMap<(Kind, Id), String>,
 }

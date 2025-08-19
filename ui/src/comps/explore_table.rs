@@ -79,8 +79,12 @@ impl AppComponent for ExploreTable {
                                 if row.response().double_clicked() {
                                     log::debug!("[explore_table] Double clicked on row elem.id: {}", elem.id);
                                     let elem = elem.clone();
-                                    ctx.state.explore.curr_sel_row_elem_id = Some(elem.id);
-                                    ctx.state.explore.curr_sel_row_elem_type = Some(Kind::AttributeTemplate);
+                                    // ctx.state.explore.curr_sel_row_elem_id = Some(elem.id);
+                                    // ctx.state.explore.curr_sel_row_elem_type = Some(Kind::AttributeTemplate);
+                                    ctx.state.explore.open_windows.insert(
+                                        (Kind::AttributeTemplate, elem.id.clone()),
+                                        serde_json::json!(elem).to_string(),
+                                    );
                                 }
                             });
                         }
