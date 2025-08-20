@@ -1,6 +1,9 @@
-mod attr_tmpl_form;
 use std::sync::mpsc::Sender;
 
+mod attr_props;
+pub use attr_props::*;
+
+mod attr_tmpl_form;
 pub use attr_tmpl_form::*;
 
 mod explore_table;

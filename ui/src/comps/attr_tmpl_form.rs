@@ -16,7 +16,7 @@ impl AppComponent for AttrTemplateForm {
         let binding = ectx
             .data(|d| d.get_temp::<Arc<Mutex<ManagedAttrTemplate>>>(egui::Id::from(EXPLORE_ATTR_TEMPLATE)))
             .clone()
-            .unwrap();
+            .unwrap_or_default();
         let mut element = binding.lock().unwrap();
 
         let id = element.id.clone();

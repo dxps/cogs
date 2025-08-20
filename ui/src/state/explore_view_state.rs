@@ -2,7 +2,7 @@ use crate::{
     ManagedAttrTemplate,
     views::{ExploreCategory, ExploreKind},
 };
-use cogs_shared::domain::model::Id;
+use cogs_shared::domain::model::{Id, meta::Kind};
 use std::{
     collections::HashMap,
     sync::{Arc, Mutex},
@@ -15,11 +15,11 @@ pub struct ExploreViewState {
 
     pub kind: ExploreKind,
 
-    /// The id of the element that is currently selected row in the Explore's table.
-    #[serde(skip)]
-    pub curr_sel_row_elem_id: Option<Id>,
-
     /// The open windows for creating (one) or editing (one or many) attribute templates.
     #[serde(skip)]
     pub open_attr_template_windows: HashMap<Id, Arc<Mutex<ManagedAttrTemplate>>>,
+
+    /// The element that is currently clicked in the Explore's table.
+    #[serde(skip)]
+    pub curr_sel_elem: Option<(Kind, Id)>,
 }

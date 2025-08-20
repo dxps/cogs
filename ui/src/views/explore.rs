@@ -1,11 +1,11 @@
 use crate::{
     CogsApp, ManagedAttrTemplate,
-    comps::{AppComponent, AttrTemplateForm, ExploreTable},
+    comps::{AppComponent, AttrTemplateForm, AttrTemplateProps, ExploreTable},
     constants::EXPLORE_ATTR_TEMPLATE,
     views::AppView,
 };
-use cogs_shared::domain::model::Id;
-use egui::{Color32, ComboBox, CursorIcon, Popup, RichText, Sense};
+use cogs_shared::domain::model::{Id, meta::Kind};
+use egui::{ComboBox, CursorIcon, Popup, RichText, Sense};
 use egui_extras::{Size, StripBuilder};
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
@@ -41,7 +41,7 @@ impl AppView for Explore {
             StripBuilder::new(ui)
                 .size(Size::relative(0.6).at_least(500.0)) // left
                 .size(Size::exact(20.0)) // middle
-                .size(Size::remainder().at_least(100.0)) // /right
+                .size(Size::remainder().at_least(80.0)) // /right
                 .horizontal(|mut strip| {
                     // The left cell.
                     strip.cell(|ui| {
@@ -101,10 +101,7 @@ impl AppView for Explore {
                                         .gap(5.0)
                                         .show(|ui| {
                                             if ui.label(" Item ").on_hover_cursor(CursorIcon::PointingHand).clicked() {
-                                                // ctx.state
-                                                // .explore
-                                                // .open_windows
-                                                // .insert((Kind::Item, Id::default()), "".into());
+                                                // TODO
                                             };
                                             ui.separator();
                                             ui.menu_button("Template", |ui| {
@@ -145,7 +142,23 @@ impl AppView for Explore {
                     strip.cell(|ui| {
                         ui.vertical(|ui| {
                             ui.add_space(45.0);
-                            ui.label(RichText::new("properties").color(Color32::GRAY));
+                            // ui.label(RichText::new("properties").color(Color32::GRAY));
+                            if let Some((kind, id)) = &ctx.state.explore.curr_sel_elem {
+                                match kind {
+                                    Kind::AttributeTemplate => {
+                                        for elem in ctx.state.data.fetched_attr_templates.iter() {
+                                            if elem.id == *id {
+                                                ectx.data_mut(|d| {
+                                                    d.insert_temp(egui::Id::from(EXPLORE_ATTR_TEMPLATE), elem.clone())
+                                                });
+                                                break;
+                                            }
+                                        }
+                                        AttrTemplateProps::show(ctx, ui);
+                                    }
+                                    _ => {}
+                                }
+                            }
                         });
                     });
                 });
