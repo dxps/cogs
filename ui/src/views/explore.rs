@@ -5,7 +5,7 @@ use crate::{
     views::AppView,
 };
 use cogs_shared::domain::model::Id;
-use egui::{ComboBox, CursorIcon, Layout, Popup, RichText, Sense};
+use egui::{Color32, ComboBox, CursorIcon, Popup, RichText, Sense};
 use egui_extras::{Size, StripBuilder};
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
@@ -39,10 +39,11 @@ impl AppView for Explore {
             ui.add_space(20.0);
 
             StripBuilder::new(ui)
-                .size(Size::remainder().at_least(200.0)) // top/left cell
-                .size(Size::remainder().at_least(300.0)) // bottom/right cell
+                .size(Size::relative(0.6).at_least(500.0)) // left
+                .size(Size::exact(20.0)) // middle
+                .size(Size::remainder().at_least(100.0)) // /right
                 .horizontal(|mut strip| {
-                    // The top/left cell.
+                    // The left cell.
                     strip.cell(|ui| {
                         ui.vertical(|ui| {
                             ui.horizontal(|ui| {
@@ -112,10 +113,7 @@ impl AppView for Explore {
                                                     .on_hover_cursor(CursorIcon::PointingHand)
                                                     .clicked()
                                                 {
-                                                    // ctx.state
-                                                    // .explore
-                                                    // .open_windows
-                                                    // .insert((Kind::ItemTemplate, Id::default()), "".into());
+                                                    // TODO
                                                 };
                                                 if ui
                                                     .label("Attribute Template")
@@ -136,26 +134,18 @@ impl AppView for Explore {
                         ExploreTable::show(ctx, ui);
 
                         for (_, element) in ctx.state.explore.open_attr_template_windows.clone().iter() {
-                            log::debug!("[explore.show] opening AttrTemplateForm for element: {:?}", element);
                             ectx.data_mut(|d| d.insert_temp(egui::Id::from(EXPLORE_ATTR_TEMPLATE), element.clone()));
                             AttrTemplateForm::show(ctx, ui);
                         }
                     });
 
-                    // The bottom/right cell. It contains a nested strip.
-                    strip.strip(|builder| {
-                        builder.sizes(Size::remainder(), 2).horizontal(|mut strip| {
-                            strip.cell(|ui| {
-                                ui.vertical(|ui| {
-                                    ui.label("Attributes");
-                                });
-                            });
+                    strip.cell(|_| {}); // Just as a space in the middle.
 
-                            strip.cell(|ui| {
-                                ui.with_layout(Layout::right_to_left(egui::Align::Min), |ui| {
-                                    ui.label("Links");
-                                });
-                            });
+                    // The right cell.
+                    strip.cell(|ui| {
+                        ui.vertical(|ui| {
+                            ui.add_space(45.0);
+                            ui.label(RichText::new("properties").color(Color32::GRAY));
                         });
                     });
                 });

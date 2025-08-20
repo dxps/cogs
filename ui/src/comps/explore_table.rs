@@ -31,7 +31,7 @@ impl AppComponent for ExploreTable {
                 .striped(true)
                 .resizable(false)
                 .cell_layout(egui::Layout::left_to_right(egui::Align::Center))
-                .column(Column::auto()) // type
+                .column(Column::auto().at_least(130.0)) // type
                 .column(Column::auto().at_least(200.0)) // name
                 .column(Column::auto().at_least(80.0)) // value type
                 .column(Column::remainder().resizable(true)) // description
