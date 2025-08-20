@@ -150,6 +150,11 @@ impl eframe::App for CogsApp {
                     self.state.data.fetch_done = true;
                     ctx.request_repaint();
                 }
+                UiMessage::AttrTemplateDeleted(_) => {
+                    self.state.data.get_all_attr_templates(ctx, self.sendr.clone());
+                    self.state.data.fetch_done = true;
+                    ctx.request_repaint();
+                }
             }
         }
 

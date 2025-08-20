@@ -1,12 +1,14 @@
 use crate::{
     CogsApp, ManagedAttrTemplate,
     comps::{AppComponent, AttrTemplateForm, ExploreTable},
+    constants::EXPLORE_ATTR_TEMPLATE,
     views::AppView,
 };
-use cogs_shared::domain::model::{Id, meta::Kind};
+use cogs_shared::domain::model::Id;
 use egui::{ComboBox, CursorIcon, Layout, Popup, RichText, Sense};
 use egui_extras::{Size, StripBuilder};
 use serde::{Deserialize, Serialize};
+use std::sync::{Arc, Mutex};
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub enum ExploreCategory {
@@ -98,10 +100,10 @@ impl AppView for Explore {
                                         .gap(5.0)
                                         .show(|ui| {
                                             if ui.label(" Item ").on_hover_cursor(CursorIcon::PointingHand).clicked() {
-                                                ctx.state
-                                                    .explore
-                                                    .open_windows
-                                                    .insert((Kind::Item, Id::default()), "".into());
+                                                // ctx.state
+                                                // .explore
+                                                // .open_windows
+                                                // .insert((Kind::Item, Id::default()), "".into());
                                             };
                                             ui.separator();
                                             ui.menu_button("Template", |ui| {
@@ -110,20 +112,20 @@ impl AppView for Explore {
                                                     .on_hover_cursor(CursorIcon::PointingHand)
                                                     .clicked()
                                                 {
-                                                    ctx.state
-                                                        .explore
-                                                        .open_windows
-                                                        .insert((Kind::ItemTemplate, Id::default()), "".into());
+                                                    // ctx.state
+                                                    // .explore
+                                                    // .open_windows
+                                                    // .insert((Kind::ItemTemplate, Id::default()), "".into());
                                                 };
                                                 if ui
                                                     .label("Attribute Template")
                                                     .on_hover_cursor(CursorIcon::PointingHand)
                                                     .clicked()
                                                 {
-                                                    ctx.state
-                                                        .explore
-                                                        .open_windows
-                                                        .insert((Kind::AttributeTemplate, Id::default()), "".into());
+                                                    ctx.state.explore.open_attr_template_windows.insert(
+                                                        Id::default(),
+                                                        Arc::new(Mutex::new(ManagedAttrTemplate::default())),
+                                                    );
                                                 };
                                             });
                                         });
@@ -133,18 +135,10 @@ impl AppView for Explore {
 
                         ExploreTable::show(ctx, ui);
 
-                        for ((kind, _id), elem_str) in ctx.state.explore.open_windows.clone().iter() {
-                            match kind {
-                                // TODO
-                                // Kind::ItemTemplate => ItemTemplateForm::show(ctx, ui, id),
-                                Kind::AttributeTemplate => {
-                                    let element = ManagedAttrTemplate::from(elem_str);
-                                    log::debug!("[explore.show] opening AttrTemplateForm for element: {:?}", element);
-                                    ectx.data_mut(|d| d.insert_temp(egui::Id::from("attr_template"), element));
-                                    AttrTemplateForm::show(ctx, ui);
-                                }
-                                _ => {}
-                            }
+                        for (_, element) in ctx.state.explore.open_attr_template_windows.clone().iter() {
+                            log::debug!("[explore.show] opening AttrTemplateForm for element: {:?}", element);
+                            ectx.data_mut(|d| d.insert_temp(egui::Id::from(EXPLORE_ATTR_TEMPLATE), element.clone()));
+                            AttrTemplateForm::show(ctx, ui);
                         }
                     });
 

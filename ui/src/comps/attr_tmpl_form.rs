@@ -1,42 +1,36 @@
-use crate::{CogsApp, ManagedAttrTemplate, comps::AppComponent};
-use cogs_shared::domain::model::{
-    Id,
-    meta::{AttributeValueType, Kind},
-};
-use egui::{Align, Color32, ComboBox, Grid, Layout, RichText, Window};
+use crate::{CogsApp, ManagedAttrTemplate, comps::AppComponent, constants::EXPLORE_ATTR_TEMPLATE};
+use cogs_shared::domain::model::meta::AttributeValueType;
+use egui::{Align, Color32, ComboBox, Direction, Grid, Layout, RichText, Window};
+use std::sync::{Arc, Mutex};
 
 pub struct AttrTemplateForm {}
 
 impl AppComponent for AttrTemplateForm {
     type Context = CogsApp;
 
-    /// Show the form for creating or editing an attribute template.
-    /// As params, it looks for an `AttrTemplate` in `ectx`'s data key `attr_template`.
-    /// If nothing found, then it considers it's the new attribute template use case.
+    /// It shows the form for creating or editing an attribute template.
+    /// As params, it expects an `Arc<Mutex<ManagedAttrTemplate>>` in `ui.ctx()`'s data key id named `EXPLORE_ATTR_TEMPLATE`.
     fn show(ctx: &mut Self::Context, ui: &mut eframe::egui::Ui) {
         //
         let ectx = ui.ctx();
-        let id: Id;
-        let title: &str;
-        let mut element = ManagedAttrTemplate::default();
+        let binding = ectx
+            .data(|d| d.get_temp::<Arc<Mutex<ManagedAttrTemplate>>>(egui::Id::from(EXPLORE_ATTR_TEMPLATE)))
+            .clone()
+            .unwrap();
+        let mut element = binding.lock().unwrap();
 
-        match ectx.data(|d| d.get_temp::<ManagedAttrTemplate>(egui::Id::from("attr_template"))) {
-            Some(at) => {
-                id = at.id.clone();
-                if id.is_zero() {
-                    title = "New Attribute Template";
-                } else {
-                    element = at.into();
-                    title = "Edit Attribute Template";
-                }
-            }
-            None => {
-                id = Id::default();
+        let id = element.id.clone();
+        let title: &str;
+        match element.id.is_zero() {
+            true => {
                 title = "New Attribute Template";
             }
-        };
+            false => {
+                title = "Edit Attribute Template";
+            }
+        }
 
-        Window::new(format!("AttrTemplateForm_id_{}", id))
+        Window::new(format!("AttrTemplateForm_id_{}", element.id))
             .title_bar(false)
             .resizable(false)
             .min_width(300.0)
@@ -96,19 +90,30 @@ impl AppComponent for AttrTemplateForm {
                         ui.add_space(8.0);
                     });
 
-                    ui.add_space(4.0);
+                    ui.add_space(20.0);
 
                     ui.with_layout(Layout::right_to_left(Align::Min), |ui| {
                         ui.add_space(18.0);
                         if ui.button("    Save    ").clicked() {
-                            ctx.state.data.save_attr_template(element, ui.ctx(), ctx.sendr.clone());
+                            ctx.state
+                                .data
+                                .save_attr_template(element.clone(), ui.ctx(), ctx.sendr.clone());
+                            ctx.state.explore.open_attr_template_windows.remove(&id);
                         }
                         ui.add_space(8.0);
                         if ui.button("  Cancel  ").clicked() {
-                            // ctx.state.data.curr_attr_template = ManagedAttrTemplate::default();
-                            // ctx.state.explore.add_kind = None;
-                            ctx.state.explore.open_windows.remove(&(Kind::AttributeTemplate, id));
+                            ctx.state.explore.open_attr_template_windows.remove(&id);
                         }
+                        ui.with_layout(
+                            Layout::from_main_dir_and_cross_align(Direction::LeftToRight, Align::Min),
+                            |ui| {
+                                ui.add_space(18.0);
+                                if ui.button("  Delete   ").clicked() {
+                                    ctx.state.data.delete_attr_template(id.clone(), ectx, ctx.sendr.clone());
+                                    ctx.state.explore.open_attr_template_windows.remove(&id);
+                                }
+                            },
+                        )
                     });
                     ui.add_space(12.0);
                 });

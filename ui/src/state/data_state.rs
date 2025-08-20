@@ -40,7 +40,7 @@ impl DataState {
         });
     }
 
-    pub fn get_all_attr_templates(&mut self, ectx: &egui::Context, sender: Sender<UiMessage>) {
+    pub fn get_all_attr_templates(&self, ectx: &egui::Context, sender: Sender<UiMessage>) {
         //
         let mut req = ehttp::Request::get("http://localhost:9010/api/attribute_templates");
         req.headers.insert("content-type", "application/json");
@@ -55,6 +55,23 @@ impl DataState {
                     return;
                 }
             }
+        });
+    }
+
+    pub fn delete_attr_template(&self, id: Id, ectx: &egui::Context, sender: Sender<UiMessage>) {
+        //
+        let mut req = ehttp::Request::post(
+            format!("http://localhost:9010/api/attribute_templates/{}/delete", id),
+            vec![],
+        );
+        req.headers.insert("content-type", "application/json");
+        let ectx = ectx.clone();
+        ehttp::fetch(req, move |rsp| {
+            log::info!("[delte_attr_template] Got response: {:?}", rsp);
+            if let Err(e) = sender.send(UiMessage::AttrTemplateDeleted(Ok(id))) {
+                log::info!("[save_attr_template] Failed to send AttrTemplateUpserted message. Error: {e}");
+            }
+            ectx.request_repaint();
         });
     }
 }

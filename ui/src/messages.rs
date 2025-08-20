@@ -8,7 +8,10 @@ use cogs_shared::{
 pub enum UiMessage {
     Login(Result<Option<UserAccount>, AppError>),
     Logout,
+
     Settings,
+
     AttrTemplatesFetched(Result<Vec<ManagedAttrTemplate>, AppError>),
     AttrTemplateUpserted(Result<Id, AppError>),
+    AttrTemplateDeleted(Result<Id, AppError>),
 }

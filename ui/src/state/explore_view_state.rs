@@ -1,8 +1,12 @@
-use std::collections::HashMap;
-
-use cogs_shared::domain::model::{Id, meta::Kind};
-
-use crate::views::{ExploreCategory, ExploreKind};
+use crate::{
+    ManagedAttrTemplate,
+    views::{ExploreCategory, ExploreKind},
+};
+use cogs_shared::domain::model::Id;
+use std::{
+    collections::HashMap,
+    sync::{Arc, Mutex},
+};
 
 #[derive(Clone, Default, Debug, serde::Deserialize, serde::Serialize)]
 #[serde(default)]
@@ -15,7 +19,7 @@ pub struct ExploreViewState {
     #[serde(skip)]
     pub curr_sel_row_elem_id: Option<Id>,
 
-    /// The open windows.
+    /// The open windows for creating (one) or editing (one or many) attribute templates.
     #[serde(skip)]
-    pub open_windows: HashMap<(Kind, Id), String>,
+    pub open_attr_template_windows: HashMap<Id, Arc<Mutex<ManagedAttrTemplate>>>,
 }

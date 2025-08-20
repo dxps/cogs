@@ -1,7 +1,7 @@
 use crate::{CogsApp, comps::AppComponent};
-use cogs_shared::domain::model::meta::Kind;
 use egui::{Color32, CursorIcon, RichText, Sense, Ui};
 use egui_extras::{Column, TableBuilder};
+use std::sync::{Arc, Mutex};
 
 pub struct ExploreTable {}
 
@@ -80,8 +80,8 @@ impl AppComponent for ExploreTable {
                                     let id = elem.id.clone();
                                     ctx.state
                                         .explore
-                                        .open_windows
-                                        .insert((Kind::AttributeTemplate, id), serde_json::json!(elem).to_string());
+                                        .open_attr_template_windows
+                                        .insert(id, Arc::new(Mutex::new(elem.clone())));
                                 }
                             });
                         }

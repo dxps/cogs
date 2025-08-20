@@ -1,6 +1,6 @@
 use cogs_shared::{
     app::{AppError, AppResult},
-    domain::model::meta::AttrTemplate,
+    domain::model::{Id, meta::AttrTemplate},
 };
 use sqlx::{PgPool, Row, postgres::PgRow};
 use std::sync::Arc;
@@ -16,9 +16,10 @@ impl AttrTemplateRepo {
         Self { dbcp }
     }
 
+    /// Retrieve all attribute templates.
     pub async fn get_all(&self) -> AppResult<Vec<AttrTemplate>> {
         //
-        let data = sqlx::query("SELECT * FROM attr_templates")
+        let data = sqlx::query("SELECT * FROM attr_templates ORDER BY name ASC")
             .fetch_all(self.dbcp.as_ref())
             .await
             .map_err(|err| AppError::from(err.to_string()))
@@ -30,9 +31,10 @@ impl AttrTemplateRepo {
         Ok(data)
     }
 
-    pub async fn upsert_attr_templ(&self, attr_templ: &AttrTemplate) -> AppResult<()> {
+    /// Insert or update an attribute template.
+    pub async fn upsert(&self, attr_templ: &AttrTemplate) -> AppResult<()> {
         //
-        log::debug!("upsert_attr_templ: {attr_templ:#?}");
+        log::debug!("upsert_attr_templ: {attr_templ:?}");
 
         sqlx::query(
             "INSERT INTO attr_templates (id, name, description, value_type, default_value, required) 
@@ -49,6 +51,17 @@ impl AttrTemplateRepo {
         .await
         .map_err(|err| AppError::from(err.to_string()))
         .map(|_| ())
+    }
+
+    /// Delete an attribute template.
+    pub async fn delete(&self, id: Id) -> AppResult<()> {
+        //
+        sqlx::query("DELETE FROM attr_templates WHERE id = $1")
+            .bind(id.0)
+            .execute(self.dbcp.as_ref())
+            .await
+            .map_err(|err| AppError::from(err.to_string()))
+            .map(|_| ())
     }
 }
 
