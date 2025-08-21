@@ -5,7 +5,7 @@ use crate::{
     views::AppView,
 };
 use cogs_shared::domain::model::{Id, meta::Kind};
-use egui::{ComboBox, CursorIcon, Popup, RichText, Sense};
+use egui::{Color32, ComboBox, CursorIcon, Popup, RichText, Sense};
 use egui_extras::{Size, StripBuilder};
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
@@ -36,6 +36,14 @@ impl AppView for Explore {
         egui::CentralPanel::default().show(ectx, |ui| {
             ui.add_space(10.0);
             ui.heading("Explore");
+            ui.add_space(20.0);
+            ui.label(
+                RichText::new(
+                    "See below the list of elements, as per previously selected category and kind of elements. 
+Click an element to view its properties on the right side, double click it to edit or delete it.",
+                )
+                .color(Color32::GRAY),
+            );
             ui.add_space(20.0);
 
             StripBuilder::new(ui)

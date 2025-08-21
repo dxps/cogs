@@ -24,9 +24,6 @@ impl AppComponent for ExploreTable {
             }
         }
 
-        ui.add_space(20.0);
-        ui.label(RichText::new("See below the list of selected kind of elements. Click on an element to view its properties on the right side. Double click on an element to edit or delete it.").color(Color32::GRAY));
-
         egui::ScrollArea::horizontal().show(ui, |ui| {
             ui.add_space(10.0);
 

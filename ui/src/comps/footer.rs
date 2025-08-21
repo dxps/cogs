@@ -12,10 +12,7 @@ impl AppComponent for Footer {
             ui.label("Powered by ");
             ui.hyperlink_to("egui", "https://github.com/emilk/egui");
             ui.label(" and ");
-            ui.hyperlink_to(
-                "eframe",
-                "https://github.com/emilk/egui/tree/master/crates/eframe",
-            );
+            ui.hyperlink_to("eframe", "https://github.com/emilk/egui/tree/master/crates/eframe");
             ui.label(". ");
             if ui
                 .label("Status")
@@ -24,7 +21,7 @@ impl AppComponent for Footer {
             {
                 let req = ehttp::Request::get("http://localhost:9009/manifest.json");
                 ehttp::fetch(req, move |rsp| {
-                    log::info!("[status] clicked. Test response: {:#?}", rsp);
+                    log::info!("[status] clicked. Test response: {:?}", rsp);
                 });
             }
         });

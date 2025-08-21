@@ -1,14 +1,14 @@
-mod home;
-pub use home::*;
+mod home_view;
+pub use home_view::*;
 
-mod explore;
-pub use explore::*;
+mod explore_view;
+pub use explore_view::*;
 
-mod login;
-pub use login::*;
+mod login_view;
+pub use login_view::*;
 
-mod settings;
-pub use settings::*;
+mod settings_view;
+pub use settings_view::*;
 
 use serde::{Deserialize, Serialize};
 

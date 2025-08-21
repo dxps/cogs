@@ -28,7 +28,7 @@ impl DataState {
         req.headers.insert("content-type", "application/json");
         let ectx = ectx.clone();
         ehttp::fetch(req, move |rsp| {
-            log::info!("[save_attr_template] Response: {:#?}", rsp);
+            log::info!("[save_attr_template] Response: {:?}", rsp);
             if let Ok(rsp) = rsp {
                 let dto: IdDto = serde_json::from_str(rsp.text().unwrap_or_default()).unwrap();
                 log::debug!("[save_attr_template] Got saved id: {}", dto.id);
