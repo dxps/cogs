@@ -11,6 +11,7 @@ pub const ICON_SETTINGS: &str = "\u{E615}";
 pub const ICON_USER: &str = "\u{F4CA}";
 pub const ICON_LOGIN: &str = "\u{E81E}";
 pub const ICON_LOGOUT: &str = "\u{E824}";
+pub const ICON_HELP: &str = "\u{E66A}";
 
 ///////////////////////
 // General constants //

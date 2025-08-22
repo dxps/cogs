@@ -1,7 +1,7 @@
 use crate::{
     CogsApp, ManagedAttrTemplate,
     comps::{AppComponent, AttrTemplateForm, AttrTemplateProps, ExploreTable},
-    constants::EXPLORE_ATTR_TEMPLATE,
+    constants::{EXPLORE_ATTR_TEMPLATE, ICON_HELP},
     views::AppView,
 };
 use cogs_shared::domain::model::{Id, meta::Kind};
@@ -22,6 +22,7 @@ pub enum ExploreKind {
     #[default]
     All,
     Attribute,
+    Link,
     Item,
 }
 
@@ -63,11 +64,7 @@ Click an element to view its properties on the right side, double click it to ed
                                 ComboBox::from_id_salt("xplore_categ")
                                     .selected_text(sel_categ)
                                     .show_ui(ui, |ui| {
-                                        ui.selectable_value(
-                                            &mut ctx.state.explore.category,
-                                            ExploreCategory::Items,
-                                            "Items",
-                                        );
+                                        ui.selectable_value(&mut ctx.state.explore.category, ExploreCategory::Items, "Items");
                                         ui.selectable_value(
                                             &mut ctx.state.explore.category,
                                             ExploreCategory::Templates,
@@ -81,6 +78,7 @@ Click an element to view its properties on the right side, double click it to ed
                                     ExploreKind::All => RichText::new("all").italics(),
                                     ExploreKind::Item => RichText::new("Item"),
                                     ExploreKind::Attribute => RichText::new("Attribute"),
+                                    ExploreKind::Link => RichText::new("Link"),
                                 };
                                 ComboBox::from_id_salt("xplore_kind")
                                     .selected_text(sel_kind)
@@ -92,46 +90,40 @@ Click an element to view its properties on the right side, double click it to ed
                                         );
                                         if ctx.state.explore.category == ExploreCategory::Templates {
                                             ui.selectable_value(&mut ctx.state.explore.kind, ExploreKind::Item, "Item");
-                                            ui.selectable_value(
-                                                &mut ctx.state.explore.kind,
-                                                ExploreKind::Attribute,
-                                                "Attribute",
-                                            );
+                                            ui.selectable_value(&mut ctx.state.explore.kind, ExploreKind::Attribute, "Attribute");
+                                            ui.selectable_value(&mut ctx.state.explore.kind, ExploreKind::Link, "Link");
                                         }
                                     });
 
-                                ui.add_space(10.0);
+                                ui.label(RichText::new(ICON_HELP).color(Color32::GRAY).size(10.0))
+                                    .on_hover_cursor(CursorIcon::Help)
+                                    .on_hover_text("If category is 'Items', you may filter by their templates.\nIf category is 'Templates', you may filter by their types.");
+                                ui.add_space(20.0);
 
                                 let btn = ui.button(" + ").interact(Sense::click());
+
                                 ui.horizontal_top(|_ui| {
-                                    Popup::menu(&btn)
-                                        .id(egui::Id::new("xplore_add_popup"))
-                                        .gap(5.0)
-                                        .show(|ui| {
-                                            if ui.label(" Item ").on_hover_cursor(CursorIcon::PointingHand).clicked() {
-                                                // TODO
+                                    Popup::menu(&btn).id(egui::Id::new("xplore_add_popup")).gap(5.0).show(|ui| {
+                                        if ui.label(" Item ").on_hover_cursor(CursorIcon::PointingHand).clicked() {
+                                            // TODO: open the item form for creating one.
+                                        };
+                                        ui.separator();
+                                        ui.menu_button("Template", |ui| {
+                                            if ui.label("Item Template").on_hover_cursor(CursorIcon::PointingHand).clicked() {
+                                                // TODO: open the item template form for creating one.
                                             };
-                                            ui.separator();
-                                            ui.menu_button("Template", |ui| {
-                                                if ui
-                                                    .label("Item Template")
-                                                    .on_hover_cursor(CursorIcon::PointingHand)
-                                                    .clicked()
-                                                {
-                                                    // TODO
-                                                };
-                                                if ui
-                                                    .label("Attribute Template")
-                                                    .on_hover_cursor(CursorIcon::PointingHand)
-                                                    .clicked()
-                                                {
-                                                    ctx.state.explore.open_attr_template_windows.insert(
-                                                        Id::default(),
-                                                        Arc::new(Mutex::new(ManagedAttrTemplate::default())),
-                                                    );
-                                                };
-                                            });
+                                            if ui
+                                                .label("Attribute Template")
+                                                .on_hover_cursor(CursorIcon::PointingHand)
+                                                .clicked()
+                                            {
+                                                ctx.state
+                                                    .explore
+                                                    .open_attr_template_windows
+                                                    .insert(Id::default(), Arc::new(Mutex::new(ManagedAttrTemplate::default())));
+                                            };
                                         });
+                                    });
                                 });
                             })
                         });
@@ -150,7 +142,6 @@ Click an element to view its properties on the right side, double click it to ed
                     strip.cell(|ui| {
                         ui.vertical(|ui| {
                             ui.add_space(45.0);
-                            // ui.label(RichText::new("properties").color(Color32::GRAY));
                             if let Some((kind, id)) = &ctx.state.explore.curr_sel_elem {
                                 match kind {
                                     Kind::AttributeTemplate => {
