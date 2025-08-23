@@ -69,8 +69,7 @@ impl AppComponent for ExploreTable {
                                         .on_hover_cursor(CursorIcon::PointingHand)
                                         .clicked()
                                     {
-                                        ctx.state.explore.curr_sel_elem =
-                                            Some((Kind::AttributeTemplate, elem.id.clone()));
+                                        ctx.state.explore.curr_sel_elem = Some((Kind::AttributeTemplate, elem.id.clone()));
                                     };
                                 });
                                 row.col(|ui| {
@@ -79,8 +78,7 @@ impl AppComponent for ExploreTable {
                                         .on_hover_cursor(CursorIcon::PointingHand)
                                         .clicked()
                                     {
-                                        ctx.state.explore.curr_sel_elem =
-                                            Some((Kind::AttributeTemplate, elem.id.clone()));
+                                        ctx.state.explore.curr_sel_elem = Some((Kind::AttributeTemplate, elem.id.clone()));
                                     };
                                 });
 
@@ -90,7 +88,7 @@ impl AppComponent for ExploreTable {
                                     let id = elem.id.clone();
                                     ctx.state
                                         .explore
-                                        .open_attr_template_windows
+                                        .open_windows_attr_template
                                         .insert(id, Arc::new(Mutex::new(elem.clone())));
                                 }
                                 if row.response().clicked() {

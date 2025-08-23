@@ -1,6 +1,7 @@
 use crate::domain::model::{Id, meta::AttributeValueType};
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Default, PartialEq, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Default, PartialEq, Clone, Serialize, Deserialize)]
 /// A template for an attribute.
 pub struct AttrTemplate {
     pub id: Id,

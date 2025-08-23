@@ -42,11 +42,7 @@ impl AppComponent for AttrTemplateForm {
                     ui.vertical_centered(|ui| {
                         ui.label(RichText::new(title).size(13.0));
                         if !id.is_zero() {
-                            ui.label(
-                                RichText::new(format!("   (id: {})", id))
-                                    .color(Color32::GRAY)
-                                    .size(10.0),
-                            );
+                            ui.label(RichText::new(format!("   (id: {})", id)).color(Color32::GRAY).size(10.0));
                         }
                     });
                     ui.add_space(20.0);
@@ -98,11 +94,11 @@ impl AppComponent for AttrTemplateForm {
                             ctx.state
                                 .data
                                 .save_attr_template(element.clone(), ui.ctx(), ctx.sendr.clone());
-                            ctx.state.explore.open_attr_template_windows.remove(&id);
+                            ctx.state.explore.open_windows_attr_template.remove(&id);
                         }
                         ui.add_space(8.0);
                         if ui.button("  Cancel  ").clicked() {
-                            ctx.state.explore.open_attr_template_windows.remove(&id);
+                            ctx.state.explore.open_windows_attr_template.remove(&id);
                         }
                         ui.with_layout(
                             Layout::from_main_dir_and_cross_align(Direction::LeftToRight, Align::Min),
@@ -110,7 +106,7 @@ impl AppComponent for AttrTemplateForm {
                                 ui.add_space(18.0);
                                 if ui.button("  Delete   ").clicked() {
                                     ctx.state.data.delete_attr_template(id.clone(), ectx, ctx.sendr.clone());
-                                    ctx.state.explore.open_attr_template_windows.remove(&id);
+                                    ctx.state.explore.open_windows_attr_template.remove(&id);
                                 }
                             },
                         )

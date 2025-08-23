@@ -4,7 +4,10 @@ use crate::{
     constants::{EXPLORE_ATTR_TEMPLATE, ICON_HELP},
     views::AppView,
 };
-use cogs_shared::domain::model::{Id, meta::Kind};
+use cogs_shared::domain::model::{
+    Id,
+    meta::{Kind, LinkTemplate},
+};
 use egui::{Color32, ComboBox, CursorIcon, Popup, RichText, Sense};
 use egui_extras::{Size, StripBuilder};
 use serde::{Deserialize, Serialize};
@@ -100,7 +103,9 @@ Click an element to view its properties on the right side, double click it to ed
                                     .on_hover_text("If category is 'Items', you may filter by their templates.\nIf category is 'Templates', you may filter by their types.");
                                 ui.add_space(20.0);
 
-                                let btn = ui.button(" + ").interact(Sense::click());
+                                let btn = ui.button(" + ").interact(Sense::click())
+                                    .on_hover_text_at_pointer("Add")
+                                    .on_hover_cursor(CursorIcon::Help);
 
                                 ui.horizontal_top(|_ui| {
                                     Popup::menu(&btn).id(egui::Id::new("xplore_add_popup")).gap(5.0).show(|ui| {
@@ -119,8 +124,18 @@ Click an element to view its properties on the right side, double click it to ed
                                             {
                                                 ctx.state
                                                     .explore
-                                                    .open_attr_template_windows
+                                                    .open_windows_attr_template
                                                     .insert(Id::default(), Arc::new(Mutex::new(ManagedAttrTemplate::default())));
+                                            };
+                                            if ui
+                                                .label("Link Template")
+                                                .on_hover_cursor(CursorIcon::PointingHand)
+                                                .clicked()
+                                            {
+                                                ctx.state
+                                                    .explore
+                                                    .open_windows_link_template
+                                                    .insert(Id::default(), Arc::new(Mutex::new(LinkTemplate::default())));
                                             };
                                         });
                                     });
@@ -130,7 +145,7 @@ Click an element to view its properties on the right side, double click it to ed
 
                         ExploreTable::show(ctx, ui);
 
-                        for (_, element) in ctx.state.explore.open_attr_template_windows.clone().iter() {
+                        for (_, element) in ctx.state.explore.open_windows_attr_template.clone().iter() {
                             ectx.data_mut(|d| d.insert_temp(egui::Id::from(EXPLORE_ATTR_TEMPLATE), element.clone()));
                             AttrTemplateForm::show(ctx, ui);
                         }
