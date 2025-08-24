@@ -1,5 +1,11 @@
 use crate::{ManagedAttrTemplate, messages::UiMessage};
-use cogs_shared::{domain::model::Id, dtos::IdDto};
+use cogs_shared::{
+    domain::model::{
+        Id,
+        meta::{Kind, LinkTemplate},
+    },
+    dtos::IdDto,
+};
 use std::sync::mpsc::Sender;
 
 #[derive(Clone, Default, Debug, serde::Deserialize, serde::Serialize)]
@@ -63,6 +69,27 @@ impl DataState {
                 log::info!("[save_attr_template] Failed to send AttrTemplateUpserted message. Error: {e}");
             }
             ectx.request_repaint();
+        });
+    }
+
+    pub fn save_link_template(&self, element: LinkTemplate, ectx: &egui::Context, sender: Sender<UiMessage>) {
+        //
+        let mut req = ehttp::Request::post(
+            "http://localhost:9010/api/link_templates",
+            serde_json::json!(element).to_string().into_bytes(),
+        );
+        req.headers.insert("content-type", "application/json");
+        let ectx = ectx.clone();
+        ehttp::fetch(req, move |rsp| {
+            log::info!("[save_link_template] Response: {:?}", rsp);
+            if let Ok(rsp) = rsp {
+                let dto: IdDto = serde_json::from_str(rsp.text().unwrap_or_default()).unwrap();
+                log::debug!("[save_link_template] Got saved id: {}", dto.id);
+                if let Err(e) = sender.send(UiMessage::ElementUpserted(Kind::LinkTemplate, Ok(dto.id))) {
+                    log::info!("[save_link_template] Failed to send ElementUpserted message. Error: {e}");
+                }
+                ectx.request_repaint();
+            }
         });
     }
 }

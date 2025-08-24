@@ -155,6 +155,9 @@ impl eframe::App for CogsApp {
                     self.state.data.fetch_done = true;
                     ctx.request_repaint();
                 }
+                UiMessage::ElementUpserted(_kind, _id) => {
+                    todo!()
+                }
             }
         }
 

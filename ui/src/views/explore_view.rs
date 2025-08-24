@@ -1,7 +1,7 @@
 use crate::{
     CogsApp, ManagedAttrTemplate,
-    comps::{AppComponent, AttrTemplateForm, AttrTemplateProps, ExploreTable},
-    constants::{EXPLORE_ATTR_TEMPLATE, ICON_HELP},
+    comps::{AppComponent, AttrTemplateForm, AttrTemplateProps, ExploreTable, LinkTemplateForm},
+    constants::{EXPLORE_ATTR_TEMPLATE, EXPLORE_LINK_TEMPLATE, ICON_HELP},
     views::AppView,
 };
 use cogs_shared::domain::model::{
@@ -148,6 +148,10 @@ Click an element to view its properties on the right side, double click it to ed
                         for (_, element) in ctx.state.explore.open_windows_attr_template.clone().iter() {
                             ectx.data_mut(|d| d.insert_temp(egui::Id::from(EXPLORE_ATTR_TEMPLATE), element.clone()));
                             AttrTemplateForm::show(ctx, ui);
+                        }
+                        for (_, element) in ctx.state.explore.open_windows_link_template.clone().iter() {
+                            ectx.data_mut(|d| d.insert_temp(egui::Id::from(EXPLORE_LINK_TEMPLATE), element.clone()));
+                            LinkTemplateForm::show(ctx, ui);
                         }
                     });
 

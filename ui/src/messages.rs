@@ -1,7 +1,7 @@
 use crate::ManagedAttrTemplate;
 use cogs_shared::{
     app::AppError,
-    domain::model::{Id, UserAccount},
+    domain::model::{Id, UserAccount, meta::Kind},
 };
 
 #[derive(Clone, Debug)]
@@ -11,7 +11,11 @@ pub enum UiMessage {
 
     Settings,
 
+    // TODO: Have the _Upserted and _Deleted messages more reusable
+    //       by including the element type.
     AttrTemplatesFetched(Result<Vec<ManagedAttrTemplate>, AppError>),
     AttrTemplateUpserted(Result<Id, AppError>),
     AttrTemplateDeleted(Result<Id, AppError>),
+
+    ElementUpserted(Kind, Result<Id, AppError>),
 }

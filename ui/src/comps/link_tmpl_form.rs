@@ -1,36 +1,39 @@
-use crate::{CogsApp, ManagedAttrTemplate, comps::AppComponent, constants::EXPLORE_ATTR_TEMPLATE};
-use cogs_shared::domain::model::meta::AttributeValueType;
+use crate::{CogsApp, comps::AppComponent, constants::EXPLORE_LINK_TEMPLATE};
+use cogs_shared::domain::model::meta::LinkTemplate;
 use egui::{Align, Color32, ComboBox, Direction, Grid, Layout, RichText, Window};
 use std::sync::{Arc, Mutex};
 
-pub struct AttrTemplateForm {}
+pub struct LinkTemplateForm {}
 
-impl AppComponent for AttrTemplateForm {
+impl AppComponent for LinkTemplateForm {
     type Context = CogsApp;
 
     /// It shows the form for creating or editing an attribute template.
-    /// As params, it expects an `Arc<Mutex<ManagedAttrTemplate>>` in `ui.ctx()`'s data key id named `EXPLORE_ATTR_TEMPLATE`.
+    /// As params, it expects an `Arc<Mutex<ManagedAttrTemplate>>` in `ui.ctx()`'s data key id named `EXPLORE_LINK_TEMPLATE`.
     fn show(ctx: &mut Self::Context, ui: &mut eframe::egui::Ui) {
         //
         let ectx = ui.ctx();
         let binding = ectx
-            .data(|d| d.get_temp::<Arc<Mutex<ManagedAttrTemplate>>>(egui::Id::from(EXPLORE_ATTR_TEMPLATE)))
+            .data(|d| d.get_temp::<Arc<Mutex<LinkTemplate>>>(egui::Id::from(EXPLORE_LINK_TEMPLATE)))
             .clone()
-            .unwrap_or_default();
+            .unwrap_or_else(|| {
+                log::error!("[LinkTemplateForm] Expected id in ui.ctx().data() key id named EXPLORE_LINK_TEMPLATE not found!");
+                Arc::new(Mutex::new(LinkTemplate::default()))
+            });
         let mut element = binding.lock().unwrap();
 
         let id = element.id.clone();
         let title: &str;
         match element.id.is_zero() {
             true => {
-                title = "New Attribute Template";
+                title = "New Link Template";
             }
             false => {
-                title = "Edit Attribute Template";
+                title = "Edit Link Template";
             }
         }
 
-        Window::new(format!("AttrTemplateForm_id_{}", element.id))
+        Window::new(format!("link_templ_form_id_{}", element.id))
             .title_bar(false)
             .resizable(false)
             .min_width(300.0)
@@ -48,7 +51,7 @@ impl AppComponent for AttrTemplateForm {
                     ui.add_space(20.0);
                     ui.horizontal(|ui| {
                         ui.add_space(14.0);
-                        Grid::new(format!("attr_templ_id_{}_grid", id))
+                        Grid::new(format!("link_templ_form_id_{}_grid", id))
                             .spacing([10.0, 10.0])
                             .num_columns(2)
                             .show(ui, |ui| {
@@ -59,25 +62,18 @@ impl AppComponent for AttrTemplateForm {
                                 ui.label("   Description");
                                 ui.text_edit_singleline(&mut element.description);
                                 ui.end_row();
-                                ui.label("    Value Type");
-                                ComboBox::from_id_salt(format!("attr_templ_id_{}_val_type", id))
+                                ui.label("   Target Item");
+                                ComboBox::from_id_salt(format!("link_templ_form_id_{}_target", id))
                                     .width(287.0)
-                                    .selected_text(element.value_type.to_string())
+                                    .selected_text(element.target_item_template_id.to_string())
                                     .show_ui(ui, |ui| {
-                                        ui.selectable_value(
-                                            &mut element.value_type,
-                                            AttributeValueType::Text,
-                                            AttributeValueType::Text.to_string(),
-                                        );
-                                        ui.selectable_value(
-                                            &mut element.value_type,
-                                            AttributeValueType::SmallInteger,
-                                            AttributeValueType::SmallInteger.to_string(),
-                                        );
+                                        // TODO: get all item templates and show them here as `ui.selectable_value`s.
+                                        // ui.selectable_value(
+                                        // &mut element.target_item_template_id,
+                                        // AttributeValueType::Text,
+                                        // AttributeValueType::Text.to_string(),
+                                        // );
                                     });
-                                ui.end_row();
-                                ui.label("Default value");
-                                ui.text_edit_singleline(&mut element.default_value);
                                 ui.end_row();
                                 ui.label("    Mandatory");
                                 ui.checkbox(&mut element.is_required, "");
@@ -93,12 +89,12 @@ impl AppComponent for AttrTemplateForm {
                         if ui.button("    Save    ").clicked() {
                             ctx.state
                                 .data
-                                .save_attr_template(element.clone(), ui.ctx(), ctx.sendr.clone());
+                                .save_link_template(element.clone(), ui.ctx(), ctx.sendr.clone());
                             ctx.state.explore.open_windows_attr_template.remove(&id);
                         }
                         ui.add_space(8.0);
                         if ui.button("  Cancel  ").clicked() {
-                            ctx.state.explore.open_windows_attr_template.remove(&id);
+                            ctx.state.explore.open_windows_link_template.remove(&id);
                         }
                         if !element.id.is_zero() {
                             ui.with_layout(
