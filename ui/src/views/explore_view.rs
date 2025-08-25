@@ -1,12 +1,12 @@
 use crate::{
     CogsApp, ManagedAttrTemplate,
-    comps::{AppComponent, AttrTemplateForm, AttrTemplateProps, ExploreTable, LinkTemplateForm},
-    constants::{EXPLORE_ATTR_TEMPLATE, EXPLORE_LINK_TEMPLATE, ICON_HELP},
+    comps::{AppComponent, AttrTemplateForm, AttrTemplateProps, ExploreTable, ItemTemplateForm, LinkTemplateForm},
+    constants::{EXPLORE_ATTR_TEMPLATE, EXPLORE_ELEMENT, EXPLORE_LINK_TEMPLATE, ICON_HELP},
     views::AppView,
 };
 use cogs_shared::domain::model::{
     Id,
-    meta::{Kind, LinkTemplate},
+    meta::{ItemTemplate, Kind, LinkTemplate},
 };
 use egui::{Color32, ComboBox, CursorIcon, Popup, RichText, Sense};
 use egui_extras::{Size, StripBuilder};
@@ -115,7 +115,7 @@ Click an element to view its properties on the right side, double click it to ed
                                         ui.separator();
                                         ui.menu_button("Template", |ui| {
                                             if ui.label("Item Template").on_hover_cursor(CursorIcon::PointingHand).clicked() {
-                                                // TODO: open the item template form for creating one.
+                                                ctx.state.explore.open_windows_item_template.insert(Id::default(), Arc::new(Mutex::new(ItemTemplate::default())));
                                             };
                                             if ui
                                                 .label("Attribute Template")
@@ -152,6 +152,10 @@ Click an element to view its properties on the right side, double click it to ed
                         for (_, element) in ctx.state.explore.open_windows_link_template.clone().iter() {
                             ectx.data_mut(|d| d.insert_temp(egui::Id::from(EXPLORE_LINK_TEMPLATE), element.clone()));
                             LinkTemplateForm::show(ctx, ui);
+                        }
+                        for (_, element) in ctx.state.explore.open_windows_item_template.clone().iter() {
+                            ectx.data_mut(|d| d.insert_temp(egui::Id::from(EXPLORE_ELEMENT), element.clone()));
+                            ItemTemplateForm::show(ctx, ui);
                         }
                     });
 

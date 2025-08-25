@@ -15,6 +15,9 @@ pub use header::*;
 mod footer;
 pub use footer::*;
 
+mod item_tmpl_form;
+pub use item_tmpl_form::*;
+
 mod link_tmpl_form;
 pub use link_tmpl_form::*;
 
