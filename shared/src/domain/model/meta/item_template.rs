@@ -5,7 +5,7 @@ use crate::domain::model::{Id, meta::AttrTemplate};
 pub struct ItemTemplate {
     pub id: Id,
     pub name: String,
-    pub description: Option<String>,
+    pub description: String,
     pub attributes: Vec<AttrTemplate>,
-    pub listing_attr_def_id: Id,
+    pub listing_attr: AttrTemplate,
 }

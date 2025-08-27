@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 pub struct AttrTemplate {
     pub id: Id,
     pub name: String,
-    pub description: Option<String>,
+    pub description: String,
     pub value_type: AttributeValueType,
     pub default_value: String,
     pub is_required: bool,

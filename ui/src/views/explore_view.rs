@@ -1,12 +1,12 @@
 use crate::{
-    CogsApp, ManagedAttrTemplate,
+    CogsApp,
     comps::{AppComponent, AttrTemplateForm, AttrTemplateProps, ExploreTable, ItemTemplateForm, LinkTemplateForm},
     constants::{EXPLORE_ATTR_TEMPLATE, EXPLORE_ELEMENT, EXPLORE_LINK_TEMPLATE, ICON_HELP},
     views::AppView,
 };
 use cogs_shared::domain::model::{
     Id,
-    meta::{ItemTemplate, Kind, LinkTemplate},
+    meta::{AttrTemplate, ItemTemplate, Kind, LinkTemplate},
 };
 use egui::{Color32, ComboBox, CursorIcon, Popup, RichText, Sense};
 use egui_extras::{Size, StripBuilder};
@@ -125,7 +125,7 @@ Click an element to view its properties on the right side, double click it to ed
                                                 ctx.state
                                                     .explore
                                                     .open_windows_attr_template
-                                                    .insert(Id::default(), Arc::new(Mutex::new(ManagedAttrTemplate::default())));
+                                                    .insert(Id::default(), Arc::new(Mutex::new(AttrTemplate::default())));
                                             };
                                             if ui
                                                 .label("Link Template")
@@ -145,6 +145,10 @@ Click an element to view its properties on the right side, double click it to ed
 
                         ExploreTable::show(ctx, ui);
 
+                        for (_, element) in ctx.state.explore.open_windows_attr_template.clone().iter() {
+                            ectx.data_mut(|d| d.insert_temp(egui::Id::from(EXPLORE_ELEMENT), element.clone()));
+                            ItemTemplateForm::show(ctx, ui);
+                        }
                         for (_, element) in ctx.state.explore.open_windows_attr_template.clone().iter() {
                             ectx.data_mut(|d| d.insert_temp(egui::Id::from(EXPLORE_ATTR_TEMPLATE), element.clone()));
                             AttrTemplateForm::show(ctx, ui);
@@ -168,7 +172,7 @@ Click an element to view its properties on the right side, double click it to ed
                             if let Some((kind, id)) = &ctx.state.explore.curr_sel_elem {
                                 match kind {
                                     Kind::AttributeTemplate => {
-                                        for elem in ctx.state.data.fetched_attr_templates.iter() {
+                                        for elem in ctx.state.data.get_attr_templates().iter() {
                                             if elem.id == *id {
                                                 ectx.data_mut(|d| {
                                                     d.insert_temp(egui::Id::from(EXPLORE_ATTR_TEMPLATE), elem.clone())

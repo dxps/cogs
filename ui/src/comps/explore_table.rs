@@ -19,7 +19,7 @@ impl AppComponent for ExploreTable {
                 }
                 crate::views::ExploreCategory::Templates => {
                     // TODO: get_all_item_templates
-                    ctx.state.data.get_all_attr_templates(ui.ctx(), ctx.sendr.clone());
+                    ctx.state.data.fetch_all_attr_templates(ui.ctx(), ctx.sendr.clone());
                 }
             }
         }
@@ -56,7 +56,7 @@ impl AppComponent for ExploreTable {
                 }
                 crate::views::ExploreCategory::Templates => {
                     table.body(|mut body| {
-                        for elem in &ctx.state.data.fetched_attr_templates {
+                        for elem in &ctx.state.data.get_attr_templates() {
                             body.row(20.0, |mut row| {
                                 row.col(|ui| {
                                     ui.label(RichText::new("A.T.").color(Color32::GRAY))
@@ -69,7 +69,8 @@ impl AppComponent for ExploreTable {
                                         .on_hover_cursor(CursorIcon::PointingHand)
                                         .clicked()
                                     {
-                                        ctx.state.explore.curr_sel_elem = Some((Kind::AttributeTemplate, elem.id.clone()));
+                                        ctx.state.explore.curr_sel_elem =
+                                            Some((Kind::AttributeTemplate, elem.id.clone()));
                                     };
                                 });
                                 row.col(|ui| {
@@ -78,7 +79,8 @@ impl AppComponent for ExploreTable {
                                         .on_hover_cursor(CursorIcon::PointingHand)
                                         .clicked()
                                     {
-                                        ctx.state.explore.curr_sel_elem = Some((Kind::AttributeTemplate, elem.id.clone()));
+                                        ctx.state.explore.curr_sel_elem =
+                                            Some((Kind::AttributeTemplate, elem.id.clone()));
                                     };
                                 });
 

@@ -1,5 +1,5 @@
-use crate::{CogsApp, ManagedAttrTemplate, comps::AppComponent, constants::EXPLORE_ATTR_TEMPLATE};
-use cogs_shared::domain::model::meta::AttributeValueType;
+use crate::{CogsApp, comps::AppComponent, constants::EXPLORE_ATTR_TEMPLATE};
+use cogs_shared::domain::model::meta::{AttrTemplate, AttributeValueType};
 use egui::{Align, Color32, ComboBox, Direction, Grid, Layout, RichText, Window};
 use std::sync::{Arc, Mutex};
 
@@ -14,7 +14,7 @@ impl AppComponent for AttrTemplateForm {
         //
         let ectx = ui.ctx();
         let binding = ectx
-            .data(|d| d.get_temp::<Arc<Mutex<ManagedAttrTemplate>>>(egui::Id::from(EXPLORE_ATTR_TEMPLATE)))
+            .data(|d| d.get_temp::<Arc<Mutex<AttrTemplate>>>(egui::Id::from(EXPLORE_ATTR_TEMPLATE)))
             .clone()
             .unwrap_or_default();
         let mut element = binding.lock().unwrap();
@@ -42,7 +42,11 @@ impl AppComponent for AttrTemplateForm {
                     ui.vertical_centered(|ui| {
                         ui.label(RichText::new(title).size(13.0));
                         if !id.is_zero() {
-                            ui.label(RichText::new(format!("   (id: {})", id)).color(Color32::GRAY).size(10.0));
+                            ui.label(
+                                RichText::new(format!("   (id: {})", id))
+                                    .color(Color32::GRAY)
+                                    .size(10.0),
+                            );
                         }
                     });
                     ui.add_space(20.0);

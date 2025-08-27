@@ -1,8 +1,8 @@
-use crate::{ManagedAttrTemplate, messages::UiMessage};
+use crate::messages::UiMessage;
 use cogs_shared::{
     domain::model::{
         Id,
-        meta::{Kind, LinkTemplate},
+        meta::{AttrTemplate, Kind, LinkTemplate},
     },
     dtos::IdDto,
 };
@@ -15,11 +15,11 @@ pub struct DataState {
     pub fetch_done: bool,
 
     #[serde(skip)]
-    pub fetched_attr_templates: Vec<ManagedAttrTemplate>,
+    fetched_attr_templates: Vec<AttrTemplate>,
 }
 
 impl DataState {
-    pub fn save_attr_template(&self, element: ManagedAttrTemplate, ectx: &egui::Context, sender: Sender<UiMessage>) {
+    pub fn save_attr_template(&self, element: AttrTemplate, ectx: &egui::Context, sender: Sender<UiMessage>) {
         //
         let mut req = ehttp::Request::post(
             "http://localhost:9010/api/attribute_templates",
@@ -40,18 +40,29 @@ impl DataState {
         });
     }
 
-    pub fn get_all_attr_templates(&self, ectx: &egui::Context, sender: Sender<UiMessage>) {
+    pub fn set_attr_templates(&mut self, data: Vec<AttrTemplate>) {
+        self.fetched_attr_templates = data;
+    }
+
+    pub fn get_attr_templates(&self) -> Vec<AttrTemplate> {
+        self.fetched_attr_templates.clone()
+    }
+
+    pub fn fetch_all_attr_templates(&self, ectx: &egui::Context, sender: Sender<UiMessage>) {
         //
+        if !self.fetched_attr_templates.is_empty() {
+            return;
+        }
         let mut req = ehttp::Request::get("http://localhost:9010/api/attribute_templates");
         req.headers.insert("content-type", "application/json");
         let ectx = ectx.clone();
         ehttp::fetch(req, move |rsp| {
             if let Ok(rsp) = rsp {
-                let data: Vec<ManagedAttrTemplate> = serde_json::from_str(rsp.text().unwrap_or_default()).unwrap();
-                log::info!("[get_all_attr_template] Got {} entries.", data.len());
+                let data: Vec<AttrTemplate> = serde_json::from_str(rsp.text().unwrap_or_default()).unwrap();
+                log::info!("[fetch_all_attr_templates] Got {} elements.", data.len());
                 ectx.request_repaint(); // wake up UI thread
                 if let Err(e) = sender.send(UiMessage::AttrTemplatesFetched(Ok(data))) {
-                    log::info!("[get_all_attr_template] Failed to send AttrTemplatesFetched message. Error: {e}");
+                    log::info!("[fetch_all_attr_templates] Failed to send AttrTemplatesFetched message. Error: {e}");
                     return;
                 }
             }
@@ -60,7 +71,10 @@ impl DataState {
 
     pub fn delete_attr_template(&self, id: Id, ectx: &egui::Context, sender: Sender<UiMessage>) {
         //
-        let mut req = ehttp::Request::post(format!("http://localhost:9010/api/attribute_templates/{}/delete", id), vec![]);
+        let mut req = ehttp::Request::post(
+            format!("http://localhost:9010/api/attribute_templates/{}/delete", id),
+            vec![],
+        );
         req.headers.insert("content-type", "application/json");
         let ectx = ectx.clone();
         ehttp::fetch(req, move |rsp| {
