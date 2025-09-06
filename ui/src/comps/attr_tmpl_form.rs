@@ -1,6 +1,6 @@
 use crate::{CogsApp, comps::AppComponent, constants::EXPLORE_ATTR_TEMPLATE};
 use cogs_shared::domain::model::meta::{AttrTemplate, AttributeValueType};
-use egui::{Align, Color32, ComboBox, Direction, Grid, Layout, RichText, Window};
+use egui::{Align, Color32, ComboBox, CursorIcon, Direction, Grid, Layout, RichText, Window};
 use std::sync::{Arc, Mutex};
 
 pub struct AttrTemplateForm {}
@@ -42,11 +42,7 @@ impl AppComponent for AttrTemplateForm {
                     ui.vertical_centered(|ui| {
                         ui.label(RichText::new(title).size(13.0));
                         if !id.is_zero() {
-                            ui.label(
-                                RichText::new(format!("   (id: {})", id))
-                                    .color(Color32::GRAY)
-                                    .size(10.0),
-                            );
+                            ui.label(RichText::new(format!("   (id: {})", id)).color(Color32::GRAY).size(10.0));
                         }
                     });
                     ui.add_space(20.0);
@@ -118,7 +114,9 @@ impl AppComponent for AttrTemplateForm {
                         }
                     });
                     ui.add_space(12.0);
-                });
+                })
+                .response
+                .on_hover_cursor(CursorIcon::Grab);
             });
     }
 }

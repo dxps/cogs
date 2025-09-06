@@ -1,6 +1,6 @@
 use crate::{CogsApp, comps::AppComponent, constants::EXPLORE_LINK_TEMPLATE};
 use cogs_shared::domain::model::meta::LinkTemplate;
-use egui::{Align, Color32, ComboBox, Direction, Grid, Layout, RichText, Window};
+use egui::{Align, Color32, ComboBox, CursorIcon, Direction, Grid, Layout, RichText, Window};
 use std::sync::{Arc, Mutex};
 
 pub struct LinkTemplateForm {}
@@ -110,7 +110,9 @@ impl AppComponent for LinkTemplateForm {
                         }
                     });
                     ui.add_space(12.0);
-                });
+                })
+                .response
+                .on_hover_cursor(CursorIcon::Grab);
             });
     }
 }

@@ -99,13 +99,13 @@ Click an element to view its properties on the right side, double click it to ed
                                     });
 
                                 ui.label(RichText::new(ICON_HELP).color(Color32::GRAY).size(10.0))
-                                    .on_hover_cursor(CursorIcon::Help)
-                                    .on_hover_text("If category is 'Items', you may filter by their templates.\nIf category is 'Templates', you may filter by their types.");
+                                    .on_hover_text("If category is 'Items', you may filter by their templates.\nIf category is 'Templates', you may filter by their types.")
+                                    .on_hover_cursor(CursorIcon::Help);
                                 ui.add_space(20.0);
 
                                 let btn = ui.button(" + ").interact(Sense::click())
                                     .on_hover_text_at_pointer("Add")
-                                    .on_hover_cursor(CursorIcon::Help);
+                                    .on_hover_cursor(CursorIcon::PointingHand);
 
                                 ui.horizontal_top(|_ui| {
                                     Popup::menu(&btn).id(egui::Id::new("xplore_add_popup")).gap(5.0).show(|ui| {
@@ -114,8 +114,12 @@ Click an element to view its properties on the right side, double click it to ed
                                         };
                                         ui.separator();
                                         ui.menu_button("Template", |ui| {
-                                            if ui.label("Item Template").on_hover_cursor(CursorIcon::PointingHand).clicked() {
-                                                ctx.state.explore.open_windows_item_template.insert(Id::default(), Arc::new(Mutex::new(ItemTemplate::default())));
+                                            if ui
+                                                .label("Item Template").on_hover_cursor(CursorIcon::PointingHand).clicked() {
+                                                    ctx.state
+                                                    .explore
+                                                    .open_windows_item_template
+                                                    .insert(Id::default(), Arc::new(Mutex::new(ItemTemplate::default())));
                                             };
                                             if ui
                                                 .label("Attribute Template")
@@ -145,7 +149,7 @@ Click an element to view its properties on the right side, double click it to ed
 
                         ExploreTable::show(ctx, ui);
 
-                        for (_, element) in ctx.state.explore.open_windows_attr_template.clone().iter() {
+                        for (_, element) in ctx.state.explore.open_windows_item_template.clone().iter() {
                             ectx.data_mut(|d| d.insert_temp(egui::Id::from(EXPLORE_ELEMENT), element.clone()));
                             ItemTemplateForm::show(ctx, ui);
                         }
@@ -157,13 +161,9 @@ Click an element to view its properties on the right side, double click it to ed
                             ectx.data_mut(|d| d.insert_temp(egui::Id::from(EXPLORE_LINK_TEMPLATE), element.clone()));
                             LinkTemplateForm::show(ctx, ui);
                         }
-                        for (_, element) in ctx.state.explore.open_windows_item_template.clone().iter() {
-                            ectx.data_mut(|d| d.insert_temp(egui::Id::from(EXPLORE_ELEMENT), element.clone()));
-                            ItemTemplateForm::show(ctx, ui);
-                        }
                     });
 
-                    strip.cell(|_| {}); // Just as a space in the middle.
+                    strip.cell(|_| {}); // Just a space in the middle.
 
                     // The right cell.
                     strip.cell(|ui| {
