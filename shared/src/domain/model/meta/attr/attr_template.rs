@@ -1,3 +1,5 @@
+use std::hash::Hash;
+
 use crate::domain::model::{Id, meta::AttributeValueType};
 use serde::{Deserialize, Serialize};
 
@@ -10,4 +12,10 @@ pub struct AttrTemplate {
     pub value_type: AttributeValueType,
     pub default_value: String,
     pub is_required: bool,
+}
+
+impl Hash for AttrTemplate {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.id.hash(state);
+    }
 }

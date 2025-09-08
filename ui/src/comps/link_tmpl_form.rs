@@ -66,7 +66,7 @@ impl AppComponent for LinkTemplateForm {
                                 ComboBox::from_id_salt(format!("link_templ_form_id_{}_target", id))
                                     .width(287.0)
                                     .selected_text(element.target_item_template_id.to_string())
-                                    .show_ui(ui, |ui| {
+                                    .show_ui(ui, |_ui| {
                                         // TODO: get all item templates and show them here as `ui.selectable_value`s.
                                         // ui.selectable_value(
                                         // &mut element.target_item_template_id,

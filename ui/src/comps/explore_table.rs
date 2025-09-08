@@ -57,6 +57,8 @@ impl AppComponent for ExploreTable {
                 crate::views::ExploreCategory::Templates => {
                     table.body(|mut body| {
                         for elem in &ctx.state.data.get_attr_templates() {
+                            let mut open_win = false; // Open element's details in a new window (for view and edit).
+                            let mut show_right = false; // Show this element's details to the right (of this table).
                             body.row(20.0, |mut row| {
                                 row.col(|ui| {
                                     ui.label(RichText::new("A.T.").color(Color32::GRAY))
@@ -64,39 +66,42 @@ impl AppComponent for ExploreTable {
                                         .on_hover_cursor(CursorIcon::Help);
                                 });
                                 row.col(|ui| {
-                                    if ui
-                                        .label(format!("{}", elem.name))
-                                        .on_hover_cursor(CursorIcon::PointingHand)
-                                        .clicked()
-                                    {
-                                        ctx.state.explore.curr_sel_elem =
-                                            Some((Kind::AttributeTemplate, elem.id.clone()));
+                                    let label = ui.label(format!("{}", elem.name)).on_hover_cursor(CursorIcon::PointingHand);
+                                    if label.double_clicked() {
+                                        open_win = true;
+                                    } else if label.clicked() {
+                                        show_right = true;
                                     };
                                 });
                                 row.col(|ui| {
-                                    if ui
-                                        .label(format!("{}", elem.description))
-                                        .on_hover_cursor(CursorIcon::PointingHand)
-                                        .clicked()
-                                    {
-                                        ctx.state.explore.curr_sel_elem =
-                                            Some((Kind::AttributeTemplate, elem.id.clone()));
+                                    let label = ui
+                                        .label(RichText::new(format!("{}", elem.description)).color(Color32::GRAY))
+                                        .on_hover_cursor(CursorIcon::PointingHand);
+                                    if label.clicked() {
+                                        show_right = true;
                                     };
+                                    if label.double_clicked() {
+                                        open_win = true;
+                                    }
                                 });
 
                                 row.response().on_hover_cursor(CursorIcon::PointingHand);
                                 if row.response().double_clicked() {
-                                    log::debug!("[explore_table] Double clicked on row w/ elem.id: {}", elem.id);
-                                    let id = elem.id.clone();
-                                    ctx.state
-                                        .explore
-                                        .open_windows_attr_template
-                                        .insert(id, Arc::new(Mutex::new(elem.clone())));
+                                    open_win = true;
                                 }
                                 if row.response().clicked() {
-                                    ctx.state.explore.curr_sel_elem = Some((Kind::AttributeTemplate, elem.id.clone()));
+                                    show_right = true;
                                 }
                             });
+                            if open_win {
+                                ctx.state
+                                    .explore
+                                    .open_windows_attr_template
+                                    .insert(elem.id.clone(), Arc::new(Mutex::new(elem.clone())));
+                            }
+                            if show_right {
+                                ctx.state.explore.curr_sel_elem = Some((Kind::AttributeTemplate, elem.id.clone()));
+                            }
                         }
                     });
                 }
