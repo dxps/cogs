@@ -1,5 +1,5 @@
 use cogs_shared::{
-    app::AppError,
+    app::{AppError, AppResult},
     domain::model::{
         Id, UserAccount,
         meta::{AttrTemplate, Kind},
@@ -19,5 +19,7 @@ pub enum UiMessage {
     AttrTemplateUpserted(Result<Id, AppError>),
     AttrTemplateDeleted(Result<Id, AppError>),
 
-    ElementUpserted(Kind, Result<Id, AppError>),
+    ElementCreated(Kind, AppResult<Id>),
+    ElementUpdated(Kind, AppResult<Id>),
+    ElementDeleted(Kind, AppResult<Id>),
 }

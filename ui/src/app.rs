@@ -5,7 +5,7 @@ use crate::{
     messages::UiMessage,
     views::{AppView, Explore, ExploreCategory, ExploreKind, Home, Login, Settings, ViewType},
 };
-use cogs_shared::domain::model::UserAccount;
+use cogs_shared::domain::model::{UserAccount, meta::Kind};
 use egui::{
     FontData,
     epaint::text::{FontInsert, InsertFontFamily},
@@ -112,7 +112,7 @@ impl eframe::App for CogsApp {
         Header::show(self, ctx);
 
         if let Ok(res) = self.recvr.try_recv() {
-            log::info!("[app][update] Received msg {:?}", res);
+            log::info!("Received msg {:?}", res);
             match res {
                 UiMessage::Login(account) => match account {
                     Ok(account) => match account {
@@ -155,8 +155,29 @@ impl eframe::App for CogsApp {
                     self.state.data.fetch_done = true;
                     ctx.request_repaint();
                 }
-                UiMessage::ElementUpserted(_kind, _id) => {
-                    todo!()
+
+                UiMessage::ElementCreated(kind, ars) => {
+                    match ars {
+                        Ok(_id) => match kind {
+                            Kind::Item => todo!(),
+                            Kind::Attribute => todo!(),
+                            Kind::ItemTemplate => {
+                                self.state.explore.open_windows_item_template.remove(&0.into());
+                                // TODO: Refetch the item templates.
+                            }
+                            Kind::AttributeTemplate => todo!(),
+                            Kind::LinkTemplate => todo!(),
+                        },
+                        Err(_err) => {
+                            // TODO: show a popup message.
+                        }
+                    }
+                }
+                UiMessage::ElementUpdated(_kind, _ars) => {
+                    // TODO
+                }
+                UiMessage::ElementDeleted(_kind, _ars) => {
+                    // TODO
                 }
             }
         }

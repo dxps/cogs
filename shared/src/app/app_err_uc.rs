@@ -32,6 +32,10 @@ pub enum AppError {
     #[error("{0}")]
     Err(String),
 
+    /// Generic error with details.
+    #[error("{0}: {1}")]
+    ErrDetails(String, String),
+
     #[error("unauthorized: {0}")]
     Unauthorized(String),
 

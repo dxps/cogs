@@ -76,14 +76,10 @@ impl AppComponent for ItemTemplateForm {
                                 ui.label("Listing Attribute");
                                 ComboBox::from_id_salt(format!("item_templ_form_{}_listing_attr_", id))
                                     .width(285.0)
-                                    .selected_text(ctx.state.explore.add_item_template_listing_attr_template.name.clone())
+                                    .selected_text(element.listing_attr.name.clone())
                                     .show_ui(ui, |ui| {
-                                        for attr in &element.attributes {
-                                            ui.selectable_value(
-                                                &mut ctx.state.explore.add_item_template_listing_attr_template,
-                                                attr.clone(),
-                                                attr.name.clone(),
-                                            );
+                                        for attr in &element.attributes.clone() {
+                                            ui.selectable_value(&mut element.listing_attr, attr.clone(), attr.name.clone());
                                         }
                                     });
                                 ui.end_row();
@@ -223,10 +219,12 @@ impl AppComponent for ItemTemplateForm {
                 ui.with_layout(Layout::right_to_left(Align::Min), |ui| {
                     ui.add_space(18.0);
                     if ui.button("    Save    ").clicked() {
-                        // ctx.state
-                        // .data
-                        // .save_attr_template(element.clone(), ui.ctx(), ctx.sendr.clone());
-                        ctx.state.explore.open_windows_item_template.remove(&id);
+                        ctx.state
+                            .data
+                            .save_item_template(element.clone(), ui.ctx(), ctx.sendr.clone());
+                        // TODO: This window should be closed based on the message
+                        //       that is received after the HTTP call to the svc ends.
+                        // ctx.state.explore.open_windows_item_template.remove(&id);
                     }
                     ui.add_space(8.0);
                     if ui.button("  Cancel  ").clicked() {
@@ -238,7 +236,8 @@ impl AppComponent for ItemTemplateForm {
                             |ui| {
                                 ui.add_space(18.0);
                                 if ui.button("  Delete   ").clicked() {
-                                    // ctx.state.data.delete_attr_template(id.clone(), ectx, ctx.sendr.clone());
+                                    // TODO
+                                    // ctx.state.data.delete_item_template(id.clone(), ectx, ctx.sendr.clone());j
                                     ctx.state.explore.open_windows_item_template.remove(&id);
                                 }
                             },
