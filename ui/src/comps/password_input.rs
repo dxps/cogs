@@ -29,9 +29,7 @@ fn show_password_input(ui: &mut egui::Ui, pass: &mut String, entered: &mut bool)
     // so in that case we can change direction to right_to_left.
     let result = ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
         // Toggle the `show_plaintext` bool with a button:
-        let response = ui
-            .selectable_label(show_plaintext, "👁")
-            .on_hover_text("Show/hide password");
+        let response = ui.selectable_label(show_plaintext, "👁").on_hover_text("Show/hide password");
 
         if response.clicked() {
             show_plaintext = !show_plaintext;

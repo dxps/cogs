@@ -12,16 +12,11 @@ fn main() -> eframe::Result {
             .with_min_inner_size([300.0, 220.0])
             .with_icon(
                 // Note: Adding an icon is optional
-                eframe::icon_data::from_png_bytes(&include_bytes!("../assets/icon-192.png")[..])
-                    .expect("Failed to load icon"),
+                eframe::icon_data::from_png_bytes(&include_bytes!("../assets/icon-192.png")[..]).expect("Failed to load icon"),
             ),
         ..Default::default()
     };
-    eframe::run_native(
-        "Cogs",
-        native_options,
-        Box::new(|cc| Ok(Box::new(cogs_ui::CogsApp::new(cc)))),
-    )
+    eframe::run_native("Cogs", native_options, Box::new(|cc| Ok(Box::new(cogs_ui::CogsApp::new(cc)))))
 }
 
 // When compiling to web using trunk:

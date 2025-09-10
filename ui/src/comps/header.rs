@@ -37,11 +37,7 @@ impl AppView for Header {
                         let logo = egui::include_image!("../../assets/logo_o.png");
                         ui.add(egui::Image::new(logo.clone()).fit_to_original_size(0.04));
                         ui.add_space(10.0);
-                        ui.selectable_value(
-                            &mut ctx.state.curr_view_type,
-                            ViewType::Home,
-                            concatcp!(ICON_HOME, "  Home "),
-                        );
+                        ui.selectable_value(&mut ctx.state.curr_view_type, ViewType::Home, concatcp!(ICON_HOME, "  Home "));
                         ui.selectable_value(
                             &mut ctx.state.curr_view_type,
                             ViewType::Explore,

@@ -55,11 +55,7 @@ impl AppView for Login {
                 ui.horizontal(|ui| {
                     ui.label(" Password: ");
                     ui.add_space(4.0);
-                    PasswordInput::show_input_entered(
-                        ui,
-                        &mut ctx.state.auth.pass,
-                        &mut ctx.state.auth.login_pass_enter,
-                    );
+                    PasswordInput::show_input_entered(ui, &mut ctx.state.auth.pass, &mut ctx.state.auth.login_pass_enter);
                 });
 
                 ui.vertical_centered(|ui| {

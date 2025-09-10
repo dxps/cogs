@@ -14,11 +14,7 @@ impl AppComponent for Footer {
             ui.label(" and ");
             ui.hyperlink_to("eframe", "https://github.com/emilk/egui/tree/master/crates/eframe");
             ui.label(". ");
-            if ui
-                .label("Status")
-                .on_hover_cursor(egui::CursorIcon::PointingHand)
-                .clicked()
-            {
+            if ui.label("Status").on_hover_cursor(egui::CursorIcon::PointingHand).clicked() {
                 let req = ehttp::Request::get("http://localhost:9009/manifest.json");
                 ehttp::fetch(req, move |rsp| {
                     log::info!("[status] clicked. Test response: {:?}", rsp);
