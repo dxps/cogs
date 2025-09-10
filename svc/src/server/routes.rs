@@ -1,5 +1,6 @@
 use crate::server::{
     ServerState, delete_attr_templ, get_all_attr_templ, login_user, upsert_attr_templ,
+    upsert_item_templ,
 };
 use axum::{
     Router,
@@ -27,6 +28,7 @@ pub fn create_router(state: ServerState) -> Router {
             "/api/attribute_templates/{id}/delete",
             post(delete_attr_templ),
         )
+        .route("/api/item_templates", post(upsert_item_templ))
         .layer(tracing_layer)
         .layer(cors_layer)
         .with_state(state)

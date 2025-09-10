@@ -4,7 +4,10 @@ use axum::{
     extract::{self, Path, State},
     response::IntoResponse,
 };
-use cogs_shared::domain::model::{Id, meta::AttrTemplate};
+use cogs_shared::domain::model::{
+    Id,
+    meta::{AttrTemplate, ItemTemplate},
+};
 use http::StatusCode;
 use serde_json::json;
 
@@ -43,6 +46,19 @@ pub async fn delete_attr_templ(
     //
     match state.data_mgmt.delete_attr_templ(id).await {
         Ok(()) => (StatusCode::OK, Json::default()),
+        Err(err) => respond_not_found(err),
+    }
+}
+
+pub async fn upsert_item_templ(
+    _auth_session: AuthSession,
+    State(state): State<ServerState>,
+    extract::Json(input): extract::Json<ItemTemplate>,
+) -> impl IntoResponse {
+    //
+    log::debug!("upsert_item_templ: {input:?}");
+    match state.data_mgmt.upsert_item_templ(input).await {
+        Ok(id) => (StatusCode::OK, Json(json!({ "id": id }))),
         Err(err) => respond_not_found(err),
     }
 }
