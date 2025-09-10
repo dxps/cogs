@@ -2,7 +2,7 @@ use cogs_shared::{
     app::{AppError, AppResult},
     domain::model::{
         Id, UserAccount,
-        meta::{AttrTemplate, Kind},
+        meta::{AttrTemplate, ItemTemplate, Kind},
     },
 };
 
@@ -15,11 +15,13 @@ pub enum UiMessage {
 
     // TODO: Have the _Upserted and _Deleted messages more reusable
     //       by including the element type.
-    AttrTemplatesFetched(Result<Vec<AttrTemplate>, AppError>),
     AttrTemplateUpserted(Result<Id, AppError>),
     AttrTemplateDeleted(Result<Id, AppError>),
 
     ElementCreated(Kind, AppResult<Id>),
     ElementUpdated(Kind, AppResult<Id>),
     ElementDeleted(Kind, AppResult<Id>),
+
+    AttrTemplatesFetched(Result<Vec<AttrTemplate>, AppError>),
+    ItemTemplatesFetched(Result<Vec<ItemTemplate>, AppError>),
 }

@@ -1,4 +1,4 @@
-use crate::{CogsApp, comps::AppComponent, constants::EXPLORE_ATTR_TEMPLATE};
+use crate::{CogsApp, comps::AppComponent, constants::EXPLORE_ELEMENT};
 use cogs_shared::domain::model::meta::AttrTemplate;
 use egui::{Color32, Grid, RichText};
 
@@ -13,7 +13,7 @@ impl AppComponent for AttrTemplateProps {
         //
         let element = ui
             .ctx()
-            .data(|d| d.get_temp::<AttrTemplate>(egui::Id::from(EXPLORE_ATTR_TEMPLATE)))
+            .data(|d| d.get_temp::<AttrTemplate>(egui::Id::from(EXPLORE_ELEMENT)))
             .clone()
             .unwrap_or_default();
 

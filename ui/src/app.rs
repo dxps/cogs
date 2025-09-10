@@ -129,27 +129,20 @@ impl eframe::App for CogsApp {
                         self.state.auth.login_error = Some(err);
                     }
                 },
+
                 UiMessage::Logout => {
                     self.state.auth.user_account = None;
                     self.state.curr_view_type = ViewType::Home;
                 }
+
                 UiMessage::Settings => {}
-                UiMessage::AttrTemplatesFetched(data) => {
-                    self.state.data.fetch_done = true;
-                    match data {
-                        Ok(attr_templates) => {
-                            self.state.data.set_attr_templates(attr_templates);
-                        }
-                        Err(err) => {
-                            log::error!("[app.update] Error fetching attr templates: {}", err);
-                        }
-                    }
-                }
+
                 UiMessage::AttrTemplateUpserted(_) => {
                     self.state.data.fetch_all_attr_templates(ctx, self.sendr.clone());
                     self.state.data.fetch_done = true;
                     ctx.request_repaint();
                 }
+
                 UiMessage::AttrTemplateDeleted(_) => {
                     self.state.data.fetch_all_attr_templates(ctx, self.sendr.clone());
                     self.state.data.fetch_done = true;
@@ -173,11 +166,37 @@ impl eframe::App for CogsApp {
                         }
                     }
                 }
+
                 UiMessage::ElementUpdated(_kind, _ars) => {
                     // TODO
                 }
+
                 UiMessage::ElementDeleted(_kind, _ars) => {
                     // TODO
+                }
+
+                UiMessage::AttrTemplatesFetched(data) => {
+                    self.state.data.fetch_done = true;
+                    match data {
+                        Ok(attr_templates) => {
+                            self.state.data.set_attr_templates(attr_templates);
+                        }
+                        Err(err) => {
+                            log::error!("[app.update] Error fetching attr templates: {}", err);
+                        }
+                    }
+                }
+
+                UiMessage::ItemTemplatesFetched(data) => {
+                    self.state.data.fetch_done = true;
+                    match data {
+                        Ok(item_templates) => {
+                            self.state.data.set_item_templates(item_templates);
+                        }
+                        Err(err) => {
+                            log::error!("[app.update] Error fetching item templates: {}", err);
+                        }
+                    }
                 }
             }
         }

@@ -11,54 +11,74 @@ use cogs_shared::domain::model::{
 use http::StatusCode;
 use serde_json::json;
 
-pub async fn upsert_attr_templ(
+pub async fn upsert_attr_template(
     _auth_session: AuthSession,
     State(state): State<ServerState>,
     extract::Json(input): extract::Json<AttrTemplate>,
 ) -> impl IntoResponse {
     //
-    log::debug!("upsert_attr_templ: {input:?}");
-    match state.data_mgmt.upsert_attr_templ(input).await {
+    log::debug!("[upsert_attr_template] input: {input:?}");
+    match state.data_mgmt.upsert_attr_templates(input).await {
         Ok(id) => (StatusCode::OK, Json(json!({ "id": id }))),
         Err(err) => respond_not_found(err),
     }
 }
 
-pub async fn get_all_attr_templ(
+pub async fn get_all_attr_templates(
     _auth_session: AuthSession,
     State(state): State<ServerState>,
 ) -> impl IntoResponse {
     //
-    match state.data_mgmt.get_all_attr_templ().await {
+    match state.data_mgmt.get_all_attr_templates().await {
         Ok(attr_templs) => {
-            log::info!("[get_all_attr_templ] Got {} entries.", attr_templs.len());
+            log::info!(
+                "[get_all_attr_templates] Got {} entries.",
+                attr_templs.len()
+            );
             (StatusCode::OK, Json(json!(attr_templs)))
         }
         Err(err) => respond_not_found(err),
     }
 }
 
-pub async fn delete_attr_templ(
+pub async fn delete_attr_template(
     _auth_session: AuthSession,
     State(state): State<ServerState>,
     Path(id): Path<Id>,
 ) -> impl IntoResponse {
     //
-    match state.data_mgmt.delete_attr_templ(id).await {
+    match state.data_mgmt.delete_attr_templates(id).await {
         Ok(()) => (StatusCode::OK, Json::default()),
         Err(err) => respond_not_found(err),
     }
 }
 
-pub async fn upsert_item_templ(
+pub async fn upsert_item_template(
     _auth_session: AuthSession,
     State(state): State<ServerState>,
     extract::Json(input): extract::Json<ItemTemplate>,
 ) -> impl IntoResponse {
     //
-    log::debug!("upsert_item_templ: {input:?}");
-    match state.data_mgmt.upsert_item_templ(input).await {
+    log::debug!("[upsert_item_template] input: {input:?}");
+    match state.data_mgmt.upsert_item_templates(input).await {
         Ok(id) => (StatusCode::OK, Json(json!({ "id": id }))),
+        Err(err) => respond_not_found(err),
+    }
+}
+
+pub async fn get_all_item_templates(
+    _auth_session: AuthSession,
+    State(state): State<ServerState>,
+) -> impl IntoResponse {
+    //
+    match state.data_mgmt.get_all_item_templates().await {
+        Ok(attr_templs) => {
+            log::info!(
+                "[get_all_attr_templates] Got {} entries.",
+                attr_templs.len()
+            );
+            (StatusCode::OK, Json(json!(attr_templs)))
+        }
         Err(err) => respond_not_found(err),
     }
 }

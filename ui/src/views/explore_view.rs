@@ -1,7 +1,9 @@
 use crate::{
     CogsApp,
-    comps::{AppComponent, AttrTemplateForm, AttrTemplateProps, ExploreTable, ItemTemplateForm, LinkTemplateForm},
-    constants::{EXPLORE_ATTR_TEMPLATE, EXPLORE_ELEMENT, EXPLORE_LINK_TEMPLATE, ICON_HELP},
+    comps::{
+        AppComponent, AttrTemplateForm, AttrTemplateProps, ExploreTable, ItemTemplateForm, ItemTemplateProps, LinkTemplateForm,
+    },
+    constants::{EXPLORE_ELEMENT, ICON_HELP},
     views::AppView,
 };
 use cogs_shared::domain::model::{
@@ -154,11 +156,11 @@ Click an element to view its properties on the right side, double click it to ed
                             ItemTemplateForm::show(ctx, ui);
                         }
                         for (_, element) in ctx.state.explore.open_windows_attr_template.clone().iter() {
-                            ectx.data_mut(|d| d.insert_temp(egui::Id::from(EXPLORE_ATTR_TEMPLATE), element.clone()));
+                            ectx.data_mut(|d| d.insert_temp(egui::Id::from(EXPLORE_ELEMENT), element.clone()));
                             AttrTemplateForm::show(ctx, ui);
                         }
                         for (_, element) in ctx.state.explore.open_windows_link_template.clone().iter() {
-                            ectx.data_mut(|d| d.insert_temp(egui::Id::from(EXPLORE_LINK_TEMPLATE), element.clone()));
+                            ectx.data_mut(|d| d.insert_temp(egui::Id::from(EXPLORE_ELEMENT), element.clone()));
                             LinkTemplateForm::show(ctx, ui);
                         }
                     });
@@ -175,12 +177,23 @@ Click an element to view its properties on the right side, double click it to ed
                                         for elem in ctx.state.data.get_attr_templates().iter() {
                                             if elem.id == *id {
                                                 ectx.data_mut(|d| {
-                                                    d.insert_temp(egui::Id::from(EXPLORE_ATTR_TEMPLATE), elem.clone())
+                                                    d.insert_temp(egui::Id::from(EXPLORE_ELEMENT), elem.clone())
                                                 });
                                                 break;
                                             }
                                         }
                                         AttrTemplateProps::show(ctx, ui);
+                                    }
+                                    Kind::ItemTemplate => {
+                                        for elem in ctx.state.data.get_item_templates().iter() {
+                                            if elem.id == *id {
+                                                ectx.data_mut(|d| {
+                                                    d.insert_temp(egui::Id::from(EXPLORE_ELEMENT), elem.clone())
+                                                });
+                                                break;
+                                            }
+                                        }
+                                        ItemTemplateProps::show(ctx, ui);
                                     }
                                     _ => {}
                                 }

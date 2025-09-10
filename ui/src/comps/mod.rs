@@ -1,7 +1,7 @@
 use std::sync::mpsc::Sender;
 
-mod attr_props;
-pub use attr_props::*;
+mod attr_templ_props;
+pub use attr_templ_props::*;
 
 mod attr_tmpl_form;
 pub use attr_tmpl_form::*;
@@ -14,6 +14,9 @@ pub use header::*;
 
 mod footer;
 pub use footer::*;
+
+mod item_templ_props;
+pub use item_templ_props::*;
 
 mod item_tmpl_form;
 pub use item_tmpl_form::*;

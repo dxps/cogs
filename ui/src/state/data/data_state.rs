@@ -17,10 +17,17 @@ pub struct DataState {
 
     #[serde(skip)]
     fetched_attr_templates: Vec<AttrTemplate>,
+
+    #[serde(skip)]
+    fetched_item_templates: Vec<ItemTemplate>,
 }
 
 impl DataState {
     //
+
+    // ------------------------
+    // Attribute Templates mgmt
+    // ------------------------
 
     pub fn save_attr_template(&self, element: AttrTemplate, ectx: &egui::Context, sender: Sender<UiMessage>) {
         //
@@ -45,6 +52,10 @@ impl DataState {
 
     pub fn set_attr_templates(&mut self, data: Vec<AttrTemplate>) {
         self.fetched_attr_templates = data;
+    }
+
+    pub fn set_item_templates(&mut self, data: Vec<ItemTemplate>) {
+        self.fetched_item_templates = data;
     }
 
     pub fn get_attr_templates(&self) -> Vec<AttrTemplate> {
@@ -83,9 +94,9 @@ impl DataState {
         });
     }
 
-    // -----------------
-    // ItemTemplate mgmt
-    // -----------------
+    // -------------------
+    // Item Templates mgmt
+    // -------------------
 
     pub fn save_item_template(&self, element: ItemTemplate, ectx: &egui::Context, sender: Sender<UiMessage>) {
         //
@@ -125,6 +136,28 @@ impl DataState {
             }
             ectx.request_repaint();
         });
+    }
+
+    pub fn fetch_all_item_templates(&self, ectx: &egui::Context, sender: Sender<UiMessage>) {
+        //
+        let mut req = ehttp::Request::get("http://localhost:9010/api/item_templates");
+        req.headers.insert("content-type", "application/json");
+        let ectx = ectx.clone();
+        ehttp::fetch(req, move |rsp| {
+            if let Ok(rsp) = rsp {
+                let data: Vec<ItemTemplate> = serde_json::from_str(rsp.text().unwrap_or_default()).unwrap();
+                log::info!("[fetch_all_item_templates] Got {} elements.", data.len());
+                ectx.request_repaint(); // wake up UI thread
+                if let Err(e) = sender.send(UiMessage::ItemTemplatesFetched(Ok(data))) {
+                    log::info!("[fetch_all_item_templates] Failed to send AttrTemplatesFetched message. Error: {e}");
+                    return;
+                }
+            }
+        });
+    }
+
+    pub fn get_item_templates(&self) -> Vec<ItemTemplate> {
+        self.fetched_item_templates.clone()
     }
 
     // -----------------
