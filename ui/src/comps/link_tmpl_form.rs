@@ -1,4 +1,4 @@
-use crate::{CogsApp, comps::AppComponent, constants::EXPLORE_LINK_TEMPLATE};
+use crate::{CogsApp, comps::AppComponent, constants::EXPLORE_ELEMENT};
 use cogs_shared::domain::model::meta::LinkTemplate;
 use egui::{Align, Color32, ComboBox, CursorIcon, Direction, Grid, Layout, RichText, Window};
 use std::sync::{Arc, Mutex};
@@ -9,12 +9,12 @@ impl AppComponent for LinkTemplateForm {
     type Context = CogsApp;
 
     /// It shows the form for creating or editing an attribute template.
-    /// As params, it expects an `Arc<Mutex<ManagedAttrTemplate>>` in `ui.ctx()`'s data key id named `EXPLORE_LINK_TEMPLATE`.
+    /// As params, it expects an `Arc<Mutex<LinkTemplate>>` in `ui.ctx()`'s data key id named `EXPLORE_ELEMENT`.
     fn show(ctx: &mut Self::Context, ui: &mut eframe::egui::Ui) {
         //
         let ectx = ui.ctx();
         let binding = ectx
-            .data(|d| d.get_temp::<Arc<Mutex<LinkTemplate>>>(egui::Id::from(EXPLORE_LINK_TEMPLATE)))
+            .data(|d| d.get_temp::<Arc<Mutex<LinkTemplate>>>(egui::Id::from(EXPLORE_ELEMENT)))
             .clone()
             .unwrap_or_else(|| {
                 log::error!("[LinkTemplateForm] Expected id in ui.ctx().data() key id named EXPLORE_LINK_TEMPLATE not found!");

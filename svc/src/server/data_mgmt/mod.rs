@@ -34,7 +34,7 @@ impl DataMgmt {
         }
     }
 
-    // -------------------
+    //
     // Attribute Templates
     // -------------------
 
