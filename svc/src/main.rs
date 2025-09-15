@@ -7,6 +7,7 @@ use cogs_svc::{
     server::{self, AuthSessionLayer, ServerState, SvcConfig, create_router, init_logging},
 };
 use config::{Config, Environment};
+use sqlx::{Pool, Postgres};
 use std::sync::Arc;
 use tokio::signal;
 
@@ -71,7 +72,7 @@ async fn main() {
     }
 
     let router = create_router(state)
-        .layer(AuthSessionLayer::new(Some(dbcp)).with_config(auth_config))
+        .layer(AuthSessionLayer::new(Some(dbcp.clone())).with_config(auth_config))
         .layer(SessionLayer::new(session_store));
 
     log::info!("Listening on http://{}", cfg.listenaddress);
@@ -80,12 +81,12 @@ async fn main() {
         .expect(format!("Failed to bind to address {}", cfg.listenaddress).as_str());
 
     axum::serve(listener, router.into_make_service())
-        .with_graceful_shutdown(shutdown_signal())
+        .with_graceful_shutdown(shutdown_signal(dbcp))
         .await
         .unwrap();
 }
 
-async fn shutdown_signal() {
+async fn shutdown_signal(dbcp: Pool<Postgres>) {
     let ctrl_c = async {
         signal::ctrl_c()
             .await
@@ -109,5 +110,7 @@ async fn shutdown_signal() {
     }
 
     log::info!("Shutting down ...");
-    // TODO: Close the db connection pool and free any other resources.
+
+    dbcp.close().await;
+    log::info!("Database connection closed.");
 }
