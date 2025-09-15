@@ -20,15 +20,10 @@ impl AppComponent for AttrTemplateForm {
         let mut element = binding.lock().unwrap();
 
         let id = element.id.clone();
-        let title: &str;
-        match element.id.is_zero() {
-            true => {
-                title = "New Attribute Template";
-            }
-            false => {
-                title = "Edit Attribute Template";
-            }
-        }
+        let title = match element.id.is_zero() {
+            true => "New Attribute Template",
+            false => "Edit Attribute Template",
+        };
 
         Window::new(format!("AttrTemplateForm_id_{}", element.id))
             .title_bar(false)

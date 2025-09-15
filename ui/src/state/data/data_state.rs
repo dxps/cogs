@@ -12,6 +12,7 @@ use std::sync::mpsc::Sender;
 #[derive(Clone, Default, Debug, serde::Deserialize, serde::Serialize)]
 #[serde(default)]
 pub struct DataState {
+    /// It tells whether we have fetched the data or not.
     #[serde(skip)]
     pub fetch_done: bool,
 
@@ -37,13 +38,19 @@ impl DataState {
         );
         req.headers.insert("content-type", "application/json");
         let ectx = ectx.clone();
+        let is_new = element.id.is_zero();
         ehttp::fetch(req, move |rsp| {
-            log::info!("[save_attr_template] Response: {:?}", rsp);
+            log::info!("[DataState::save_attr_template] Response: {:?}", rsp);
             if let Ok(rsp) = rsp {
                 let dto: IdDto = serde_json::from_str(rsp.text().unwrap_or_default()).unwrap();
-                log::debug!("[save_attr_template] Got saved id: {}", dto.id);
-                if let Err(e) = sender.send(UiMessage::AttrTemplateUpserted(Ok(dto.id))) {
-                    log::info!("[save_attr_template] Failed to send AttrTemplateUpserted message. Error: {e}");
+                let ui_msg = if is_new {
+                    log::debug!("[DataState::save_attr_template] Got id: {}", dto.id);
+                    UiMessage::ElementCreated(Kind::AttributeTemplate, Ok(dto.id))
+                } else {
+                    UiMessage::ElementUpdated(Kind::AttributeTemplate, Ok(dto.id))
+                };
+                if let Err(e) = sender.send(ui_msg) {
+                    log::info!("[DataState::save_attr_template] Failed to send UiMessage. Error: {e}");
                 }
                 ectx.request_repaint();
             }
@@ -70,10 +77,10 @@ impl DataState {
         ehttp::fetch(req, move |rsp| {
             if let Ok(rsp) = rsp {
                 let data: Vec<AttrTemplate> = serde_json::from_str(rsp.text().unwrap_or_default()).unwrap();
-                log::info!("[fetch_all_attr_templates] Got {} elements.", data.len());
+                log::info!("[DataState::fetch_all_attr_templates] Got {} elements.", data.len());
                 ectx.request_repaint(); // wake up UI thread
                 if let Err(e) = sender.send(UiMessage::AttrTemplatesFetched(Ok(data))) {
-                    log::info!("[fetch_all_attr_templates] Failed to send AttrTemplatesFetched message. Error: {e}");
+                    log::info!("[DataState::fetch_all_attr_templates] Failed to send UiMessage. Error: {e}");
                     return;
                 }
             }
@@ -86,9 +93,9 @@ impl DataState {
         req.headers.insert("content-type", "application/json");
         let ectx = ectx.clone();
         ehttp::fetch(req, move |rsp| {
-            log::info!("[delte_attr_template] Got response: {:?}", rsp);
-            if let Err(e) = sender.send(UiMessage::AttrTemplateDeleted(Ok(id))) {
-                log::info!("[save_attr_template] Failed to send AttrTemplateUpserted message. Error: {e}");
+            log::info!("[DataState::delete_attr_template] Got response: {:?}", rsp);
+            if let Err(e) = sender.send(UiMessage::ElementDeleted(Kind::AttributeTemplate, Ok(id))) {
+                log::info!("[DataState::delete_attr_template] Failed to send UiMessage. Error: {e}");
             }
             ectx.request_repaint();
         });
@@ -107,7 +114,7 @@ impl DataState {
         req.headers.insert("content-type", "application/json");
         let ectx = ectx.clone();
         ehttp::fetch(req, move |rsp| {
-            log::info!("[save_item_template] Response: {:?}", rsp);
+            log::info!("[DataState::save_item_template] Response: {:?}", rsp);
             match rsp {
                 Ok(rsp) => {
                     let ars: AppResult<Id>;
@@ -119,18 +126,18 @@ impl DataState {
                         ));
                     } else {
                         let dto: IdDto = serde_json::from_str(rsp.text().unwrap_or_default()).unwrap();
-                        log::debug!("[save_item_template] Got saved id: {}", dto.id);
+                        log::debug!("[DataState::save_item_template] Got saved id: {}", dto.id);
                         ars = Ok(dto.id);
                     }
 
                     if let Err(e) = sender.send(UiMessage::ElementCreated(Kind::ItemTemplate, ars)) {
-                        log::info!("[save_item_template] Failed to send ElementCreated message. Error: {e}");
+                        log::info!("[DataState::save_item_template] Failed to send UiMessage. Error: {e}");
                     }
                 }
                 Err(err) => {
                     let ars = Err(AppError::from(err));
                     if let Err(e) = sender.send(UiMessage::ElementUpdated(Kind::ItemTemplate, ars)) {
-                        log::info!("[save_item_template] Failed to send ElementCreated message. Error: {e}");
+                        log::info!("[DataState::save_item_template] Failed to send UiMessage. Error: {e}");
                     }
                 }
             }
@@ -146,10 +153,10 @@ impl DataState {
         ehttp::fetch(req, move |rsp| {
             if let Ok(rsp) = rsp {
                 let data: Vec<ItemTemplate> = serde_json::from_str(rsp.text().unwrap_or_default()).unwrap();
-                log::info!("[fetch_all_item_templates] Got {} elements.", data.len());
+                log::info!("[DataState::fetch_all_item_templates] Got {} elements.", data.len());
                 ectx.request_repaint(); // wake up UI thread
                 if let Err(e) = sender.send(UiMessage::ItemTemplatesFetched(Ok(data))) {
-                    log::info!("[fetch_all_item_templates] Failed to send AttrTemplatesFetched message. Error: {e}");
+                    log::info!("[DataState::fetch_all_item_templates] Failed to send UiMessage. Error: {e}");
                     return;
                 }
             }
@@ -158,6 +165,20 @@ impl DataState {
 
     pub fn get_item_templates(&self) -> Vec<ItemTemplate> {
         self.fetched_item_templates.clone()
+    }
+
+    pub fn delete_item_template(&self, id: Id, ectx: &egui::Context, sender: Sender<UiMessage>) {
+        //
+        let mut req = ehttp::Request::post(format!("http://localhost:9010/api/item_templates/{}/delete", id), vec![]);
+        req.headers.insert("content-type", "application/json");
+        let ectx = ectx.clone();
+        ehttp::fetch(req, move |rsp| {
+            log::info!("[DataState::delete_item_template] Got response: {:?}", rsp);
+            if let Err(e) = sender.send(UiMessage::ElementDeleted(Kind::ItemTemplate, Ok(id))) {
+                log::info!("[DataState::delete_item_template] Failed to send UiMessage. Error: {e}");
+            }
+            ectx.request_repaint();
+        });
     }
 
     // -----------------
@@ -173,12 +194,12 @@ impl DataState {
         req.headers.insert("content-type", "application/json");
         let ectx = ectx.clone();
         ehttp::fetch(req, move |rsp| {
-            log::info!("[save_link_template] Response: {:?}", rsp);
+            log::info!("[DataState::save_link_template] Response: {:?}", rsp);
             if let Ok(rsp) = rsp {
                 let dto: IdDto = serde_json::from_str(rsp.text().unwrap_or_default()).unwrap();
-                log::debug!("[save_link_template] Got saved id: {}", dto.id);
+                log::debug!("[DataState::save_link_template] Got saved id: {}", dto.id);
                 if let Err(e) = sender.send(UiMessage::ElementUpdated(Kind::LinkTemplate, Ok(dto.id))) {
-                    log::info!("[save_link_template] Failed to send ElementUpserted message. Error: {e}");
+                    log::info!("[DataState::save_link_template] Failed to send UiMessage. Error: {e}");
                 }
                 ectx.request_repaint();
             }

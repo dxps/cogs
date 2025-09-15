@@ -2,7 +2,6 @@
 pub enum Kind {
     #[default]
     Item,
-    Attribute,
     ItemTemplate,
     AttributeTemplate,
     LinkTemplate,

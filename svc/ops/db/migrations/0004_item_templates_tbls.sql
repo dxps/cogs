@@ -13,7 +13,7 @@ CREATE TABLE item_templates_attr_templates_xref
     attr_templ_id            BIGINT,
     show_index               INT2         NOT NULL     CHECK(show_index > 0),
     PRIMARY KEY (item_templ_id, attr_templ_id),
-    CONSTRAINT item_templ_fk   FOREIGN KEY(item_templ_id)   REFERENCES item_templates(id),
+    CONSTRAINT item_templ_fk   FOREIGN KEY(item_templ_id)   REFERENCES item_templates(id) ON DELETE CASCADE,
     CONSTRAINT attr_templ_fk   FOREIGN KEY(attr_templ_id)   REFERENCES attr_templates(id)
 );
 

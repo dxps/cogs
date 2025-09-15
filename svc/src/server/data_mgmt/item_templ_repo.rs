@@ -1,6 +1,9 @@
 use cogs_shared::{
     app::{AppError, AppResult},
-    domain::model::meta::{AttrTemplate, AttributeValueType, ItemTemplate},
+    domain::model::{
+        Id,
+        meta::{AttrTemplate, AttributeValueType, ItemTemplate},
+    },
 };
 use sqlx::{PgPool, Row, postgres::PgRow};
 use std::sync::Arc;
@@ -96,6 +99,17 @@ impl ItemTemplateRepo {
                     .collect::<Vec<ItemTemplate>>()
             })?;
         Ok(data)
+    }
+
+    /// Delete an item template.
+    pub async fn delete(&self, id: Id) -> AppResult<()> {
+        //
+        sqlx::query("DELETE FROM item_templates WHERE id = $1")
+            .bind(id.0)
+            .execute(self.dbcp.as_ref())
+            .await
+            .map_err(|err| AppError::from(err.to_string()))?;
+        Ok(())
     }
 }
 

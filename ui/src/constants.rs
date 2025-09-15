@@ -29,7 +29,3 @@ pub const MODAL_BTN_LABEL: &str = "cogs_modal_btn_label";
 pub const MODAL_BTN_MSG: &str = "cogs_modal_btn_msg";
 
 pub const EXPLORE_ELEMENT: &str = "explore_element";
-
-// TODO: Consider using the generic `EXPLORE_ELEMENT`.
-pub const EXPLORE_ATTR_TEMPLATE: &str = "attr_template";
-pub const EXPLORE_LINK_TEMPLATE: &str = "link_template";

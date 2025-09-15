@@ -222,9 +222,9 @@ impl AppComponent for ItemTemplateForm {
                         ctx.state
                             .data
                             .save_item_template(element.clone(), ui.ctx(), ctx.sendr.clone());
-                        // TODO: This window should be closed based on the message
-                        //       that is received after the HTTP call to the svc ends.
-                        // ctx.state.explore.open_windows_item_template.remove(&id);
+                        // FYI: This window is closed based on the UiMessage
+                        // that is received (by the app itself, in `app.rs`)
+                        // after the HTTP call to the svc ends.
                     }
                     ui.add_space(8.0);
                     if ui.button("  Cancel  ").clicked() {
@@ -236,8 +236,7 @@ impl AppComponent for ItemTemplateForm {
                             |ui| {
                                 ui.add_space(18.0);
                                 if ui.button("  Delete   ").clicked() {
-                                    // TODO
-                                    // ctx.state.data.delete_item_template(id.clone(), ectx, ctx.sendr.clone());j
+                                    ctx.state.data.delete_item_template(id.clone(), ectx, ctx.sendr.clone());
                                     ctx.state.explore.open_windows_item_template.remove(&id);
                                 }
                             },

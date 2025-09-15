@@ -153,12 +153,17 @@ impl eframe::App for CogsApp {
                     match ars {
                         Ok(_id) => match kind {
                             Kind::Item => todo!(),
-                            Kind::Attribute => todo!(),
                             Kind::ItemTemplate => {
                                 self.state.explore.open_windows_item_template.remove(&0.into());
-                                // TODO: Refetch the item templates.
+                                self.state.data.fetch_all_item_templates(ctx, self.sendr.clone());
+                                self.state.data.fetch_done = true;
+                                ctx.request_repaint();
                             }
-                            Kind::AttributeTemplate => todo!(),
+                            Kind::AttributeTemplate => {
+                                self.state.data.fetch_all_attr_templates(ctx, self.sendr.clone());
+                                self.state.data.fetch_done = true;
+                                ctx.request_repaint();
+                            }
                             Kind::LinkTemplate => todo!(),
                         },
                         Err(_err) => {
@@ -167,13 +172,39 @@ impl eframe::App for CogsApp {
                     }
                 }
 
-                UiMessage::ElementUpdated(_kind, _ars) => {
-                    // TODO
-                }
+                UiMessage::ElementUpdated(kind, ar) => match ar {
+                    Ok(_id) => match kind {
+                        Kind::Item => todo!(),
+                        Kind::ItemTemplate => todo!(),
+                        Kind::AttributeTemplate => {
+                            self.state.data.fetch_all_attr_templates(ctx, self.sendr.clone());
+                            self.state.data.fetch_done = true;
+                            ctx.request_repaint();
+                        }
+                        Kind::LinkTemplate => todo!(),
+                    },
+                    Err(_) => {
+                        todo!();
+                    }
+                },
 
-                UiMessage::ElementDeleted(_kind, _ars) => {
-                    // TODO
-                }
+                UiMessage::ElementDeleted(kind, ar) => match ar {
+                    Ok(_id) => match kind {
+                        Kind::Item => todo!(),
+                        Kind::ItemTemplate => {
+                            self.state.data.fetch_all_item_templates(ctx, self.sendr.clone());
+                            self.state.data.fetch_done = true;
+                            ctx.request_repaint();
+                        }
+                        Kind::AttributeTemplate => {
+                            self.state.data.fetch_all_attr_templates(ctx, self.sendr.clone());
+                            self.state.data.fetch_done = true;
+                            ctx.request_repaint();
+                        }
+                        Kind::LinkTemplate => todo!(),
+                    },
+                    Err(_) => todo!(),
+                },
 
                 UiMessage::AttrTemplatesFetched(data) => {
                     self.state.data.fetch_done = true;
