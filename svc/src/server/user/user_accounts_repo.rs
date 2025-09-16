@@ -23,11 +23,7 @@ impl UserAccountsRepo {
         }
     }
 
-    pub async fn get_by_username(
-        &self,
-        username: &String,
-        usecase: AppUseCase,
-    ) -> AppResult<UserEntry> {
+    pub async fn get_by_username(&self, username: &String, usecase: AppUseCase) -> AppResult<UserEntry> {
         //
         sqlx::query_as::<_, UserEntry>(
             "SELECT id, email, username, password, name, salt, bio, is_anonymous FROM user_accounts 
@@ -67,19 +63,18 @@ impl UserAccountsRepo {
     }
 
     pub async fn get_permissions(&self, account: &mut UserAccount) -> AppResult<()> {
-        let mut permissions =
-            sqlx::query("SELECT permission FROM user_permissions WHERE user_id = $1;")
-                .bind(&account.id.0)
-                .map(|r: PgRow| r.get("permission"))
-                .fetch_all(self.dbcp.as_ref())
-                .await
-                .map_err(|err| {
-                    log::error!(
-                        "Could not load permissions for user account w/ id: {}. Error: {err}",
-                        account.id
-                    );
-                    AppError::from(err)
-                })?;
+        let mut permissions = sqlx::query("SELECT permission FROM user_permissions WHERE user_id = $1;")
+            .bind(&account.id.0)
+            .map(|r: PgRow| r.get("permission"))
+            .fetch_all(self.dbcp.as_ref())
+            .await
+            .map_err(|err| {
+                log::error!(
+                    "Could not load permissions for user account w/ id: {}. Error: {err}",
+                    account.id
+                );
+                AppError::from(err)
+            })?;
         account.permissions.append(&mut permissions);
         Ok(())
     }
@@ -117,20 +112,18 @@ impl UserAccountsRepo {
 
         if res.is_ok() {
             for permission in permissions.iter() {
-                let res = sqlx::query(
-                    "INSERT INTO user_permissions (user_id, permission) VALUES ($1, $2)",
-                )
-                .bind(&id.0)
-                .bind(&permission)
-                .execute(self.dbcp.as_ref())
-                .await
-                .map_err(|err| {
-                    AppError::from((
-                        err,
-                        AppUseCase::UserRegistration,
-                        "Self registration of admin user permissions".to_string(),
-                    ))
-                });
+                let res = sqlx::query("INSERT INTO user_permissions (user_id, permission) VALUES ($1, $2)")
+                    .bind(&id.0)
+                    .bind(&permission)
+                    .execute(self.dbcp.as_ref())
+                    .await
+                    .map_err(|err| {
+                        AppError::from((
+                            err,
+                            AppUseCase::UserRegistration,
+                            "Self registration of admin user permissions".to_string(),
+                        ))
+                    });
                 if res.is_err() {
                     return AppResult::Err(res.err().unwrap());
                 }
@@ -143,13 +136,11 @@ impl UserAccountsRepo {
 
     pub async fn get_password_by_id(&self, user_id: &Id) -> AppResult<UserPasswordSalt> {
         //
-        sqlx::query_as::<_, UserPasswordSalt>(
-            "SELECT password, salt FROM user_accounts WHERE id = $1",
-        )
-        .bind(user_id.0)
-        .fetch_one(self.dbcp.as_ref())
-        .await
-        .map_err(|err| AppError::from(err))
+        sqlx::query_as::<_, UserPasswordSalt>("SELECT password, salt FROM user_accounts WHERE id = $1")
+            .bind(user_id.0)
+            .fetch_one(self.dbcp.as_ref())
+            .await
+            .map_err(|err| AppError::from(err))
     }
 
     pub async fn update_password(&self, user_id: &Id, pwd: String) -> AppResult<()> {

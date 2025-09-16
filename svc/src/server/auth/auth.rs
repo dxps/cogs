@@ -10,8 +10,7 @@ use crate::{
 };
 
 pub type AuthSession = axum_session_auth::AuthSession<UserAccount, Id, SessionPgPool, PgPool>;
-pub type AuthSessionLayer =
-    axum_session_auth::AuthSessionLayer<UserAccount, Id, SessionPgPool, PgPool>;
+pub type AuthSessionLayer = axum_session_auth::AuthSessionLayer<UserAccount, Id, SessionPgPool, PgPool>;
 
 #[async_trait]
 impl Authentication<UserAccount, Id, PgPool> for UserAccount {
@@ -21,7 +20,7 @@ impl Authentication<UserAccount, Id, PgPool> for UserAccount {
         let repo = UserAccountsRepo::from(pool.unwrap());
         repo.get_by_id(&user_id).await.map_or_else(
             |e| {
-                log::debug!("[load_user] No user account w/ id: {user_id} exist: {e}");
+                log::debug!("[load_user] No user account w/ id: {user_id} exists: {e}");
                 Err(anyhow::anyhow!("Could not load user"))
             },
             |account_opt| account_opt.ok_or(anyhow::anyhow!("Could not get loaded user")),

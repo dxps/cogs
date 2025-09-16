@@ -34,13 +34,12 @@ async fn main() {
     log::debug!("Loaded cfg: {cfg:#?}");
 
     log::info!("Connecting to database ...");
-    let dbcp = server::db_pool_init()
-        .await
-        .expect("Failed to connect to the database!");
+    let dbcp = server::db_pool_init().await.expect("Failed to connect to the database!");
     log::info!("Connected to database.");
 
     let session_config = SessionConfig::default()
-        .with_session_name("cogs_session")
+        .with_session_name("cogs_user_session")
+        .with_store_name("cogs_user_stored_cookie")
         .with_table_name("user_sessions")
         .with_lifetime(chrono::Duration::hours(24))
         .with_purge_database_update(chrono::Duration::minutes(5));
@@ -53,12 +52,7 @@ async fn main() {
 
     match state
         .user_mgmt
-        .register_admin_user(
-            "Admin".into(),
-            "admin@example.com".into(),
-            "admin".into(),
-            "admin".into(),
-        )
+        .register_admin_user("Admin".into(), "admin@example.com".into(), "admin".into(), "admin".into())
         .await
     {
         Ok(_) => log::info!("Self-registered the admin user."),
@@ -88,9 +82,7 @@ async fn main() {
 
 async fn shutdown_signal(dbcp: Pool<Postgres>) {
     let ctrl_c = async {
-        signal::ctrl_c()
-            .await
-            .expect("failed to install Ctrl+C handler");
+        signal::ctrl_c().await.expect("failed to install Ctrl+C handler");
     };
 
     #[cfg(unix)]

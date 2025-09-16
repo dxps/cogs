@@ -67,9 +67,7 @@ impl IntoResponse for AppError {
             "error": self.to_string()
         }));
         let response_tuple = match self {
-            AppError::Unauthorized(msg) => {
-                (StatusCode::UNAUTHORIZED, Json(json!({ "error": msg })))
-            }
+            AppError::Unauthorized(msg) => (StatusCode::UNAUTHORIZED, Json(json!({ "error": msg }))),
             _ => (StatusCode::INTERNAL_SERVER_ERROR, body),
         };
         response_tuple.into_response()

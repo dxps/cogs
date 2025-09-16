@@ -18,14 +18,12 @@ pub async fn login_user(
     extract::Json(input): extract::Json<LoginRequest>,
 ) -> impl IntoResponse {
     //
-    let res = state
-        .user_mgmt
-        .authenticate_user(input.username, input.password)
-        .await;
+    let res = state.user_mgmt.authenticate_user(input.username, input.password).await;
     match res.error {
         None => {
             let account = res.account.unwrap();
             auth_session.login_user(account.id.clone());
+            log::debug!("[api::login_user] Setting user ID {} to the session.", account.id.clone());
             (StatusCode::OK, Json(json!(account)))
         }
         Some(err) => match err {

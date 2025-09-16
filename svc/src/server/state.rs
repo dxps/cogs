@@ -13,19 +13,14 @@ pub struct ServerState {
 impl ServerState {
     pub fn new(db_pool: Arc<PgPool>) -> Self {
         //
-        let user_mgmt = Arc::new(UserMgmt::new(Arc::new(UserAccountsRepo::new(
-            db_pool.clone(),
-        ))));
+        let user_mgmt = Arc::new(UserMgmt::new(Arc::new(UserAccountsRepo::new(db_pool.clone()))));
 
         let data_mgmt = Arc::new(DataMgmt::new(
             Arc::new(AttrTemplateRepo::new(db_pool.clone())),
             Arc::new(ItemTemplateRepo::new(db_pool.clone())),
         ));
 
-        Self {
-            user_mgmt,
-            data_mgmt,
-        }
+        Self { user_mgmt, data_mgmt }
     }
 }
 

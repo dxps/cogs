@@ -9,10 +9,7 @@ static DB_POOL: std::sync::OnceLock<PgPool> = std::sync::OnceLock::new();
 pub async fn db_pool_init() -> AppResult<PgPool> {
     //
     let db_url = std::env::var("DATABASE_URL").map_err(|err| {
-        log::error!(
-            "DATABASE_URL environment variable is not set. Reason: '{}'.",
-            err
-        );
+        log::error!("DATABASE_URL environment variable is not set. Reason: '{}'.", err);
         AppError::Err("DATABASE_URL environment variable is not set.".into())
     })?;
     let pool = PgPoolOptions::new()
@@ -78,11 +75,7 @@ impl From<(sqlx::Error, AppUseCase)> for AppError {
 }
 
 fn log_and_return_internal_err(ctx: (sqlx::Error, AppUseCase)) -> AppError {
-    log::debug!(
-        "InternalErr due to sql err={:?} on usecase:{:?}.",
-        ctx.0,
-        ctx.1
-    );
+    log::debug!("InternalErr due to sql err={:?} on usecase:{:?}.", ctx.0, ctx.1);
     AppError::InternalErr
 }
 

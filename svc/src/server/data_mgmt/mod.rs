@@ -24,10 +24,7 @@ pub struct DataMgmt {
 
 impl DataMgmt {
     //
-    pub fn new(
-        attr_templ_repo: Arc<AttrTemplateRepo>,
-        item_templ_repo: Arc<ItemTemplateRepo>,
-    ) -> Self {
+    pub fn new(attr_templ_repo: Arc<AttrTemplateRepo>, item_templ_repo: Arc<ItemTemplateRepo>) -> Self {
         Self {
             attr_templ_repo,
             item_templ_repo,

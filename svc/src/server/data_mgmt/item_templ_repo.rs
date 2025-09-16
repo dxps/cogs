@@ -22,23 +22,19 @@ impl ItemTemplateRepo {
     /// Insert or update an item template.
     pub async fn upsert(&self, item_templ: &ItemTemplate) -> AppResult<()> {
         //
-        let mut txn = self
-            .dbcp
-            .begin()
-            .await
-            .map_err(|e| AppError::from(e.to_string()))?;
+        let mut txn = self.dbcp.begin().await.map_err(|e| AppError::from(e.to_string()))?;
 
         if let Err(e) = sqlx::query(
             "INSERT INTO item_templates (id, name, description, listing_attr_templ_id) 
              VALUES ($1, $2, $3, $4)
              ON CONFLICT (id) DO UPDATE SET name = $2, description = $3, listing_attr_templ_id = $4",
-            )
-            .bind(item_templ.id.0)
-            .bind(item_templ.name.clone())
-            .bind(item_templ.description.clone())
-            .bind(item_templ.listing_attr.id.0)
-            .execute(&mut *txn)
-            .await
+        )
+        .bind(item_templ.id.0)
+        .bind(item_templ.name.clone())
+        .bind(item_templ.description.clone())
+        .bind(item_templ.listing_attr.id.0)
+        .execute(&mut *txn)
+        .await
         {
             txn.rollback().await.map_err(|e| AppError::from(e.to_string()))?;
             log::error!("Failed to add item template: '{}'.", e);
@@ -46,16 +42,12 @@ impl ItemTemplateRepo {
         }
 
         if !item_templ.id.is_zero() {
-            if let Err(e) = sqlx::query(
-                "DELETE FROM item_templates_attr_templates_xref WHERE item_templ_id = $1",
-            )
-            .bind(item_templ.id.0)
-            .execute(&mut *txn)
-            .await
+            if let Err(e) = sqlx::query("DELETE FROM item_templates_attr_templates_xref WHERE item_templ_id = $1")
+                .bind(item_templ.id.0)
+                .execute(&mut *txn)
+                .await
             {
-                txn.rollback()
-                    .await
-                    .map_err(|e| AppError::from(e.to_string()))?;
+                txn.rollback().await.map_err(|e| AppError::from(e.to_string()))?;
                 log::error!(
                     "Failed to delete item template's attribute templates during its upsert: {}",
                     e
@@ -65,13 +57,14 @@ impl ItemTemplateRepo {
         }
 
         for (index, attr_def) in item_templ.attributes.clone().iter().enumerate() {
-            if let Err(e) =
-                sqlx::query("INSERT INTO item_templates_attr_templates_xref (item_templ_id, attr_templ_id, show_index) VALUES ($1, $2, $3)")
-                    .bind(item_templ.id.0)
-                    .bind(attr_def.id.0)
-                    .bind((index + 1) as i16)
-                    .execute(&mut *txn)
-                    .await
+            if let Err(e) = sqlx::query(
+                "INSERT INTO item_templates_attr_templates_xref (item_templ_id, attr_templ_id, show_index) VALUES ($1, $2, $3)",
+            )
+            .bind(item_templ.id.0)
+            .bind(attr_def.id.0)
+            .bind((index + 1) as i16)
+            .execute(&mut *txn)
+            .await
             {
                 txn.rollback().await.map_err(|e| AppError::from(e.to_string()))?;
                 log::error!("Failed to add item template's attribute templates: {}", e);
@@ -79,9 +72,7 @@ impl ItemTemplateRepo {
             }
         }
 
-        txn.commit()
-            .await
-            .map_err(|e| AppError::from(e.to_string()))?;
+        txn.commit().await.map_err(|e| AppError::from(e.to_string()))?;
 
         AppResult::Ok(())
     }
@@ -93,11 +84,7 @@ impl ItemTemplateRepo {
             .fetch_all(self.dbcp.as_ref())
             .await
             .map_err(|err| AppError::from(err.to_string()))
-            .map(|rows| {
-                rows.iter()
-                    .map(|row| from_row(row).unwrap())
-                    .collect::<Vec<ItemTemplate>>()
-            })?;
+            .map(|rows| rows.iter().map(|row| from_row(row).unwrap()).collect::<Vec<ItemTemplate>>())?;
         Ok(data)
     }
 

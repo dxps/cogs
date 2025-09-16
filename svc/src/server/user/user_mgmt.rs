@@ -22,11 +22,7 @@ impl UserMgmt {
 
     pub async fn authenticate_user(&self, email: String, pwd: String) -> LoginResult {
         //
-        match self
-            .user_repo
-            .get_by_username(&email, AppUseCase::UserLogin)
-            .await
-        {
+        match self.user_repo.get_by_username(&email, AppUseCase::UserLogin).await {
             Ok(user_entry) => {
                 match Self::check_password(&pwd, &user_entry.password, &user_entry.salt) {
                     true => {
@@ -52,13 +48,7 @@ impl UserMgmt {
         }
     }
 
-    pub async fn register_admin_user(
-        &self,
-        name: String,
-        email: String,
-        username: String,
-        pwd: String,
-    ) -> AppResult<Id> {
+    pub async fn register_admin_user(&self, name: String, email: String, username: String, pwd: String) -> AppResult<Id> {
         //
         let (pwd, salt) = Self::generate_password(pwd);
         self.user_repo
@@ -73,12 +63,7 @@ impl UserMgmt {
             .await
     }
 
-    pub async fn update_password(
-        &self,
-        user_id: &Id,
-        curr_password: String,
-        new_password: String,
-    ) -> AppResult<()> {
+    pub async fn update_password(&self, user_id: &Id, curr_password: String, new_password: String) -> AppResult<()> {
         //
         let ups = self.user_repo.get_password_by_id(user_id).await?;
         match Self::check_password(&curr_password, &ups.password, &ups.salt) {

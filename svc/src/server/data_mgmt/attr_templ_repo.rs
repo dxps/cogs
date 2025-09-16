@@ -23,11 +23,7 @@ impl AttrTemplateRepo {
             .fetch_all(self.dbcp.as_ref())
             .await
             .map_err(|err| AppError::from(err.to_string()))
-            .map(|rows| {
-                rows.iter()
-                    .map(|row| from_row(row).unwrap())
-                    .collect::<Vec<AttrTemplate>>()
-            })?;
+            .map(|rows| rows.iter().map(|row| from_row(row).unwrap()).collect::<Vec<AttrTemplate>>())?;
         Ok(data)
     }
 

@@ -24,17 +24,11 @@ pub async fn upsert_attr_template(
     }
 }
 
-pub async fn get_all_attr_templates(
-    _auth_session: AuthSession,
-    State(state): State<ServerState>,
-) -> impl IntoResponse {
+pub async fn get_all_attr_templates(_auth_session: AuthSession, State(state): State<ServerState>) -> impl IntoResponse {
     //
     match state.data_mgmt.get_all_attr_templates().await {
         Ok(attr_templs) => {
-            log::info!(
-                "[api::get_all_attr_templates] Got {} entries.",
-                attr_templs.len()
-            );
+            log::info!("[api::get_all_attr_templates] Got {} entries.", attr_templs.len());
             (StatusCode::OK, Json(json!(attr_templs)))
         }
         Err(err) => respond_not_found(err),
@@ -66,17 +60,11 @@ pub async fn upsert_item_template(
     }
 }
 
-pub async fn get_all_item_templates(
-    _auth_session: AuthSession,
-    State(state): State<ServerState>,
-) -> impl IntoResponse {
+pub async fn get_all_item_templates(_auth_session: AuthSession, State(state): State<ServerState>) -> impl IntoResponse {
     //
     match state.data_mgmt.get_all_item_templates().await {
         Ok(attr_templs) => {
-            log::info!(
-                "[api::get_all_item_templates] Got {} entries.",
-                attr_templs.len()
-            );
+            log::info!("[api::get_all_item_templates] Got {} entries.", attr_templs.len());
             (StatusCode::OK, Json(json!(attr_templs)))
         }
         Err(err) => respond_not_found(err),
