@@ -5,10 +5,10 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-serde         = { version = "=1.0.225", features = [ "derive" ] }
+serde         = { version = "=1.0.226", features = [ "derive" ] }
 serde_json    = { version = "=1.0.145" }
 thiserror     = { version = "=2.0.16"  }
-anyhow        = { version = "=1.0.99"  }
+anyhow        = { version = "=1.0.100"  }
 chrono        = { version = "=0.4.42", features = [ "serde" ] }
 strum         = { version = "=0.27.2", features = [ "derive" ] }
 log           = { version = "=0.4.28", features = [ "serde" ] }   # serde support for Level and LevelFilter.

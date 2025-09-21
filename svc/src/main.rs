@@ -22,10 +22,7 @@ async fn main() {
 
     dotenvy::dotenv().unwrap();
     let config = Config::builder()
-        .add_source(
-            Environment::with_prefix("COGS_SVC").try_parsing(true), // .separator("_")
-                                                                    // .list_separator(" "),
-        )
+        .add_source(Environment::with_prefix("COGS_SVC").try_parsing(true))
         .build()
         .unwrap();
 
@@ -39,8 +36,9 @@ async fn main() {
 
     let session_config = SessionConfig::default()
         .with_session_name("cogs_user_session")
-        .with_store_name("cogs_user_stored_cookie")
+        .with_secure(false)
         .with_table_name("user_sessions")
+        .with_store_name("cogs_cookie")
         .with_lifetime(chrono::Duration::hours(24))
         .with_purge_database_update(chrono::Duration::minutes(5));
     let session_store = SessionPgSessionStore::new(Some(dbcp.clone().into()), session_config)
