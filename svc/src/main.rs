@@ -38,7 +38,6 @@ async fn main() {
         .with_session_name("cogs_user_session")
         .with_secure(false)
         .with_table_name("user_sessions")
-        .with_store_name("cogs_cookie")
         .with_lifetime(chrono::Duration::hours(24))
         .with_purge_database_update(chrono::Duration::minutes(5));
     let session_store = SessionPgSessionStore::new(Some(dbcp.clone().into()), session_config)

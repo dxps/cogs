@@ -1,7 +1,7 @@
 use crate::{
     CogsApp,
     comps::{AppComponent, Modal, PasswordInput},
-    constants::{MODAL_BTN_LABEL, MODAL_BTN_MSG, MODAL_CONTENT, MODAL_TITLE},
+    constants::{APP_HEADER_SESSION, MODAL_BTN_LABEL, MODAL_BTN_MSG, MODAL_CONTENT, MODAL_TITLE},
     messages::UiMessage,
     views::AppView,
 };
@@ -110,6 +110,11 @@ fn handle_login(user: String, pass: String, sender: Sender<UiMessage>, ectx: egu
             Ok(rsp) => {
                 if rsp.status == 200 {
                     log::info!("[handle_login] Login successful!");
+                    log::info!("[handle_login] Got response: {:?}", rsp);
+                    log::info!("[handle_login] Got user session: {:?}", rsp.headers.get(APP_HEADER_SESSION));
+                    for (header, value) in rsp.headers {
+                        log::info!("header {}: {}", header, value);
+                    }
                     let account = serde_json::from_slice::<UserAccount>(rsp.bytes.as_slice()).unwrap();
                     ectx.request_repaint(); // wake up UI thread
                     if let Err(e) = sender.send(UiMessage::Login(Ok(Some(account)))) {
@@ -117,16 +122,12 @@ fn handle_login(user: String, pass: String, sender: Sender<UiMessage>, ectx: egu
                     }
                 } else {
                     log::info!("[handle_login] Login failed! HTTP status code: {}", rsp.status);
-                    if rsp.status == 401 {
-                        let aerr = AppError::LoginWrongCredentials;
-                        if let Err(e) = sender.send(UiMessage::Login(Err(aerr))) {
-                            log::info!("[handle_login] Failed to send Login message. Error: {e}");
-                        }
-                    } else {
-                        let aerr = AppError::from(format!("{}", rsp.status));
-                        if let Err(e) = sender.send(UiMessage::Login(Err(aerr))) {
-                            log::info!("[handle_login] Failed to send Login message. Error: {e}");
-                        }
+                    let aerr = match rsp.status {
+                        401 => AppError::LoginWrongCredentials,
+                        _ => AppError::from(format!("{}", rsp.status)),
+                    };
+                    if let Err(e) = sender.send(UiMessage::Login(Err(aerr))) {
+                        log::info!("[handle_login] Failed to send Login message. Error: {e}");
                     }
                 }
             }

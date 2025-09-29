@@ -23,7 +23,11 @@ pub async fn login_user(
         None => {
             let account = res.account.unwrap();
             auth_session.login_user(account.id.clone());
-            log::debug!("[api::login_user] Setting user ID {} to the session.", account.id.clone());
+            log::info!(
+                "[api::login_user] Setting user id {} to the session id {}.",
+                account.id.clone(),
+                auth_session.session.get_session_id()
+            );
             (StatusCode::OK, Json(json!(account)))
         }
         Some(err) => match err {

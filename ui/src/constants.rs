@@ -13,11 +13,12 @@ pub const ICON_LOGIN: &str = "\u{E81E}";
 pub const ICON_LOGOUT: &str = "\u{E824}";
 pub const ICON_HELP: &str = "\u{E66A}";
 
-///////////////////////
-// General constants //
-///////////////////////
+///////////////////////////
+// General app constants //
+///////////////////////////
 
 pub const APP_KEY: &str = "cogs";
+pub const APP_HEADER_SESSION: &str = "cogs_user_session";
 
 ///////////////////////
 // egui Context data //

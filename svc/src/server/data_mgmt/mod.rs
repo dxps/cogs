@@ -1,5 +1,5 @@
-mod api;
-pub use api::*;
+mod data_mgmt_api;
+pub use data_mgmt_api::*;
 
 mod data_mgmt;
 pub use data_mgmt::*;

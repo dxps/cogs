@@ -42,7 +42,7 @@ catppuccin-egui = { version = "=5.6.0", default-features = false, features = [ "
 
 log = { version = "=0.4.28" }
 
-serde             = { version = "=1.0.226", features = [ "derive" ] }      # for the app persistence.
+serde             = { version = "=1.0.228", features = [ "derive" ] }      # for the app persistence.
 egui_extras       = { version = "=0.32.3", features = [ "all_loaders" ] }
 const_format      = { version = "=0.2.34" }
 ehttp             = { version = "=0.5.0", features = [ "json" ] }
@@ -62,7 +62,7 @@ env_logger = { version =  "=0.11.8" }
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 ###################################################
 
-wasm-bindgen-futures = { version = "=0.4.53" }
-web-sys              = { version = "=0.3.80" }      # to access the DOM (to hide the loading text)
+wasm-bindgen-futures = { version = "=0.4.54" }
+web-sys              = { version = "=0.3.81" }      # to access the DOM (to hide the loading text)
 
 
