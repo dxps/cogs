@@ -4,22 +4,30 @@
 
 Install `sqlx-cli` version 0.8.6 using:
 
-```
+```shell
 cargo install --version=0.8.6 sqlx-cli --no-default-features --features native-tls,postgres
 ```
 
 On an Ubuntu based Linux distro, you need to have `libssl-dev` package installed,
 so that `sqlx-cli` can be compiled and installed. Install it using:
 
-```
+```shell
 sudo apt-get install libssl-dev
+```
+
+Install PostgreSQL client.
+
+On macOS, use:
+
+```shell
+brew install libpq
 ```
 
 <br/>
 
 ### Init Database
 
-Use `./init.sh` to create and initialize (populating it with all the changes that exist) the database as a Docker container.
+Use `./init.sh` to create and initialize the database (populating it with all the changes that exist) as a Docker container.
 
 <br/>
 
