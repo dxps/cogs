@@ -11,5 +11,6 @@
 		"**/.factorypath": true,
 		"target": true
 	},
-	"explorerExclude.backup": {}
+	"explorerExclude.backup": {},
+	"rust-analyzer.cargo.target": "wasm32-unknown-unknown"
 }

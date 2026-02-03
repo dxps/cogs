@@ -1,7 +1,7 @@
 #![warn(clippy::all, rust_2018_idioms)]
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
 
-// When compiling natively:
+// When compiling natively.
 #[cfg(not(target_arch = "wasm32"))]
 fn main() -> eframe::Result {
     env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
@@ -11,7 +11,7 @@ fn main() -> eframe::Result {
             .with_inner_size([400.0, 300.0])
             .with_min_inner_size([300.0, 220.0])
             .with_icon(
-                // Note: Adding an icon is optional
+                // Note: Adding an icon is optional.
                 eframe::icon_data::from_png_bytes(&include_bytes!("../assets/icon-192.png")[..]).expect("Failed to load icon"),
             ),
         ..Default::default()
@@ -19,12 +19,12 @@ fn main() -> eframe::Result {
     eframe::run_native("Cogs", native_options, Box::new(|cc| Ok(Box::new(cogs_ui::CogsApp::new(cc)))))
 }
 
-// When compiling to web using trunk:
+// When compiling to web using trunk.
 #[cfg(target_arch = "wasm32")]
 fn main() {
     use eframe::wasm_bindgen::JsCast as _;
 
-    // Redirect `log` message to `console.log` and friends:
+    // Redirect `log` message to `console.log` and friends.
     eframe::WebLogger::init(log::LevelFilter::Debug).ok();
 
     let web_options = eframe::WebOptions::default();
@@ -42,15 +42,15 @@ fn main() {
             .start(
                 canvas,
                 web_options,
-                Box::new(|cc| {
-                    let app = cogs_ui::CogsApp::new(cc);
-                    app.init_web(&cc);
+                Box::new(|mut cc| {
+                    let mut app = cogs_ui::CogsApp::new(cc);
+                    app.init_web(&mut cc);
                     Ok(Box::new(app))
                 }),
             )
             .await;
 
-        // Remove the loading text and spinner:
+        // Remove the loading text and spinner.
         if let Some(loading_text) = document.get_element_by_id("loading_text") {
             match start_result {
                 Ok(_) => {

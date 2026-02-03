@@ -6,7 +6,7 @@ use crate::{
     comps::AppComponent,
     constants::{ICON_LOGIN, ICON_LOGOUT, ICON_SETTINGS, ICON_USER},
     messages::UiMessage,
-    views::ViewType,
+    views::ViewName,
 };
 
 pub struct UserWidget {}
@@ -41,8 +41,7 @@ impl AppComponent for UserWidget {
                             .on_hover_cursor(CursorIcon::PointingHand)
                             .clicked()
                         {
-                            ctx.state.prev_view_type = ctx.state.curr_view_type.clone();
-                            ctx.state.curr_view_type = ViewType::Login;
+                            ctx.state.set_curr_view(ViewName::Login);
                         };
                     } else {
                         if ui

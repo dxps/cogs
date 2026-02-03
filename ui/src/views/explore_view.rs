@@ -38,15 +38,15 @@ impl AppView for Explore {
 
     fn show(ctx: &mut Self::Context, ectx: &egui::Context) {
         //
-        // The central panel is the region left after adding TopPanel's and SidePanel's
-        egui::CentralPanel::default().show(ectx, |ui| {
-            ui.add_space(10.0);
-            ui.heading("Explore");
-            ui.add_space(20.0);
+        // The central panel is the region left after adding TopPanel's and SidePanel's.
+        let style = ectx.style();
+        egui::CentralPanel::default()
+        .frame(egui::Frame::central_panel(&style).inner_margin(egui::Margin::symmetric(20, 0)))
+        .show(ectx, |ui| {
+            ui.add_space(17.0);
             ui.label(
                 RichText::new(
-                    "See below the list of elements, as per previously selected category and kind of elements. 
-Click an element to view its properties on the right side, double click it to edit or delete it.",
+                    "In this view, you can explore the elements that exist in the system. Click an element to view its properties on the right, double click it to edit or delete.",
                 )
                 .color(Color32::GRAY),
             );

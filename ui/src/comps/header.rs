@@ -5,7 +5,7 @@ use crate::{
     CogsApp,
     comps::{AppComponent, UserWidget},
     constants::{ICON_EXPLORE, ICON_HOME},
-    views::{AppView, ViewType},
+    views::{AppView, ViewName},
 };
 
 pub struct Header {}
@@ -17,7 +17,8 @@ impl AppView for Header {
         egui::TopBottomPanel::top("top_panel")
             .show_separator_line(false)
             .show(ectx, |ui| {
-                // The top panel is often a good place for a menu bar:
+                // When running as a desktop app, the top panel
+                // is often a good place for a menu bar.
                 let is_web = cfg!(target_arch = "wasm32");
                 if !is_web {
                     egui::MenuBar::new().ui(ui, |ui| {
@@ -37,12 +38,21 @@ impl AppView for Header {
                         let logo = egui::include_image!("../../assets/logo_o.png");
                         ui.add(egui::Image::new(logo.clone()).fit_to_original_size(0.04));
                         ui.add_space(10.0);
-                        ui.selectable_value(&mut ctx.state.curr_view_type, ViewType::Home, concatcp!(ICON_HOME, "  Home "));
-                        ui.selectable_value(
-                            &mut ctx.state.curr_view_type,
-                            ViewType::Explore,
+                        let state = &mut ctx.state;
+                        let resp = ui.selectable_value(&mut state.curr_view(), &ViewName::Home, concatcp!(ICON_HOME, "  Home "));
+                        if resp.clicked() {
+                            state.set_curr_view(ViewName::Home);
+                        }
+
+                        let resp = ui.selectable_value(
+                            &mut state.curr_view(),
+                            &ViewName::Explore,
                             concatcp!(ICON_EXPLORE, "  Explore "),
                         );
+                        if resp.clicked() {
+                            state.set_curr_view(ViewName::Explore);
+                        }
+
                         egui::global_theme_preference_switch(ui);
                         ui.with_layout(Layout::right_to_left(Align::LEFT), |ui| {
                             ui.add_space(6.0);

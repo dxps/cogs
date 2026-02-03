@@ -1,13 +1,15 @@
-use crate::{AuthState, DataState, ExploreViewState, messages::UiMessage, views::ViewType};
+use crate::{AuthState, DataState, ExploreViewState, messages::UiMessage, views::ViewName};
+use serde::{Deserialize, Serialize};
 use std::sync::mpsc::Sender;
 
-#[derive(Clone, Default, Debug, serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Default, Debug, Deserialize, Serialize)]
 #[serde(default)]
 pub struct UiState {
-    pub curr_view_type: ViewType,
+    //
+    curr_view: ViewName,
 
     #[serde(skip)]
-    pub prev_view_type: ViewType,
+    prev_view: ViewName,
 
     pub auth: AuthState,
 
@@ -20,6 +22,23 @@ pub struct UiState {
 }
 
 impl UiState {
+    pub fn set_curr_view(&mut self, view: ViewName) {
+        if self.prev_view != ViewName::Login {
+            self.auth.login_user_focus = true;
+        }
+        self.prev_view = self.curr_view.clone();
+        self.curr_view = view;
+        self.update_url_hash();
+    }
+
+    pub fn curr_view(&self) -> &ViewName {
+        &self.curr_view
+    }
+
+    pub fn prev_view(&self) -> &ViewName {
+        &self.prev_view
+    }
+
     pub fn set_sender(&mut self, sender: Sender<UiMessage>) {
         self.sender = Some(sender);
     }
@@ -28,5 +47,17 @@ impl UiState {
         if let Err(e) = self.sender.as_ref().unwrap().send(msg) {
             log::info!("[UiState] Failed to send message. Error: {e}");
         }
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    fn update_url_hash(&self) {
+        let hash = match self.curr_view {
+            ViewName::Home => "#/",
+            ViewName::Explore => "#/explore",
+            ViewName::Settings => "#/settings",
+            ViewName::Login => "#/login",
+        };
+        let window = web_sys::window().unwrap();
+        window.location().set_hash(hash).unwrap();
     }
 }

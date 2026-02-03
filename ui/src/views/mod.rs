@@ -13,7 +13,7 @@ pub use settings_view::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-pub enum ViewType {
+pub enum ViewName {
     #[default]
     Home,
     Explore,

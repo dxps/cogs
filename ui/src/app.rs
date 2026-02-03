@@ -3,7 +3,7 @@ use crate::{
     comps::{AppComponent, Footer, Header},
     constants::APP_KEY,
     messages::UiMessage,
-    views::{AppView, Explore, ExploreCategory, ExploreKind, Home, Login, Settings, ViewType},
+    views::{AppView, Explore, ExploreCategory, ExploreKind, Home, Login, Settings, ViewName},
 };
 use cogs_shared::domain::model::{UserAccount, meta::Kind};
 use egui::{
@@ -52,7 +52,7 @@ impl CogsApp {
         egui_extras::install_image_loaders(ectx);
 
         // Zoom setting.
-        ectx.set_zoom_factor(1.25);
+        ectx.set_zoom_factor(1.26);
 
         ui_init_cosmetics(ectx);
 
@@ -84,8 +84,20 @@ impl CogsApp {
 
     /// Further app init when running on web.
     #[cfg(target_arch = "wasm32")]
-    pub fn init_web(&self, cc: &eframe::CreationContext<'_>) {
-        log::info!("[init web] {:#?}", cc.integration_info.web_info);
+    pub fn init_web(&mut self, cc: &eframe::CreationContext<'_>) {
+        let web_info = &cc.integration_info.web_info;
+        log::info!("[init web] webinfo: {:#?}", web_info);
+        match web_info.location.hash.as_str() {
+            "#/explore" => {
+                self.state.set_curr_view(ViewName::Explore);
+            }
+            "#/login" => {
+                self.state.set_curr_view(ViewName::Login);
+            }
+            _ => {
+                self.state.set_curr_view(ViewName::Home);
+            }
+        }
     }
 }
 
@@ -118,7 +130,7 @@ impl eframe::App for CogsApp {
                     Ok(account) => match account {
                         Some(account) => {
                             self.state.auth.user_account = Some(account);
-                            self.state.curr_view_type = ViewType::Home;
+                            self.state.set_curr_view(ViewName::Home);
                         }
                         None => {
                             self.state.auth.login_error = None;
@@ -132,7 +144,7 @@ impl eframe::App for CogsApp {
 
                 UiMessage::Logout => {
                     self.state.auth.user_account = None;
-                    self.state.curr_view_type = ViewType::Home;
+                    self.state.set_curr_view(ViewName::Home);
                 }
 
                 UiMessage::Settings => {}
@@ -167,7 +179,7 @@ impl eframe::App for CogsApp {
                             Kind::LinkTemplate => todo!(),
                         },
                         Err(_err) => {
-                            // TODO: show a popup message.
+                            // TODO: show a popup window.
                         }
                     }
                 }
@@ -232,15 +244,12 @@ impl eframe::App for CogsApp {
             }
         }
 
-        match self.state.curr_view_type {
-            ViewType::Home => Home::show(self, ctx),
-            ViewType::Explore => Explore::show(self, ctx),
-            ViewType::Settings => Settings::show(self, ctx),
-            ViewType::Login => {
-                if self.state.prev_view_type != ViewType::Login {
-                    self.state.auth.login_user_focus = true;
-                    self.state.prev_view_type = ViewType::Login;
-                }
+        match self.state.curr_view() {
+            ViewName::Home => Home::show(self, ctx),
+            ViewName::Explore => Explore::show(self, ctx),
+            ViewName::Settings => Settings::show(self, ctx),
+            ViewName::Login => {
+                self.state.set_curr_view(ViewName::Login);
                 Login::show(self, ctx);
             }
         }
