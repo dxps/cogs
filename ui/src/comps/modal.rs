@@ -1,11 +1,10 @@
-use egui::{Id, RichText, Shadow, Stroke};
-
 use crate::{
     CogsApp,
     comps::AppComponent,
     constants::{MODAL_BTN_LABEL, MODAL_BTN_MSG, MODAL_CONTENT, MODAL_TITLE},
     messages::UiMessage,
 };
+use egui::{Id, RichText, Shadow, Stroke};
 
 pub struct Modal {}
 
@@ -14,7 +13,7 @@ impl AppComponent for Modal {
 
     /// Show a modal.\
     ///
-    /// **Note:** It expects 4 values in `ui`'s `.data()`:
+    /// **Note:** It expects 4 `String` values in `ui`'s `.data` under the following `Id`s:
     /// - `MODAL_TITLE` - The title of the modal.
     /// - `MODAL_CONTENT` - The content of the modal.
     /// - `MODAL_BTN_LABEL` - The label of the button (that acknowledges and closes the modal).

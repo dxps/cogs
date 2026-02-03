@@ -33,9 +33,8 @@ pub use password_input::*;
 mod user_widget;
 pub use user_widget::*;
 
-use eframe::egui::Ui;
-
 use crate::messages::UiMessage;
+use eframe::egui::Ui;
 
 pub trait AppComponent {
     type Context;
