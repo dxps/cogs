@@ -14,7 +14,11 @@ impl AppComponent for Modal {
 
     /// Show a modal.\
     ///
-    /// **Note:** It expects 4 values (`MODAL_TITLE`, `MODAL_CONTENT`, `MODAL_BTN_LABEL`, `MODAL_BTN_MSG`) in provided `ui`'s `.data()`.
+    /// **Note:** It expects 4 values in `ui`'s `.data()`:
+    /// - `MODAL_TITLE` - The title of the modal.
+    /// - `MODAL_CONTENT` - The content of the modal.
+    /// - `MODAL_BTN_LABEL` - The label of the button (that acknowledges and closes the modal).
+    /// - `MODAL_BTN_MSG` - The message that is sent when the button is clicked.
     fn show(ctx: &mut Self::Context, ui: &mut eframe::egui::Ui) {
         //
         let title = ui.data(|data| data.get_temp::<String>(Id::from(MODAL_TITLE))).unwrap();

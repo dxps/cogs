@@ -129,6 +129,7 @@ fn handle_login(user: String, pass: String, sender: Sender<UiMessage>, ectx: egu
                     if let Err(e) = sender.send(UiMessage::Login(Err(aerr))) {
                         log::info!("[handle_login] Failed to send Login message. Error: {e}");
                     }
+                    ectx.request_repaint();
                 }
             }
             Err(e) => log::info!("[handle_login] Login failed! Error: {}", e),
