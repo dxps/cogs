@@ -25,28 +25,27 @@ targets = ["x86_64-unknown-linux-gnu", "wasm32-unknown-unknown"]
 
 cogs_shared = { path = "../shared" }
 
-egui = { version = "=0.32.3", features = [
+egui = { version = "=0.33.3", features = [
     "persistence",   # Enable persistence of memory (window positions etc).
-    "log",           # It makes egui log some errors using the `log` crate.
     "serde",         # Allow serialization using `serde`.
  ] }
-eframe = { version = "=0.32.3", default-features = false, features = [
-    "accesskit",     # Make egui compatible with screen readers. NOTE: adds a lot of dependencies.
+eframe = { version = "=0.33.3", default-features = false, features = [
+    "accesskit",     # Make egui compatible with screen readers. Note: It adds a lot of dependencies.
     "default_fonts", # Embed the default egui fonts.
     "glow",          # Use the glow rendering backend. Alternative: "wgpu".
     "persistence",   # Enable restoring app state when restarting the app.
     "wayland",       # To support Linux (and CI).
     "x11",           # To support older Linux distributions (restores one of the default features).
 ] }
-catppuccin-egui = { version = "=5.6.0", default-features = false, features = [ "egui32" ] }
+catppuccin-egui = { version = "=5.7.0", default-features = false, features = [ "egui33" ] }
 
-log = { version = "=0.4.28" }
+log = { version = "=0.4.29" }
 
 serde             = { version = "=1.0.228", features = [ "derive" ] }      # for the app persistence.
-egui_extras       = { version = "=0.32.3", features = [ "all_loaders" ] }
-const_format      = { version = "=0.2.34" }
-ehttp             = { version = "=0.5.0", features = [ "json" ] }
-serde_json        = { version = "=1.0.145" }
+egui_extras       = { version = "=0.33.3", features = [ "all_loaders" ] }
+const_format      = { version = "=0.2.35" }
+ehttp             = { version = "=0.6.0", features = [ "json" ] }
+serde_json        = { version = "=1.0.149" }
 
 
 # Native deps
@@ -62,7 +61,7 @@ env_logger = { version =  "=0.11.8" }
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 ###################################################
 
-wasm-bindgen-futures = { version = "=0.4.54" }
-web-sys              = { version = "=0.3.81" }      # to access the DOM (to hide the loading text)
+wasm-bindgen-futures = { version = "=0.4.58" }
+web-sys              = { version = "=0.3.85" }      # to access the DOM (to hide the loading text)
 
 
