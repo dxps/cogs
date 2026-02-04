@@ -2,7 +2,7 @@ use cogs_shared::{
     app::{AppError, AppResult},
     domain::model::{Id, meta::AttrTemplate},
 };
-use sqlx::{PgPool, Row, postgres::PgRow};
+use sqlx::{PgPool, Row, postgres::PgRow, types::Uuid};
 use std::sync::Arc;
 
 #[derive(Clone, Debug)]
@@ -63,7 +63,7 @@ impl AttrTemplateRepo {
 
 fn from_row(row: &PgRow) -> Result<AttrTemplate, sqlx::Error> {
     Ok(AttrTemplate {
-        id: row.get::<i64, _>("id").into(),
+        id: Id(row.get::<Uuid, _>("id")),
         name: row.get("name"),
         description: row.get("description"),
         value_type: row.get::<String, _>("value_type").into(),

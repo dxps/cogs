@@ -163,10 +163,10 @@ impl eframe::App for CogsApp {
 
                 UiMessage::ElementCreated(kind, ars) => {
                     match ars {
-                        Ok(_id) => match kind {
+                        Ok(id) => match kind {
                             Kind::Item => todo!(),
                             Kind::ItemTemplate => {
-                                self.state.explore.open_windows_item_template.remove(&0.into());
+                                self.state.explore.open_windows_item_template.remove(&id);
                                 self.state.data.fetch_all_item_templates(ctx, self.sendr.clone());
                                 self.state.data.fetch_done = true;
                                 ctx.request_repaint();

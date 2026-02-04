@@ -1,20 +1,9 @@
-use axum_session::{SessionConfig, SessionLayer};
-use axum_session_auth::AuthConfig;
-use axum_session_sqlx::SessionPgSessionStore;
-use cogs_svc::{
-    AppError,
-    domain::model::Id,
-    server::{self, AuthSessionLayer, ServerState, SvcConfig, create_router, init_logging},
-};
+use cogs_shared::app::AppError;
+use cogs_svc::server::{self, ServerState, SvcConfig, init_logging, init_router};
 use config::{Config, Environment};
 use sqlx::{Pool, Postgres};
 use std::sync::Arc;
 use tokio::signal;
-
-pub use axum::{
-    Router,
-    routing::{get, post},
-};
 
 #[tokio::main]
 async fn main() {
@@ -28,22 +17,9 @@ async fn main() {
 
     let cfg: SvcConfig = config.try_deserialize().unwrap();
 
-    log::debug!("Loaded cfg: {cfg:#?}");
-
     log::info!("Connecting to database ...");
     let dbcp = server::db_pool_init().await.expect("Failed to connect to the database!");
     log::info!("Connected to database.");
-
-    let session_config = SessionConfig::default()
-        .with_session_name("cogs_user_session")
-        .with_secure(false)
-        .with_table_name("user_sessions")
-        .with_lifetime(chrono::Duration::hours(24))
-        .with_purge_database_update(chrono::Duration::minutes(5));
-    let session_store = SessionPgSessionStore::new(Some(dbcp.clone().into()), session_config)
-        .await
-        .unwrap();
-    let auth_config = AuthConfig::<Id>::default().with_anonymous_user_id(Some(0.into()));
 
     let state = ServerState::new(Arc::new(dbcp.clone()));
 
@@ -58,20 +34,19 @@ async fn main() {
                 // It's fine if the admin user already exists.
             } else {
                 log::error!("Failed to self-register the admin user: {}", e);
+                return;
             }
         }
     }
 
-    let router = create_router(state)
-        .layer(AuthSessionLayer::new(Some(dbcp.clone())).with_config(auth_config))
-        .layer(SessionLayer::new(session_store));
+    let web_api_router = init_router(&dbcp).await.with_state(state);
 
     log::info!("Listening on http://{}", cfg.listenaddress);
     let listener = tokio::net::TcpListener::bind(&cfg.listenaddress)
         .await
         .expect(format!("Failed to bind to address {}", cfg.listenaddress).as_str());
 
-    axum::serve(listener, router.into_make_service())
+    axum::serve(listener, web_api_router.into_make_service())
         .with_graceful_shutdown(shutdown_signal(dbcp))
         .await
         .unwrap();

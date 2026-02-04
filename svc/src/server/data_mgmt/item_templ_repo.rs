@@ -7,6 +7,7 @@ use cogs_shared::{
 };
 use sqlx::{PgPool, Row, postgres::PgRow};
 use std::sync::Arc;
+use uuid::Uuid;
 
 #[derive(Clone, Debug)]
 pub struct ItemTemplateRepo {
@@ -102,13 +103,13 @@ impl ItemTemplateRepo {
 
 fn from_row(row: &PgRow) -> Result<ItemTemplate, sqlx::Error> {
     Ok(ItemTemplate {
-        id: row.get::<i64, _>("id").into(),
+        id: Id(row.get::<Uuid, _>("id")),
         name: row.get("name"),
         description: row.get("description"),
         // For the purpose of this use case, we just need
         // to fill it in with minimal data that we already have.
         listing_attr: AttrTemplate {
-            id: row.get::<i64, _>("listing_attr_templ_id").into(),
+            id: Id(row.get::<Uuid, _>("listing_attr_templ_id")),
             name: "".into(),
             description: "".into(),
             value_type: AttributeValueType::Text,

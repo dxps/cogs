@@ -1,27 +1,13 @@
+use serde::{Deserialize, Serialize};
 use std::{fmt::Display, str::FromStr};
+use uuid::Uuid;
 
-#[derive(Debug, Default, Clone, Hash, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
-pub struct Id(pub i64);
+#[derive(Debug, Default, Clone, Hash, Eq, PartialEq, Serialize, Deserialize)]
+pub struct Id(pub Uuid);
 
 impl Id {
-    pub fn new_from(id: i64) -> Self {
-        Self(id)
-    }
-
-    pub fn new_from_opt(s: &str) -> Option<Self> {
-        if s.is_empty() {
-            return None;
-        }
-        let val = i64::from_str(s).ok()?;
-        Some(Self(val))
-    }
-
-    pub fn to_string(&self) -> String {
-        self.0.to_string()
-    }
-
     pub fn is_zero(&self) -> bool {
-        self.0 == 0
+        self.0.is_nil()
     }
 }
 
@@ -33,11 +19,13 @@ impl Display for Id {
 
 impl From<&str> for Id {
     fn from(s: &str) -> Self {
-        let val = i64::from_str(s);
-        if val.is_err() {
-            log::error!("Invalid provided id: {}", s);
+        match Uuid::parse_str(s) {
+            Ok(val) => Self(val),
+            Err(e) => {
+                log::error!("[Id::from] Failed to parse id. Error: {e}");
+                Self::default()
+            }
         }
-        Self(val.unwrap())
     }
 }
 
@@ -52,11 +40,5 @@ impl FromStr for Id {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         Ok(Self::from(s))
-    }
-}
-
-impl From<i64> for Id {
-    fn from(value: i64) -> Self {
-        Self { 0: value }
     }
 }

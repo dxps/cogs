@@ -23,24 +23,25 @@ sqlx              = { version = "=0.8.6", features = [
     "macros",
     "postgres",
     "runtime-tokio-rustls",
+    "uuid"
 ]}
 
-axum_session      = { version = "=0.17.1"  }
-axum_session_auth = { version = "=0.17.0", features = [ "rest_mode" ] }
-axum_session_sqlx = { version = "=0.6.1",  features = [ "postgres", "tls-rustls" ] }
+axum_session      = { version = "=0.18.0"  }
+axum_session_auth = { version = "=0.18.0", features = [ "rest_mode" ] }
+axum_session_sqlx = { version = "=0.7",  features = [ "postgres", "tls-rustls" ] }
 async-trait       = { version = "=0.1.89"  }
 
 thiserror         = { version = "=2.0.18"  }
 anyhow            = { version = "=1.0.100"  }
 log               = { version = "=0.4.29"  }
-simple_logger     = { version = "=5.0.0"   }
+simple_logger     = { version = "=5.1.0"   }
 
 dotenvy           = { version = "=0.15.7"  }
 randoid           = { version = "=0.3.0"   }
 md5               = { version = "=0.8.0"   }
 config            = { version = "=0.15.19" }
-snowflake-ng      = { version = "=0.1.5"   }
 chrono            = { version = "=0.4.43"  }
+uuid          = { version = "=1.20.0", features = ["v7", "std"] }
 
 #######
 [lints]

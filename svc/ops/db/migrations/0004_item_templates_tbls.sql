@@ -1,16 +1,16 @@
 CREATE TABLE item_templates
 (
-    id                      BIGINT        PRIMARY KEY,
+    id                      UUID          PRIMARY KEY,
     name                    VARCHAR(64)   NOT NULL,
     description             VARCHAR(256),
-    listing_attr_templ_id   BIGINT        NOT NULL,
+    listing_attr_templ_id   UUID          NOT NULL,
     CONSTRAINT item_templ_listing_attr_templ_fk  FOREIGN KEY(listing_attr_templ_id) REFERENCES attr_templates(id)
 );
 
 CREATE TABLE item_templates_attr_templates_xref
 (
-    item_templ_id            BIGINT,
-    attr_templ_id            BIGINT,
+    item_templ_id            UUID,
+    attr_templ_id            UUID,
     show_index               INT2         NOT NULL     CHECK(show_index > 0),
     PRIMARY KEY (item_templ_id, attr_templ_id),
     CONSTRAINT item_templ_fk   FOREIGN KEY(item_templ_id)   REFERENCES item_templates(id) ON DELETE CASCADE,

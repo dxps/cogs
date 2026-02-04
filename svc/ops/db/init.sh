@@ -15,7 +15,7 @@ if ! [ -x "$(command -v sqlx)" ]; then
   exit 1
 fi
 
-DB_IMAGE="postgres:17-alpine"
+DB_IMAGE="postgres:18-alpine"
 
 # Check if a custom user has been set, otherwise default to 'cogs'.
 DB_USER="${POSTGRES_USER:=cogs}"

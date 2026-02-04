@@ -28,6 +28,7 @@ impl UiState {
         }
         self.prev_view = self.curr_view.clone();
         self.curr_view = view;
+        #[cfg(target_arch = "wasm32")]
         self.update_url_hash();
     }
 

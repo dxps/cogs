@@ -1,13 +1,10 @@
-use std::sync::Arc;
-
-use randoid::randoid;
-
-use crate::{
-    app_err_uc::{AppError, AppResult, AppUseCase},
+use crate::server::UserAccountsRepo;
+use cogs_shared::{
+    app::{AppError, AppResult},
     domain::model::{Id, UserAccount},
-    dtos::LoginResult,
-    server::UserAccountsRepo,
 };
+use randoid::randoid;
+use std::sync::Arc;
 
 #[derive(Clone, Debug)]
 pub struct UserMgmt {
@@ -20,31 +17,18 @@ impl UserMgmt {
         Self { user_repo }
     }
 
-    pub async fn authenticate_user(&self, email: String, pwd: String) -> LoginResult {
+    pub async fn authenticate_user(&self, email: String, pwd: String) -> AppResult<UserAccount> {
         //
-        match self.user_repo.get_by_username(&email, AppUseCase::UserLogin).await {
-            Ok(user_entry) => {
-                match Self::check_password(&pwd, &user_entry.password, &user_entry.salt) {
-                    true => {
-                        // Get user permissions.
-                        let mut account: UserAccount = user_entry.into();
-                        match self.user_repo.get_permissions(&mut account).await {
-                            Ok(()) => LoginResult {
-                                is_succcess: true,
-                                account: Some(account),
-                                error: None,
-                            },
-                            Err(e) => LoginResult {
-                                is_succcess: false,
-                                account: None,
-                                error: Some(AppError::into(e)),
-                            },
-                        }
-                    }
-                    false => AppError::Unauthorized("wrong credentials".into()).into(),
-                }
+        let user_entry = self.user_repo.get_by_username(&email).await.map_err(|err| {
+            if err == AppError::NotFound {
+                AppError::Unauthorized("wrong credentials".into())
+            } else {
+                err
             }
-            Err(err) => err.into(),
+        })?;
+        match Self::check_password(&pwd, &user_entry.password, &user_entry.salt) {
+            true => Ok(user_entry.into()),
+            false => Err(AppError::Unauthorized("wrong credentials".into())),
         }
     }
 

@@ -1,10 +1,13 @@
-use sqlx::{FromRow, PgPool, Row, postgres::PgRow};
-use std::sync::Arc;
-
 use crate::{
-    app_err_uc::{AppError, AppResult, AppUseCase},
+    infra::{new_app_error_from_sqlx, new_id},
+    server::AuthUserAccount,
+};
+use cogs_shared::{
+    app::{AppError, AppResult},
     domain::model::{Id, UserAccount, UserEntry, UserPasswordSalt},
 };
+use sqlx::{PgPool, Row, postgres::PgRow};
+use std::sync::Arc;
 
 #[derive(Debug)]
 pub struct UserAccountsRepo {
@@ -23,43 +26,68 @@ impl UserAccountsRepo {
         }
     }
 
-    pub async fn get_by_username(&self, username: &String, usecase: AppUseCase) -> AppResult<UserEntry> {
+    pub async fn get_by_username(&self, username: &String) -> AppResult<UserEntry> {
         //
-        sqlx::query_as::<_, UserEntry>(
-            "SELECT id, email, username, password, name, salt, bio, is_anonymous FROM user_accounts 
+        let row = sqlx::query(
+            "SELECT id, name, email, password, salt, bio, is_anonymous FROM user_accounts 
              WHERE username = $1",
         )
         .bind(username)
         .fetch_one(self.dbcp.as_ref())
         .await
-        .map_err(|err| AppError::from((err, usecase)))
+        .map_err(|err| new_app_error_from_sqlx(err, Some("failed to get user by email".to_string())))?;
+
+        let mut user_account = UserAccount {
+            id: Id(row.get("id")),
+            name: row.get("name"),
+            email: row.get("email"),
+            username: username.clone(),
+            bio: row.get("bio"),
+            is_anonymous: row.get("is_anonymous"),
+            permissions: Vec::new(),
+        };
+
+        let permissions = sqlx::query("SELECT permission FROM user_permissions WHERE user_id = $1")
+            .bind(user_account.id.0)
+            .fetch_all(self.dbcp.as_ref())
+            .await
+            .map_err(|err| new_app_error_from_sqlx(err, Some("failed to get user permissions".to_string())))?;
+
+        user_account.permissions = permissions.iter().map(|r| r.get("permission")).collect();
+
+        Ok(UserEntry {
+            user: user_account,
+            password: row.get("password"),
+            salt: row.get("salt"),
+        })
     }
 
-    pub async fn get_by_email(&self, email: &String, usecase: AppUseCase) -> AppResult<UserEntry> {
+    pub async fn get_by_id(id: &Id, pool: &PgPool) -> Option<AuthUserAccount> {
         //
-        sqlx::query_as::<_, UserEntry>(
-            "SELECT id, email, username, password, name, salt, bio, is_anonymous FROM user_accounts 
-             WHERE email = $1",
-        )
-        .bind(email)
-        .fetch_one(self.dbcp.as_ref())
-        .await
-        .map_err(|err| AppError::from((err, usecase)))
-    }
+        let row = sqlx::query("SELECT id, email, username, bio, is_anyonymous FROM user_accounts WHERE id = $1")
+            .bind(id.to_string())
+            .fetch_one(pool)
+            .await
+            .ok()?;
 
-    pub async fn get_by_id(&self, id: &Id) -> AppResult<Option<UserAccount>> {
-        //
-        let mut account = sqlx::query_as::<_, UserAccount>(
-            "SELECT id, name, email, username, bio, is_anonymous FROM user_accounts WHERE id = $1",
-        )
-        .bind(id.0)
-        .fetch_one(self.dbcp.as_ref())
-        .await
-        .map_err(AppError::from)?;
+        let mut user_account = UserAccount {
+            id: Id(row.get("id")),
+            name: row.get("name"),
+            email: row.get("email"),
+            username: row.get("username"),
+            bio: row.get("bio"),
+            is_anonymous: row.get("is_anonymous"),
+            permissions: Vec::new(),
+        };
 
-        self.get_permissions(&mut account).await?;
+        let mut permissions = sqlx::query("SELECT permission FROM user_permissions WHERE user_id = $1;")
+            .map(|r: PgRow| r.get("permission"))
+            .fetch_all(pool)
+            .await
+            .ok()?;
 
-        Ok(Some(account))
+        user_account.permissions.append(&mut permissions);
+        Some(user_account.into())
     }
 
     pub async fn get_permissions(&self, account: &mut UserAccount) -> AppResult<()> {
@@ -73,7 +101,7 @@ impl UserAccountsRepo {
                     "Could not load permissions for user account w/ id: {}. Error: {err}",
                     account.id
                 );
-                AppError::from(err)
+                AppError::from(err.to_string())
             })?;
         account.permissions.append(&mut permissions);
         Ok(())
@@ -89,7 +117,7 @@ impl UserAccountsRepo {
         permissions: Vec<String>,
     ) -> AppResult<Id> {
         //
-        let id = Id::new();
+        let id = new_id();
         let res = sqlx::query(
             "INSERT INTO user_accounts (id, name, email, username, password, salt) 
              VALUES ($1, $2, $3, $4, $5, $6)",
@@ -102,13 +130,7 @@ impl UserAccountsRepo {
         .bind(salt)
         .execute(self.dbcp.as_ref())
         .await
-        .map_err(|err| {
-            AppError::from((
-                err,
-                AppUseCase::UserRegistration,
-                "Self registration of admin user account".to_string(),
-            ))
-        });
+        .map_err(|err| new_app_error_from_sqlx(err, None));
 
         if res.is_ok() {
             for permission in permissions.iter() {
@@ -117,13 +139,7 @@ impl UserAccountsRepo {
                     .bind(&permission)
                     .execute(self.dbcp.as_ref())
                     .await
-                    .map_err(|err| {
-                        AppError::from((
-                            err,
-                            AppUseCase::UserRegistration,
-                            "Self registration of admin user permissions".to_string(),
-                        ))
-                    });
+                    .map_err(|err| new_app_error_from_sqlx(err, None));
                 if res.is_err() {
                     return AppResult::Err(res.err().unwrap());
                 }
@@ -136,11 +152,16 @@ impl UserAccountsRepo {
 
     pub async fn get_password_by_id(&self, user_id: &Id) -> AppResult<UserPasswordSalt> {
         //
-        sqlx::query_as::<_, UserPasswordSalt>("SELECT password, salt FROM user_accounts WHERE id = $1")
+        let row = sqlx::query("SELECT password, salt FROM user_accounts WHERE id = $1")
             .bind(user_id.0)
             .fetch_one(self.dbcp.as_ref())
             .await
-            .map_err(|err| AppError::from(err))
+            .map_err(|err| new_app_error_from_sqlx(err, Some("failed to get password by user id".to_string())))?;
+
+        Ok(UserPasswordSalt {
+            password: row.get("password"),
+            salt: row.get("salt"),
+        })
     }
 
     pub async fn update_password(&self, user_id: &Id, pwd: String) -> AppResult<()> {
@@ -150,58 +171,10 @@ impl UserAccountsRepo {
             .bind(user_id.0)
             .execute(self.dbcp.as_ref())
             .await
-            .map_err(|err| AppError::from(err))
+            .map_err(|err| AppError::from(err.to_string()))
         {
             Ok(_) => Ok(()),
             Err(err) => Err(AppError::from(err)),
         }
-    }
-}
-
-// ///////////////////////////////////////////
-// Implementations of sqlx's FromRow trait. //
-// ///////////////////////////////////////////
-
-impl FromRow<'_, PgRow> for UserEntry {
-    //
-    fn from_row(row: &PgRow) -> Result<Self, sqlx::Error> {
-        Ok(Self {
-            user: UserAccount {
-                id: row.try_get::<i64, _>("id").unwrap_or_default().into(),
-                email: row.get("email"),
-                username: row.get("username"),
-                name: row.get("name"),
-                bio: row.get("bio"),
-                is_anonymous: row.get("is_anonymous"),
-                permissions: Vec::new(),
-            },
-            password: row.get("password"),
-            salt: row.get("salt"),
-        })
-    }
-}
-
-impl FromRow<'_, PgRow> for UserPasswordSalt {
-    //
-    fn from_row(row: &PgRow) -> Result<Self, sqlx::Error> {
-        Ok(Self {
-            password: row.get("password"),
-            salt: row.get("salt"),
-        })
-    }
-}
-
-impl FromRow<'_, PgRow> for UserAccount {
-    //
-    fn from_row(row: &PgRow) -> Result<Self, sqlx::Error> {
-        Ok(Self {
-            id: row.get::<i64, _>("id").into(),
-            email: row.get("email"),
-            username: row.get("username"),
-            name: row.get("name"),
-            bio: row.get("bio"),
-            is_anonymous: row.get("is_anonymous"),
-            permissions: Vec::new(),
-        })
     }
 }

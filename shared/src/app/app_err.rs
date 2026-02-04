@@ -71,13 +71,3 @@ impl From<anyhow::Error> for AppError {
         Self::from(err.to_string())
     }
 }
-
-// /////////////
-// AppUseCase //
-////////////////
-
-#[derive(Debug)]
-pub enum AppUseCase {
-    UserRegistration,
-    UserLogin,
-}

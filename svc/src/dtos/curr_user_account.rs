@@ -1,6 +1,5 @@
+use cogs_shared::{app::AppError, domain::model::UserAccount};
 use serde::{Deserialize, Serialize};
-
-use crate::{app_err_uc::AppError, domain::model::UserAccount};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct CurrentUserAccount {

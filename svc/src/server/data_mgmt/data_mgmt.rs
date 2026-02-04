@@ -30,7 +30,7 @@ impl DataMgmt {
 
     pub async fn upsert_attr_template(&self, mut attr_templ: AttrTemplate) -> AppResult<Id> {
         if attr_templ.id.clone().is_zero() {
-            attr_templ.id = Id::from(crate::domain::model::Id::new().0);
+            attr_templ.id = Id::default();
         }
         self.attr_templ_repo.upsert(&attr_templ).await?;
         Ok(attr_templ.id)
@@ -50,7 +50,7 @@ impl DataMgmt {
 
     pub async fn upsert_item_template(&self, mut item_templ: ItemTemplate) -> AppResult<Id> {
         if item_templ.id.clone().is_zero() {
-            item_templ.id = Id::from(crate::domain::model::Id::new().0);
+            item_templ.id = Id::default();
         }
         self.item_templ_repo.upsert(&item_templ).await?;
         Ok(item_templ.id)
