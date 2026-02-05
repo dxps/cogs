@@ -1,13 +1,12 @@
 use serde::{Deserialize, Serialize};
 use std::{fmt::Display, str::FromStr};
-use uuid::Uuid;
 
 #[derive(Debug, Default, Clone, Hash, Eq, PartialEq, Serialize, Deserialize)]
-pub struct Id(pub Uuid);
+pub struct Id(pub String);
 
 impl Id {
     pub fn is_zero(&self) -> bool {
-        self.0.is_nil()
+        self.0.is_empty()
     }
 }
 
@@ -19,13 +18,7 @@ impl Display for Id {
 
 impl From<&str> for Id {
     fn from(s: &str) -> Self {
-        match Uuid::parse_str(s) {
-            Ok(val) => Self(val),
-            Err(e) => {
-                log::error!("[Id::from] Failed to parse id. Error: {e}");
-                Self::default()
-            }
-        }
+        Self(s.to_string())
     }
 }
 

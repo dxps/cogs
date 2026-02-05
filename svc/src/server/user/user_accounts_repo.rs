@@ -48,7 +48,7 @@ impl UserAccountsRepo {
         };
 
         let permissions = sqlx::query("SELECT permission FROM user_permissions WHERE user_id = $1")
-            .bind(user_account.id.0)
+            .bind(user_account.id.to_string())
             .fetch_all(self.dbcp.as_ref())
             .await
             .map_err(|err| new_app_error_from_sqlx(err, Some("failed to get user permissions".to_string())))?;
@@ -153,7 +153,7 @@ impl UserAccountsRepo {
     pub async fn get_password_by_id(&self, user_id: &Id) -> AppResult<UserPasswordSalt> {
         //
         let row = sqlx::query("SELECT password, salt FROM user_accounts WHERE id = $1")
-            .bind(user_id.0)
+            .bind(user_id.to_string())
             .fetch_one(self.dbcp.as_ref())
             .await
             .map_err(|err| new_app_error_from_sqlx(err, Some("failed to get password by user id".to_string())))?;
@@ -168,7 +168,7 @@ impl UserAccountsRepo {
         //
         match sqlx::query("UPDATE user_accounts SET password = $1 WHERE id = $2")
             .bind(pwd)
-            .bind(user_id.0)
+            .bind(user_id.to_string())
             .execute(self.dbcp.as_ref())
             .await
             .map_err(|err| AppError::from(err.to_string()))

@@ -30,10 +30,10 @@ impl ItemTemplateRepo {
              VALUES ($1, $2, $3, $4)
              ON CONFLICT (id) DO UPDATE SET name = $2, description = $3, listing_attr_templ_id = $4",
         )
-        .bind(item_templ.id.0)
+        .bind(item_templ.id.to_string())
         .bind(item_templ.name.clone())
         .bind(item_templ.description.clone())
-        .bind(item_templ.listing_attr.id.0)
+        .bind(item_templ.listing_attr.id.to_string())
         .execute(&mut *txn)
         .await
         {
@@ -44,7 +44,7 @@ impl ItemTemplateRepo {
 
         if !item_templ.id.is_zero() {
             if let Err(e) = sqlx::query("DELETE FROM item_templates_attr_templates_xref WHERE item_templ_id = $1")
-                .bind(item_templ.id.0)
+                .bind(item_templ.id.to_string())
                 .execute(&mut *txn)
                 .await
             {
@@ -61,8 +61,8 @@ impl ItemTemplateRepo {
             if let Err(e) = sqlx::query(
                 "INSERT INTO item_templates_attr_templates_xref (item_templ_id, attr_templ_id, show_index) VALUES ($1, $2, $3)",
             )
-            .bind(item_templ.id.0)
-            .bind(attr_def.id.0)
+            .bind(item_templ.id.to_string())
+            .bind(attr_def.id.to_string())
             .bind((index + 1) as i16)
             .execute(&mut *txn)
             .await
@@ -103,13 +103,13 @@ impl ItemTemplateRepo {
 
 fn from_row(row: &PgRow) -> Result<ItemTemplate, sqlx::Error> {
     Ok(ItemTemplate {
-        id: Id(row.get::<Uuid, _>("id")),
+        id: row.get::<Uuid, _>("id").to_string().into(),
         name: row.get("name"),
         description: row.get("description"),
         // For the purpose of this use case, we just need
         // to fill it in with minimal data that we already have.
         listing_attr: AttrTemplate {
-            id: Id(row.get::<Uuid, _>("listing_attr_templ_id")),
+            id: row.get::<Uuid, _>("listing_attr_templ_id").to_string().into(),
             name: "".into(),
             description: "".into(),
             value_type: AttributeValueType::Text,

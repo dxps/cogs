@@ -37,7 +37,7 @@ impl AttrTemplateRepo {
              VALUES ($1, $2, $3, $4, $5, $6)
              ON CONFLICT (id) DO UPDATE SET name = $2, description = $3, value_type = $4, default_value = $5, required = $6",
         )
-        .bind(attr_templ.id.0)
+        .bind(attr_templ.id.to_string())
         .bind(&attr_templ.name)
         .bind(&attr_templ.description)
         .bind(&attr_templ.value_type.to_string())
@@ -63,7 +63,7 @@ impl AttrTemplateRepo {
 
 fn from_row(row: &PgRow) -> Result<AttrTemplate, sqlx::Error> {
     Ok(AttrTemplate {
-        id: Id(row.get::<Uuid, _>("id")),
+        id: row.get::<Uuid, _>("id").to_string().into(),
         name: row.get("name"),
         description: row.get("description"),
         value_type: row.get::<String, _>("value_type").into(),
