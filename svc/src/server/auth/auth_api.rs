@@ -45,3 +45,10 @@ pub async fn login(
     };
     Ok((StatusCode::OK, Json(response)))
 }
+
+pub async fn logout(session: Session<SessionPgPool>) -> Result<StatusCode, (StatusCode, Json<ErrorResponse>)> {
+    //
+    session.destroy();
+    debug!("[logout] Destroyed user session {:?}.", session.get_session_id());
+    Ok(StatusCode::NO_CONTENT)
+}

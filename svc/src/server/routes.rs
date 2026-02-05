@@ -1,6 +1,6 @@
 use crate::server::{
     ServerState, delete_attr_template, delete_item_template, get_all_attr_templates, get_all_item_templates, init_auth_layer,
-    init_session_layer, login, upsert_attr_template, upsert_item_template,
+    init_session_layer, login, logout, upsert_attr_template, upsert_item_template,
 };
 use axum::{
     Router,
@@ -22,6 +22,7 @@ pub async fn init_router(pg_pool: &Pool<Postgres>) -> Router<ServerState> {
     Router::new()
         // .route("/api/healthcheck", get(health_check))
         .route("/api/login", post(login))
+        .route("/api/logout", post(logout))
         .route("/api/attribute_templates", post(upsert_attr_template))
         .route("/api/attribute_templates", get(get_all_attr_templates))
         .route("/api/attribute_templates/{id}/delete", post(delete_attr_template))

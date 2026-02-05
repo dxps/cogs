@@ -6,7 +6,7 @@ use cogs_shared::{
     },
 };
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum UiMessage {
     Login(Result<Option<(UserAccount, String)>, AppError>),
     Logout,

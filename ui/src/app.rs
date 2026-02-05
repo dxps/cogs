@@ -2,6 +2,7 @@ use crate::{
     UiState,
     comps::{AppComponent, Footer, Header},
     constants::APP_KEY,
+    handle_msg,
     messages::UiMessage,
     views::{AppView, Explore, ExploreCategory, ExploreKind, Home, Login, Settings, ViewName},
 };
@@ -143,7 +144,9 @@ impl eframe::App for CogsApp {
                 },
 
                 UiMessage::Logout => {
+                    handle_msg(UiMessage::Logout, &self.state);
                     self.state.auth.user_account = None;
+                    self.state.auth.user_session = None;
                     self.state.set_curr_view(ViewName::Home);
                 }
 
