@@ -5,25 +5,24 @@ use crate::{
     messages::UiMessage,
     views::{AppView, Explore, ExploreCategory, ExploreKind, Home, Login, Settings, ViewName},
 };
-use cogs_shared::domain::model::{UserAccount, meta::Kind};
+use cogs_shared::domain::model::meta::Kind;
 use egui::{
     FontData,
     epaint::text::{FontInsert, InsertFontFamily},
 };
 use std::sync::mpsc::{Receiver, Sender, channel};
 
-#[derive(serde::Deserialize, serde::Serialize)] // so we can persist ui state on app shutdown.
-#[serde(default)] // if we add new fields, give them default values when deserializing old state.
+#[derive(serde::Deserialize, serde::Serialize)] // So we can persist ui state on app shutdown.
+#[serde(default)] // If we add new fields, give them default values when deserializing old state.
 pub struct CogsApp {
     pub(crate) state: UiState,
-    pub(crate) auth_session: Option<UserAccount>,
 
     #[serde(skip)]
-    /// Sender for UI messages.
+    /// Sender of UI messages.
     pub sendr: Sender<UiMessage>,
 
     #[serde(skip)]
-    /// Receiver for UI messages.
+    /// Receiver of UI messages.
     pub recvr: Receiver<UiMessage>,
 }
 
@@ -32,7 +31,6 @@ impl Default for CogsApp {
         let (sendr, recvr) = channel();
         Self {
             state: UiState::default(),
-            auth_session: None,
             sendr,
             recvr,
         }
@@ -46,7 +44,7 @@ impl CogsApp {
         // `cc.egui_ctx.set_visuals` and `cc.egui_ctx.set_fonts`.
 
         let ectx = &cc.egui_ctx;
-        Self::init_font(&ectx);
+        Self::init_font(ectx);
 
         // Image loading init.
         egui_extras::install_image_loaders(ectx);
@@ -86,7 +84,7 @@ impl CogsApp {
     #[cfg(target_arch = "wasm32")]
     pub fn init_web(&mut self, cc: &eframe::CreationContext<'_>) {
         let web_info = &cc.integration_info.web_info;
-        log::info!("[init web] webinfo: {:#?}", web_info);
+        log::trace!("[init web] webinfo: {:#?}", web_info);
         match web_info.location.hash.as_str() {
             "#/explore" => {
                 self.state.set_curr_view(ViewName::Explore);
@@ -126,10 +124,12 @@ impl eframe::App for CogsApp {
         if let Ok(res) = self.recvr.try_recv() {
             log::info!("Received msg {:?}", res);
             match res {
-                UiMessage::Login(account) => match account {
-                    Ok(account) => match account {
-                        Some(account) => {
+                UiMessage::Login(data) => match data {
+                    Ok(acc_sess) => match acc_sess {
+                        Some((account, session)) => {
                             self.state.auth.user_account = Some(account);
+                            self.state.auth.user_session = Some(session);
+                            self.state.auth.login_error = None;
                             self.state.set_curr_view(ViewName::Home);
                         }
                         None => {

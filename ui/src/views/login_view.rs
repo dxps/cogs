@@ -1,11 +1,14 @@
 use crate::{
     CogsApp,
     comps::{AppComponent, Modal, PasswordInput},
-    constants::{APP_HEADER_SESSION, MODAL_BTN_LABEL, MODAL_BTN_MSG, MODAL_CONTENT, MODAL_TITLE},
+    constants::{MODAL_BTN_LABEL, MODAL_BTN_MSG, MODAL_CONTENT, MODAL_TITLE},
     messages::UiMessage,
     views::AppView,
 };
-use cogs_shared::{app::AppError, domain::model::UserAccount, dtos::LoginRequest};
+use cogs_shared::{
+    app::AppError,
+    dtos::{LoginRequest, LoginResponse},
+};
 use egui::{Align2, Id, RichText, Shadow, Stroke};
 use std::sync::mpsc::Sender;
 
@@ -109,16 +112,28 @@ fn handle_login(user: String, pass: String, sender: Sender<UiMessage>, ectx: egu
         match rsp {
             Ok(rsp) => {
                 if rsp.status == 200 {
-                    log::info!("[handle_login] Login successful!");
-                    log::info!("[handle_login] Got response: {:?}", rsp);
-                    log::info!("[handle_login] Got user session: {:?}", rsp.headers.get(APP_HEADER_SESSION));
-                    for (header, value) in rsp.headers {
-                        log::info!("header {}: {}", header, value);
-                    }
-                    let account = serde_json::from_slice::<UserAccount>(rsp.bytes.as_slice()).unwrap();
-                    ectx.request_repaint(); // wake up UI thread
-                    if let Err(e) = sender.send(UiMessage::Login(Ok(Some(account)))) {
-                        log::info!("[handle_login] Failed to send Login message. Error: {e}");
+                    let rsp_dto = serde_json::from_slice::<LoginResponse>(rsp.bytes.as_slice()).unwrap_or_else(|err| {
+                        log::error!("[handle_login] Failed to parse login response: {err}");
+                        LoginResponse::default()
+                    });
+                    if let Some(account) = rsp_dto.user {
+                        if let Some(session) = rsp_dto.session {
+                            log::info!("[handle_login] Successfully logged in! Got session: {:?}", session);
+                            ectx.request_repaint(); // wake up UI thread
+                            if let Err(e) = sender.send(UiMessage::Login(Ok(Some((account, session))))) {
+                                log::info!("[handle_login] Failed to send Login message. Error: {e}");
+                            }
+                        }
+                    } else {
+                        if let Some(e) = rsp_dto.error {
+                            if let Err(e) = sender.send(UiMessage::Login(Err(e))) {
+                                log::info!("[handle_login] Failed to send Login message. Error: {e}");
+                            }
+                        } else {
+                            if let Err(e) = sender.send(UiMessage::Login(Err(AppError::from("Unknown error")))) {
+                                log::info!("[handle_login] Failed to send Login message. Error: {e}");
+                            }
+                        }
                     }
                 } else {
                     log::info!("[handle_login] Login failed! HTTP status code: {}", rsp.status);

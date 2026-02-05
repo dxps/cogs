@@ -3,5 +3,5 @@
 
 pub mod domain;
 pub mod dtos;
-mod infra;
 pub mod server;
+mod utils;

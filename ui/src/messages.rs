@@ -8,7 +8,7 @@ use cogs_shared::{
 
 #[derive(Clone, Debug)]
 pub enum UiMessage {
-    Login(Result<Option<UserAccount>, AppError>),
+    Login(Result<Option<(UserAccount, String)>, AppError>),
     Logout,
 
     Settings,

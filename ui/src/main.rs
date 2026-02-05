@@ -4,7 +4,8 @@
 // When compiling natively.
 #[cfg(not(target_arch = "wasm32"))]
 fn main() -> eframe::Result {
-    env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
+    // env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
+    init_logging();
 
     let native_options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
@@ -25,7 +26,8 @@ fn main() {
     use eframe::wasm_bindgen::JsCast as _;
 
     // Redirect `log` message to `console.log` and friends.
-    eframe::WebLogger::init(log::LevelFilter::Debug).ok();
+    // eframe::WebLogger::init(log::LevelFilter::Debug).ok();
+    init_logging();
 
     let web_options = eframe::WebOptions::default();
 
@@ -61,6 +63,45 @@ fn main() {
                     panic!("Failed to start eframe: {e:?}");
                 }
             }
+        }
+    });
+}
+
+use std::sync::Once;
+static LOGGING_INIT: Once = Once::new();
+
+pub fn init_logging() {
+    LOGGING_INIT.call_once(|| {
+        let _ = tracing_log::LogTracer::init();
+
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            use tracing_subscriber::{EnvFilter, fmt};
+
+            let filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info,eframe=warn,egui_glow=warn"));
+
+            let _ = fmt().with_env_filter(filter).try_init(); // <- do not panic if already set
+        }
+
+        #[cfg(target_arch = "wasm32")]
+        {
+            use tracing_subscriber::{EnvFilter, fmt, prelude::*};
+            use tracing_subscriber_wasm::MakeConsoleWriter;
+
+            let filter = EnvFilter::new("info,eframe=warn,egui_glow=warn");
+
+            let subscriber = tracing_subscriber::registry().with(filter).with(
+                fmt::layer()
+                    .with_writer(MakeConsoleWriter::default())
+                    .without_time()
+                    .with_target(false)
+                    .with_file(true)
+                    .with_line_number(true)
+                    .with_ansi(false),
+            );
+
+            // non-panicking:
+            let _ = tracing::subscriber::set_global_default(subscriber);
         }
     });
 }

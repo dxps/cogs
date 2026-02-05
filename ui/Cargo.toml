@@ -39,7 +39,10 @@ eframe = { version = "=0.33.3", default-features = false, features = [
 ] }
 catppuccin-egui = { version = "=5.7.0", default-features = false, features = [ "egui33" ] }
 
-log = { version = "=0.4.29" }
+log = "=0.4.29"
+tracing = "0.1"
+tracing-log = "0.2"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
 
 serde             = { version = "=1.0.228", features = [ "derive" ] }      # For the app persistence.
 egui_extras       = { version = "=0.33.3", features = [ "all_loaders" ] }
@@ -61,7 +64,9 @@ env_logger = { version =  "=0.11.8" }
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 ###################################################
 
-wasm-bindgen-futures = { version = "=0.4.58" }
-web-sys              = { version = "=0.3.85" }      # To access the DOM (for hiding the loading text).
+tracing-wasm            = { version = "=0.2.1"  }
+tracing-subscriber-wasm = { version = "=0.1.0"  }
+wasm-bindgen-futures    = { version = "=0.4.58" }
+web-sys                 = { version = "=0.3.85" }      # To access the DOM (for hiding the loading text).
 
 

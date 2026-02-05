@@ -1,6 +1,6 @@
 use crate::{
-    infra::{new_app_error_from_sqlx, new_id},
     server::AuthUserAccount,
+    utils::{new_app_error_from_sqlx, new_id, uuid_from},
 };
 use cogs_shared::{
     app::{AppError, AppResult},
@@ -8,6 +8,7 @@ use cogs_shared::{
 };
 use sqlx::{PgPool, Row, postgres::PgRow};
 use std::sync::Arc;
+use uuid::Uuid;
 
 #[derive(Debug)]
 pub struct UserAccountsRepo {
@@ -38,7 +39,7 @@ impl UserAccountsRepo {
         .map_err(|err| new_app_error_from_sqlx(err, Some("failed to get user by email".to_string())))?;
 
         let mut user_account = UserAccount {
-            id: Id(row.get("id")),
+            id: row.get::<Uuid, _>("id").to_string().into(),
             name: row.get("name"),
             email: row.get("email"),
             username: username.clone(),
@@ -48,7 +49,7 @@ impl UserAccountsRepo {
         };
 
         let permissions = sqlx::query("SELECT permission FROM user_permissions WHERE user_id = $1")
-            .bind(user_account.id.to_string())
+            .bind(uuid_from(&user_account.id))
             .fetch_all(self.dbcp.as_ref())
             .await
             .map_err(|err| new_app_error_from_sqlx(err, Some("failed to get user permissions".to_string())))?;
@@ -122,7 +123,7 @@ impl UserAccountsRepo {
             "INSERT INTO user_accounts (id, name, email, username, password, salt) 
              VALUES ($1, $2, $3, $4, $5, $6)",
         )
-        .bind(&id.0)
+        .bind(uuid_from(&id))
         .bind(name)
         .bind(email)
         .bind(username)

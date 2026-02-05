@@ -38,8 +38,8 @@ pub async fn login(
     session.set(SESSION_CURRENT_USER_KEY, AuthUserAccount::from(user_account.clone()));
 
     let response = LoginResponse {
-        session: session.get_session_id(),
-        expires_in_seconds: SESSION_MAX_LIFESPAN.num_seconds(),
+        session: Some(session.get_session_id()),
+        expires_in_seconds: Some(SESSION_MAX_LIFESPAN.num_seconds()),
         user: Some(user_account),
         error: None,
     };

@@ -18,7 +18,6 @@ pub const ICON_HELP: &str = "\u{E66A}";
 ///////////////////////////
 
 pub const APP_KEY: &str = "cogs";
-pub const APP_HEADER_SESSION: &str = "cogs_user_session";
 
 ///////////////////////
 // egui Context data //

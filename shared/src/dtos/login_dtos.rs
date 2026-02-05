@@ -18,10 +18,11 @@ impl LoginRequest {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
+#[serde_with::skip_serializing_none]
 pub struct LoginResponse {
-    pub session: String,
-    pub expires_in_seconds: i64,
+    pub session: Option<String>,
+    pub expires_in_seconds: Option<i64>,
     pub user: Option<UserAccount>,
     pub error: Option<AppError>,
 }
