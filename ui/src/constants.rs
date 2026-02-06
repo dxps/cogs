@@ -19,6 +19,9 @@ pub const ICON_HELP: &str = "\u{E66A}";
 
 pub const APP_KEY: &str = "cogs";
 
+pub const POPUP_W: f32 = 100.0;
+pub const POPUP_ROW_H: f32 = 24.0;
+
 ///////////////////////
 // egui Context data //
 ///////////////////////

@@ -72,7 +72,7 @@ impl UserAccountsRepo {
             .ok()?;
 
         let mut user_account = UserAccount {
-            id: Id(row.get("id")),
+            id: row.get::<Uuid, _>("id").to_string().into(),
             name: row.get("name"),
             email: row.get("email"),
             username: row.get("username"),
@@ -93,7 +93,7 @@ impl UserAccountsRepo {
 
     pub async fn get_permissions(&self, account: &mut UserAccount) -> AppResult<()> {
         let mut permissions = sqlx::query("SELECT permission FROM user_permissions WHERE user_id = $1;")
-            .bind(&account.id.0)
+            .bind(uuid_from(&account.id))
             .map(|r: PgRow| r.get("permission"))
             .fetch_all(self.dbcp.as_ref())
             .await
@@ -136,7 +136,7 @@ impl UserAccountsRepo {
         if res.is_ok() {
             for permission in permissions.iter() {
                 let res = sqlx::query("INSERT INTO user_permissions (user_id, permission) VALUES ($1, $2)")
-                    .bind(&id.0)
+                    .bind(uuid_from(&id))
                     .bind(&permission)
                     .execute(self.dbcp.as_ref())
                     .await
@@ -154,7 +154,7 @@ impl UserAccountsRepo {
     pub async fn get_password_by_id(&self, user_id: &Id) -> AppResult<UserPasswordSalt> {
         //
         let row = sqlx::query("SELECT password, salt FROM user_accounts WHERE id = $1")
-            .bind(user_id.to_string())
+            .bind(uuid_from(user_id))
             .fetch_one(self.dbcp.as_ref())
             .await
             .map_err(|err| new_app_error_from_sqlx(err, Some("failed to get password by user id".to_string())))?;
@@ -169,7 +169,7 @@ impl UserAccountsRepo {
         //
         match sqlx::query("UPDATE user_accounts SET password = $1 WHERE id = $2")
             .bind(pwd)
-            .bind(user_id.to_string())
+            .bind(uuid_from(user_id))
             .execute(self.dbcp.as_ref())
             .await
             .map_err(|err| AppError::from(err.to_string()))

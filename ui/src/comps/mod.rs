@@ -30,8 +30,8 @@ pub use modal::*;
 mod password_input;
 pub use password_input::*;
 
-mod user_widget;
-pub use user_widget::*;
+mod user_menu;
+pub use user_menu::*;
 
 use crate::messages::UiMessage;
 use eframe::egui::Ui;

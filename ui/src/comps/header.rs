@@ -3,7 +3,7 @@ use egui::{Align, Layout};
 
 use crate::{
     CogsApp,
-    comps::{AppComponent, UserWidget},
+    comps::{AppComponent, UserMenu},
     constants::{ICON_EXPLORE, ICON_HOME},
     views::{AppView, ViewName},
 };
@@ -56,7 +56,7 @@ impl AppView for Header {
                         egui::global_theme_preference_switch(ui);
                         ui.with_layout(Layout::right_to_left(Align::LEFT), |ui| {
                             ui.add_space(6.0);
-                            UserWidget::show(ctx, ui);
+                            UserMenu::show(ctx, ui);
                         });
                     });
                 });
