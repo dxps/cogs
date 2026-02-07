@@ -36,6 +36,11 @@ pub use user_menu::*;
 mod menu_utils;
 pub use menu_utils::*;
 
+mod symbols;
+pub use symbols::*;
+
+/////////////////////////////////////////////////////////
+
 use crate::messages::UiMessage;
 use eframe::egui::Ui;
 

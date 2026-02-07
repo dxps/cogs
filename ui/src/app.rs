@@ -266,6 +266,7 @@ impl eframe::App for CogsApp {
 }
 
 fn ui_init_cosmetics(ctx: &egui::Context) {
+    // Set the theme.
     match ctx.theme() {
         egui::Theme::Light => {
             catppuccin_egui::set_theme(ctx, catppuccin_egui::LATTE);

@@ -2,7 +2,7 @@ use crate::{
     CogsApp,
     comps::{
         AppComponent, AttrTemplateForm, AttrTemplateProps, ExploreTable, ItemTemplateForm, ItemTemplateProps, LinkTemplateForm,
-        menu_row,
+        menu_row, paint_combo_chevron,
     },
     constants::{EXPLORE_ELEMENT, ICON_HELP, ICON_SETTINGS, POPUP_ROW_WIDTH},
     views::AppView,
@@ -12,7 +12,7 @@ use cogs_shared::domain::model::{
     meta::{AttrTemplate, ItemTemplate, Kind, LinkTemplate},
 };
 use const_format::concatcp;
-use egui::{Color32, ComboBox, CursorIcon, Popup, RichText, Sense, Ui};
+use egui::{Color32, CursorIcon, Popup, RichText, Sense, Ui};
 use egui_extras::{Size, StripBuilder};
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
@@ -63,52 +63,12 @@ impl AppView for Explore {
                     strip.cell(|ui| {
                         ui.vertical(|ui| {
                             ui.horizontal(|ui| {
-                                ui.label("Category:");
-                                let sel_categ = match ctx.state.explore.category {
-                                    ExploreCategory::Items => RichText::new("Items"),
-                                    ExploreCategory::Templates => RichText::new("Templates"),
-                                };
-                                ComboBox::from_id_salt("xplore_categ")
-                                    .selected_text(sel_categ)
-                                    .show_ui(ui, |ui| {
-                                        ui.selectable_value(&mut ctx.state.explore.category, ExploreCategory::Items, "Items");
-                                        ui.selectable_value(
-                                            &mut ctx.state.explore.category,
-                                            ExploreCategory::Templates,
-                                            "Templates",
-                                        );
-                                    });
-                                ui.add_space(10.0);
-
-                                ui.label("Kind:");
-                                let sel_kind = match ctx.state.explore.kind {
-                                    ExploreKind::All => RichText::new("all").italics(),
-                                    ExploreKind::Item => RichText::new("Item"),
-                                    ExploreKind::Attribute => RichText::new("Attribute"),
-                                    ExploreKind::Link => RichText::new("Link"),
-                                };
-                                ComboBox::from_id_salt("xplore_kind")
-                                    .selected_text(sel_kind)
-                                    .show_ui(ui, |ui| {
-                                        ui.selectable_value(
-                                            &mut ctx.state.explore.kind,
-                                            ExploreKind::All,
-                                            RichText::new("all").italics(),
-                                        );
-                                        if ctx.state.explore.category == ExploreCategory::Templates {
-                                            ui.selectable_value(&mut ctx.state.explore.kind, ExploreKind::Item, "Item");
-                                            ui.selectable_value(&mut ctx.state.explore.kind, ExploreKind::Attribute, "Attribute");
-                                            ui.selectable_value(&mut ctx.state.explore.kind, ExploreKind::Link, "Link");
-                                        }
-                                    });
-
-                                ui.label(RichText::new(ICON_HELP).color(Color32::GRAY).size(10.0))
-                                    .on_hover_text("If category is 'Items', you may filter by their templates.\nIf category is 'Templates', you may filter by their types.")
-                                    .on_hover_cursor(CursorIcon::Help);
-                                ui.add_space(20.0);
-
+                                show_category(ctx, ui);
+                                ui.add_space(15.0);
+                                show_kind(ctx, ui);
+                                ui.add_space(15.0);
                                 // The "+" button and its menu.
-                                add_menu(ctx, ui);
+                                show_add_menu(ctx, ui);
                             })
                         });
 
@@ -168,29 +128,220 @@ impl AppView for Explore {
     }
 }
 
-fn add_menu(ctx: &mut CogsApp, ui: &mut Ui) {
+fn show_category(ctx: &mut CogsApp, ui: &mut egui::Ui) {
+    ui.horizontal(|ui| {
+        ui.label("Category:");
+
+        let selected = match ctx.state.explore.category {
+            ExploreCategory::Items => "Items",
+            ExploreCategory::Templates => "Templates",
+        };
+
+        // Exact-size trigger rect.
+        let h = 20.0;
+        let w = 120.0;
+        let (rect, resp) = ui.allocate_exact_size(egui::vec2(w, h), egui::Sense::click());
+
+        let bg = if resp.is_pointer_button_down_on() {
+            ui.visuals().widgets.active.bg_fill
+        } else if resp.hovered() {
+            ui.visuals().widgets.hovered.bg_fill
+        } else {
+            // This matches ComboBox-like resting background best in most themes:
+            ui.visuals().widgets.inactive.bg_fill
+            // If you want even closer to popup/button body in your theme, try:
+            // ui.visuals().widgets.open.bg_fill
+        };
+
+        ui.painter().rect_filled(rect, 4.0, bg);
+
+        // Show the text w/ the selected category.
+        ui.painter().text(
+            egui::pos2(rect.left() + 10.0, rect.center().y),
+            egui::Align2::LEFT_CENTER,
+            selected,
+            egui::TextStyle::Button.resolve(ui.style()),
+            ui.visuals().text_color(),
+        );
+
+        // Show the chevron (down arrow) symbol.
+        paint_combo_chevron(ui, rect);
+
+        let resp = resp
+            .on_hover_cursor(egui::CursorIcon::PointingHand)
+            .on_hover_text("Select category");
+
+        // Popup style that follows current theme (FRAPPE/LATTE).
+        let mut popup_style: egui::Style = ui.style().as_ref().clone();
+        let v = ui.visuals();
+
+        // Match popup background to the same family as the trigger (resp) background.
+        popup_style.visuals.window_fill = v.widgets.inactive.bg_fill;
+        popup_style.visuals.panel_fill = v.widgets.inactive.bg_fill;
+        popup_style.visuals.extreme_bg_color = v.widgets.inactive.bg_fill;
+
+        // Optional: keep row hover/active consistent with current theme.
+        popup_style.visuals.widgets.inactive.bg_fill = v.widgets.inactive.bg_fill;
+        popup_style.visuals.widgets.hovered.bg_fill = v.widgets.hovered.bg_fill;
+        popup_style.visuals.widgets.active.bg_fill = v.widgets.active.bg_fill;
+        popup_style.visuals.selection.bg_fill = v.selection.bg_fill;
+
+        Popup::menu(&resp)
+            .id(ui.id().with("explore_categ_popup"))
+            .style(popup_style)
+            .gap(4.0)
+            .show(|ui| {
+                if menu_row(ui, "Items", false, Some(100.0)).clicked() {
+                    ctx.state.explore.category = ExploreCategory::Items;
+                    ui.close();
+                }
+                if menu_row(ui, "Templates", false, Some(100.0)).clicked() {
+                    ctx.state.explore.category = ExploreCategory::Templates;
+                    ui.close();
+                }
+            });
+    });
+}
+
+fn show_kind(ctx: &mut CogsApp, ui: &mut Ui) {
+    use egui::{Color32, CursorIcon, Popup, RichText, Sense};
+
+    ui.label("Kind:");
+
+    let selected_text = match ctx.state.explore.kind {
+        ExploreKind::All => "all".to_owned(),
+        ExploreKind::Item => "Item".to_owned(),
+        ExploreKind::Attribute => "Attribute".to_owned(),
+        ExploreKind::Link => "Link".to_owned(),
+    };
+    let is_all = ctx.state.explore.kind == ExploreKind::All;
+
+    let h = 20.0;
+    let w = 120.0;
+    let (rect, resp) = ui.allocate_exact_size(egui::vec2(w, h), Sense::click());
+
+    // Copy needed visual values (no long-lived borrow of ui)
+    let (bg_inactive, bg_hovered, bg_active, sel_bg) = {
+        let v = ui.visuals();
+        (
+            v.widgets.inactive.bg_fill,
+            v.widgets.hovered.bg_fill,
+            v.widgets.active.bg_fill,
+            v.selection.bg_fill,
+        )
+    };
+
+    let bg = if resp.is_pointer_button_down_on() {
+        bg_active
+    } else if resp.hovered() {
+        bg_hovered
+    } else {
+        bg_inactive
+    };
+    ui.painter().rect_filled(rect, 4.0, bg);
+
+    let text_rect = egui::Rect::from_min_max(
+        egui::pos2(rect.left() + 10.0, rect.top()),
+        egui::pos2(rect.right() - 20.0, rect.bottom()),
+    );
+
+    ui.scope_builder(egui::UiBuilder::new().max_rect(text_rect), |ui| {
+        ui.with_layout(egui::Layout::left_to_right(egui::Align::Center), |ui| {
+            let rt = if is_all {
+                RichText::new(selected_text.as_str()).italics()
+            } else {
+                RichText::new(selected_text.as_str())
+            };
+            ui.label(rt);
+        });
+    });
+
+    paint_combo_chevron(ui, rect);
+
+    let resp = resp.on_hover_cursor(CursorIcon::PointingHand).on_hover_text("Select kind");
+
+    let mut popup_style: egui::Style = ui.style().as_ref().clone();
+    popup_style.visuals.window_fill = bg_inactive;
+    popup_style.visuals.panel_fill = bg_inactive;
+    popup_style.visuals.extreme_bg_color = bg_inactive;
+    popup_style.visuals.widgets.inactive.bg_fill = bg_inactive;
+    popup_style.visuals.widgets.hovered.bg_fill = bg_hovered;
+    popup_style.visuals.widgets.active.bg_fill = bg_active;
+    popup_style.visuals.selection.bg_fill = sel_bg;
+
+    Popup::menu(&resp)
+        .id(ui.id().with("explore_kind_popup"))
+        .style(popup_style)
+        .gap(4.0)
+        .show(|ui| {
+            if menu_row(ui, "all", true, Some(120.0)).clicked() {
+                ctx.state.explore.kind = ExploreKind::All;
+                ui.close();
+            }
+
+            if ctx.state.explore.category == ExploreCategory::Templates {
+                if menu_row(ui, "Item", false, Some(120.0)).clicked() {
+                    ctx.state.explore.kind = ExploreKind::Item;
+                    ui.close();
+                }
+                if menu_row(ui, "Attribute", false, Some(120.0)).clicked() {
+                    ctx.state.explore.kind = ExploreKind::Attribute;
+                    ui.close();
+                }
+                if menu_row(ui, "Link", false, Some(120.0)).clicked() {
+                    ctx.state.explore.kind = ExploreKind::Link;
+                    ui.close();
+                }
+            }
+        });
+
+    ui.add_space(94.0);
+    ui.label(RichText::new(ICON_HELP).color(Color32::GRAY).size(10.0))
+        .on_hover_text(
+            "If category is 'Items', you may filter by their templates.\nIf category is 'Templates', you may filter by their types.",
+        )
+        .on_hover_cursor(CursorIcon::Help);
+}
+
+fn show_add_menu(ctx: &mut CogsApp, ui: &mut Ui) {
     let btn = ui
         .button(" + ")
         .interact(Sense::click())
         .on_hover_text_at_pointer("Add")
         .on_hover_cursor(CursorIcon::PointingHand);
 
-    let mut style: egui::Style = ui.style().as_ref().clone();
-    style.visuals.window_fill = style.visuals.extreme_bg_color;
+    let (bg_inactive, bg_hovered, bg_active, sel_bg) = {
+        let v = ui.visuals();
+        (
+            v.widgets.inactive.bg_fill,
+            v.widgets.hovered.bg_fill,
+            v.widgets.active.bg_fill,
+            v.selection.bg_fill,
+        )
+    };
+
+    let mut popup_style: egui::Style = ui.style().as_ref().clone();
+    popup_style.visuals.window_fill = bg_inactive;
+    popup_style.visuals.panel_fill = bg_inactive;
+    popup_style.visuals.extreme_bg_color = bg_inactive;
+    popup_style.visuals.widgets.inactive.bg_fill = bg_inactive;
+    popup_style.visuals.widgets.hovered.bg_fill = bg_hovered;
+    popup_style.visuals.widgets.active.bg_fill = bg_active;
+    popup_style.visuals.selection.bg_fill = sel_bg;
 
     Popup::menu(&btn)
         .id(egui::Id::new("explore_add_popup"))
-        .style(style.clone())
+        .style(popup_style)
         .gap(5.0)
         .show(|ui| {
-            if menu_row(ui, concatcp!(ICON_SETTINGS, "  Item"), None).clicked() {
+            if menu_row(ui, concatcp!(ICON_SETTINGS, "  Item"), false, None).clicked() {
                 // TODO: open item form.
                 ui.close();
             }
 
             ui.separator();
 
-            let templates_resp = menu_row(ui, "  Templates  >", None);
+            let templates_resp = menu_row(ui, "  Templates  >", false, None);
 
             let submenu_open_id = ui.id().with("templates_submenu_open");
             let submenu_rect_id = ui.id().with("templates_submenu_rect");
@@ -221,7 +372,7 @@ fn add_menu(ctx: &mut CogsApp, ui: &mut Ui) {
                         egui::Frame::popup(&style).show(ui, |ui| {
                             ui.set_min_width(POPUP_ROW_WIDTH);
 
-                            if menu_row(ui, "  Item Template", None).clicked() {
+                            if menu_row(ui, "  Item Template", false, Some(POPUP_ROW_WIDTH)).clicked() {
                                 ctx.state
                                     .explore
                                     .open_windows_item_template
@@ -229,7 +380,7 @@ fn add_menu(ctx: &mut CogsApp, ui: &mut Ui) {
                                 ui.close();
                             }
 
-                            if menu_row(ui, "  Attribute Template", None).clicked() {
+                            if menu_row(ui, "  Attribute Template", false, Some(POPUP_ROW_WIDTH)).clicked() {
                                 ctx.state
                                     .explore
                                     .open_windows_attr_template
@@ -237,7 +388,7 @@ fn add_menu(ctx: &mut CogsApp, ui: &mut Ui) {
                                 ui.close();
                             }
 
-                            if menu_row(ui, "  Link Template", None).clicked() {
+                            if menu_row(ui, "  Link Template", false, Some(POPUP_ROW_WIDTH)).clicked() {
                                 ctx.state
                                     .explore
                                     .open_windows_link_template
