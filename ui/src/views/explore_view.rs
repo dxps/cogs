@@ -4,7 +4,7 @@ use crate::{
         AppComponent, AttrTemplateForm, AttrTemplateProps, ExploreTable, ItemTemplateForm, ItemTemplateProps, LinkTemplateForm,
         menu_row,
     },
-    constants::{EXPLORE_ELEMENT, ICON_HELP, ICON_SETTINGS, POPUP_MIN_WIDTH, POPUP_ROW_WIDTH},
+    constants::{EXPLORE_ELEMENT, ICON_HELP, ICON_SETTINGS, POPUP_ROW_WIDTH},
     views::AppView,
 };
 use cogs_shared::domain::model::{
@@ -12,7 +12,7 @@ use cogs_shared::domain::model::{
     meta::{AttrTemplate, ItemTemplate, Kind, LinkTemplate},
 };
 use const_format::concatcp;
-use egui::{Color32, ComboBox, CursorIcon, Popup, PopupAnchor, PopupCloseBehavior, PopupKind, RichText, Sense};
+use egui::{Color32, ComboBox, CursorIcon, Popup, RichText, Sense, Ui};
 use egui_extras::{Size, StripBuilder};
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
@@ -107,49 +107,8 @@ impl AppView for Explore {
                                     .on_hover_cursor(CursorIcon::Help);
                                 ui.add_space(20.0);
 
-                                let btn = ui.button(" + ").interact(Sense::click())
-                                    .on_hover_text_at_pointer("Add")
-                                    .on_hover_cursor(CursorIcon::PointingHand);
-
-                                let mut style = ui.style_mut().clone();
-                                style.visuals.window_fill = style.visuals.extreme_bg_color;
-
-                                Popup::menu(&btn)
-                                    .id(egui::Id::new("explore_add_popup"))
-                                    .style(style.clone())
-                                    .gap(5.0)
-                                    .show(|ui| {
-                                        ui.set_min_width(POPUP_MIN_WIDTH);
-
-                                        if menu_row(ui, concatcp!(ICON_SETTINGS, "  Item"), None).clicked() {
-                                            // TODO: open item creation
-                                            ui.close();
-                                        }
-
-                                        ui.separator();
-                                        
-                                        if menu_row(ui, "  Item Template", None).clicked() {
-                                            ctx.state.explore.open_windows_item_template.insert(
-                                                Id::default(),
-                                                Arc::new(Mutex::new(ItemTemplate::default())),
-                                            );
-                                            ui.close();
-                                        }
-                                        if menu_row(ui, "  Attribute Template", None).clicked() {
-                                            ctx.state.explore.open_windows_attr_template.insert(
-                                                Id::default(),
-                                                Arc::new(Mutex::new(AttrTemplate::default())),
-                                            );
-                                            ui.close();
-                                        }
-                                        if menu_row(ui, "  Link Template", None).clicked() {
-                                            ctx.state.explore.open_windows_link_template.insert(
-                                                Id::default(),
-                                                Arc::new(Mutex::new(LinkTemplate::default())),
-                                            );
-                                            ui.close();
-                                        }
-                                    });
+                                // The "+" button and its menu.
+                                add_menu(ctx, ui);
                             })
                         });
 
@@ -207,4 +166,119 @@ impl AppView for Explore {
                 });
         });
     }
+}
+
+fn add_menu(ctx: &mut CogsApp, ui: &mut Ui) {
+    let btn = ui
+        .button(" + ")
+        .interact(Sense::click())
+        .on_hover_text_at_pointer("Add")
+        .on_hover_cursor(CursorIcon::PointingHand);
+
+    let mut style: egui::Style = ui.style().as_ref().clone();
+    style.visuals.window_fill = style.visuals.extreme_bg_color;
+
+    Popup::menu(&btn)
+        .id(egui::Id::new("explore_add_popup"))
+        .style(style.clone())
+        .gap(5.0)
+        .show(|ui| {
+            if menu_row(ui, concatcp!(ICON_SETTINGS, "  Item"), None).clicked() {
+                // TODO: open item form.
+                ui.close();
+            }
+
+            ui.separator();
+
+            let templates_resp = menu_row(ui, "  Templates  >", None);
+
+            let submenu_open_id = ui.id().with("templates_submenu_open");
+            let submenu_rect_id = ui.id().with("templates_submenu_rect");
+
+            let mut submenu_open = ui.ctx().data(|d| d.get_temp::<bool>(submenu_open_id)).unwrap_or(false);
+
+            // Open submenu on hover/click of parent row.
+            if templates_resp.hovered() || templates_resp.clicked() {
+                submenu_open = true;
+            }
+
+            // Desired submenu position (to the right of parent row).
+            let submenu_pos = egui::pos2(templates_resp.rect.right() + 6.0, templates_resp.rect.top());
+
+            // We keep last known submenu rect in temp memory.
+            let mut submenu_rect = ui
+                .ctx()
+                .data(|d| d.get_temp::<egui::Rect>(submenu_rect_id))
+                .unwrap_or_else(|| egui::Rect::from_min_size(submenu_pos, egui::vec2(POPUP_ROW_WIDTH, 1.0)));
+
+            if submenu_open {
+                let mut style: egui::Style = ui.style().as_ref().clone();
+                style.visuals.window_fill = style.visuals.extreme_bg_color;
+                let area_resp = egui::Area::new(ui.id().with("templates_submenu_area"))
+                    .order(egui::Order::Foreground)
+                    .fixed_pos(submenu_pos)
+                    .show(ui.ctx(), |ui| {
+                        egui::Frame::popup(&style).show(ui, |ui| {
+                            ui.set_min_width(POPUP_ROW_WIDTH);
+
+                            if menu_row(ui, "  Item Template", None).clicked() {
+                                ctx.state
+                                    .explore
+                                    .open_windows_item_template
+                                    .insert(Id::default(), Arc::new(Mutex::new(ItemTemplate::default())));
+                                ui.close();
+                            }
+
+                            if menu_row(ui, "  Attribute Template", None).clicked() {
+                                ctx.state
+                                    .explore
+                                    .open_windows_attr_template
+                                    .insert(Id::default(), Arc::new(Mutex::new(AttrTemplate::default())));
+                                ui.close();
+                            }
+
+                            if menu_row(ui, "  Link Template", None).clicked() {
+                                ctx.state
+                                    .explore
+                                    .open_windows_link_template
+                                    .insert(Id::default(), Arc::new(Mutex::new(LinkTemplate::default())));
+                                ui.close();
+                            }
+                        });
+                    });
+
+                submenu_rect = area_resp.response.rect;
+            }
+
+            // A pointer-based close logic.
+            let pointer_pos = ui.input(|i| i.pointer.hover_pos());
+            let should_keep_open = if let Some(p) = pointer_pos {
+                let parent_zone = templates_resp.rect.expand2(egui::vec2(2.0, 2.0)); // Parent row zone (slightly expanded).
+                let submenu_zone = submenu_rect.expand2(egui::vec2(2.0, 2.0)); // Submenu zone (slightly expanded).
+
+                // Corridor between parent and submenu to allow transit.
+                let corridor = egui::Rect::from_min_max(
+                    egui::pos2(parent_zone.right(), parent_zone.top().min(submenu_zone.top())),
+                    egui::pos2(submenu_zone.left(), parent_zone.bottom().max(submenu_zone.bottom())),
+                )
+                .expand2(egui::vec2(2.0, 0.0));
+
+                parent_zone.contains(p) || submenu_zone.contains(p) || corridor.contains(p)
+            } else {
+                false
+            };
+
+            if submenu_open && !should_keep_open {
+                submenu_open = false;
+            }
+
+            ui.ctx().data_mut(|d| {
+                d.insert_temp(submenu_open_id, submenu_open);
+                d.insert_temp(submenu_rect_id, submenu_rect);
+            });
+
+            if submenu_open {
+                ui.ctx().request_repaint();
+            }
+        });
 }

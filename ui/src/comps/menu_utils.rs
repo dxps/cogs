@@ -1,9 +1,9 @@
-use crate::constants::{POPUP_ROW_HEIGHT, POPUP_ROW_WIDTH};
+use crate::constants::{POPUP_ROW_HEIGHT, POPUP_ROW_WIDTH_MIN};
 
 pub fn menu_row(ui: &mut egui::Ui, text: &str, width: Option<f32>) -> egui::Response {
     //
     let (rect, response) = ui.allocate_exact_size(
-        egui::vec2(width.unwrap_or(POPUP_ROW_WIDTH), POPUP_ROW_HEIGHT),
+        egui::vec2(width.unwrap_or(POPUP_ROW_WIDTH_MIN), POPUP_ROW_HEIGHT),
         egui::Sense::click(),
     );
 
