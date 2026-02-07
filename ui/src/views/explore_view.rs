@@ -12,7 +12,7 @@ use cogs_shared::domain::model::{
     meta::{AttrTemplate, ItemTemplate, Kind, LinkTemplate},
 };
 use const_format::concatcp;
-use egui::{Color32, CursorIcon, Popup, RichText, Sense, Ui};
+use egui::{Color32, CursorIcon, Popup, RichText, Sense, TextStyle, TextWrapMode, Ui, WidgetText, pos2};
 use egui_extras::{Size, StripBuilder};
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
@@ -129,6 +129,7 @@ impl AppView for Explore {
 }
 
 fn show_category(ctx: &mut CogsApp, ui: &mut egui::Ui) {
+    //
     ui.horizontal(|ui| {
         ui.label("Category:");
 
@@ -204,8 +205,7 @@ fn show_category(ctx: &mut CogsApp, ui: &mut egui::Ui) {
 }
 
 fn show_kind(ctx: &mut CogsApp, ui: &mut Ui) {
-    use egui::{Color32, CursorIcon, Popup, RichText, Sense, TextStyle, WidgetText};
-
+    //
     ui.label("Kind:");
 
     let selected_text = match ctx.state.explore.kind {
@@ -245,8 +245,8 @@ fn show_kind(ctx: &mut CogsApp, ui: &mut Ui) {
     if is_all {
         rt = rt.italics();
     }
-    let galley = WidgetText::from(rt).into_galley(ui, Some(egui::TextWrapMode::Extend), f32::INFINITY, TextStyle::Button);
-    let text_pos = egui::pos2(rect.left() + 10.0, rect.center().y - galley.size().y * 0.5);
+    let galley = WidgetText::from(rt).into_galley(ui, Some(TextWrapMode::Extend), f32::INFINITY, TextStyle::Button);
+    let text_pos = pos2(rect.left() + 10.0, rect.center().y - galley.size().y * 0.5);
     ui.painter().galley(text_pos, galley, text_inactive);
 
     paint_combo_chevron(ui, rect);
@@ -296,6 +296,7 @@ fn show_kind(ctx: &mut CogsApp, ui: &mut Ui) {
 }
 
 fn show_add_menu(ctx: &mut CogsApp, ui: &mut Ui) {
+    //
     let btn = ui
         .button(" + ")
         .interact(Sense::click())

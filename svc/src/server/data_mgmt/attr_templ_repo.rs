@@ -1,3 +1,4 @@
+use crate::utils::uuid_from;
 use cogs_shared::{
     app::{AppError, AppResult},
     domain::model::{Id, meta::AttrTemplate},
@@ -37,7 +38,7 @@ impl AttrTemplateRepo {
              VALUES ($1, $2, $3, $4, $5, $6)
              ON CONFLICT (id) DO UPDATE SET name = $2, description = $3, value_type = $4, default_value = $5, required = $6",
         )
-        .bind(attr_templ.id.to_string())
+        .bind(uuid_from(&attr_templ.id))
         .bind(&attr_templ.name)
         .bind(&attr_templ.description)
         .bind(&attr_templ.value_type.to_string())
@@ -53,7 +54,7 @@ impl AttrTemplateRepo {
     pub async fn delete(&self, id: Id) -> AppResult<()> {
         //
         sqlx::query("DELETE FROM attr_templates WHERE id = $1")
-            .bind(id.0)
+            .bind(uuid_from(&id))
             .execute(self.dbcp.as_ref())
             .await
             .map_err(|err| AppError::from(err.to_string()))

@@ -1,4 +1,4 @@
-use crate::server::{ServerState, respond_not_found};
+use crate::server::{ServerState, respond_internal_server_error, respond_not_found};
 use axum::{
     Json,
     extract::{self, Path, State},
@@ -19,7 +19,11 @@ pub async fn upsert_attr_template(
     log::debug!("Upserting attr template {input:?} ...");
     match state.data_mgmt.upsert_attr_template(input).await {
         Ok(id) => (StatusCode::OK, Json(json!({ "id": id }))),
-        Err(err) => respond_not_found(err),
+        Err(err) => {
+            // TODO: We should return a more specific error:
+            // e.g. Either not found (if the id is non-zero) or internal server error.
+            respond_internal_server_error(err)
+        }
     }
 }
 

@@ -4,6 +4,7 @@ use cogs_shared::domain::model::{
     meta::{AttrTemplate, AttributeValueType},
 };
 use egui::{Align, Color32, ComboBox, CursorIcon, Direction, Grid, Label, Layout, RichText, Window};
+use log::debug;
 use std::sync::{Arc, Mutex};
 
 pub struct AttrTemplateForm {}
@@ -22,21 +23,22 @@ impl AppComponent for AttrTemplateForm {
             .unwrap_or_default();
         let mut element = binding.lock().unwrap();
         let id = element.id.clone();
-        let act_id = egui::Id::from(format!("xp_at_{}", id));
-        let action = ectx.data(|d| d.get_temp::<Action>(act_id)).unwrap_or(Action::View);
+        let act_id = egui::Id::from(format!("xp_attr_tmpl_id_{}_action", id));
 
-        let title = match element.id.is_zero() {
-            true => "New Attribute Template",
-            false => {
-                if action.is_edit() {
-                    "Edit Attribute Template"
-                } else {
-                    "View Attribute Template"
-                }
-            }
+        let action = match id.is_zero() {
+            true => Action::Create,
+            false => ectx.data(|d| d.get_temp::<Action>(act_id)).unwrap_or(Action::View),
         };
 
-        Window::new(format!("atf_window_{}", element.id))
+        log::info!("act_id: {:?} id.is_zero(): {} action: {}", act_id, id.is_zero(), action);
+
+        let title = match action {
+            Action::Create => "New Attribute Template",
+            Action::Edit => "Edit Attribute Template",
+            _ => "View Attribute Template",
+        };
+
+        Window::new(format!("attr_tmpl_win_{}", element.id))
             .title_bar(false)
             .resizable(false)
             .min_width(300.0)
@@ -63,10 +65,10 @@ impl AppComponent for AttrTemplateForm {
                             .show(ui, |ui| {
                                 // ui.label("            Name");
                                 ui.add_enabled(false, Label::new("            Name"));
-                                ui.add(egui::TextEdit::singleline(&mut element.name).interactive(action.is_edit()));
+                                ui.add(egui::TextEdit::singleline(&mut element.name).interactive(!action.is_view()));
                                 ui.end_row();
                                 ui.add_enabled(false, Label::new("   Description"));
-                                ui.add(egui::TextEdit::singleline(&mut element.description).interactive(action.is_edit()));
+                                ui.add(egui::TextEdit::singleline(&mut element.description).interactive(!action.is_view()));
                                 ui.end_row();
                                 ui.add_enabled(false, Label::new("    Value Type"));
                                 if action.is_view() {
@@ -90,7 +92,7 @@ impl AppComponent for AttrTemplateForm {
                                 }
                                 ui.end_row();
                                 ui.add_enabled(false, Label::new("Default value"));
-                                ui.add(egui::TextEdit::singleline(&mut element.default_value).interactive(action.is_edit()));
+                                ui.add(egui::TextEdit::singleline(&mut element.default_value).interactive(!action.is_view()));
                                 ui.end_row();
                                 ui.add_enabled(false, Label::new("    Mandatory"));
                                 if action.is_view() {

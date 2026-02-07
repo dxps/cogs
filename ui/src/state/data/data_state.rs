@@ -42,7 +42,11 @@ impl DataState {
         ehttp::fetch(req, move |rsp| {
             log::info!("[DataState::save_attr_template] Response: {:?}", rsp);
             if let Ok(rsp) = rsp {
-                let dto: IdDto = serde_json::from_str(rsp.text().unwrap_or_default()).unwrap();
+                let dto: IdDto = serde_json::from_str(rsp.text().unwrap_or_default()).unwrap_or_else(|e| {
+                    log::error!("[DataState::save_attr_template] Error: {e}");
+                    // TODO: tell the caller.
+                    IdDto::default()
+                });
                 let ui_msg = if is_new {
                     log::debug!("[DataState::save_attr_template] Got id: {}", dto.id);
                     UiMessage::ElementCreated(Kind::AttributeTemplate, Ok(dto.id))
