@@ -204,15 +204,15 @@ fn show_category(ctx: &mut CogsApp, ui: &mut egui::Ui) {
 }
 
 fn show_kind(ctx: &mut CogsApp, ui: &mut Ui) {
-    use egui::{Color32, CursorIcon, Popup, RichText, Sense};
+    use egui::{Color32, CursorIcon, Popup, RichText, Sense, TextStyle, WidgetText};
 
     ui.label("Kind:");
 
     let selected_text = match ctx.state.explore.kind {
-        ExploreKind::All => "all".to_owned(),
-        ExploreKind::Item => "Item".to_owned(),
-        ExploreKind::Attribute => "Attribute".to_owned(),
-        ExploreKind::Link => "Link".to_owned(),
+        ExploreKind::All => "all",
+        ExploreKind::Item => "Item",
+        ExploreKind::Attribute => "Attribute",
+        ExploreKind::Link => "Link",
     };
     let is_all = ctx.state.explore.kind == ExploreKind::All;
 
@@ -220,14 +220,14 @@ fn show_kind(ctx: &mut CogsApp, ui: &mut Ui) {
     let w = 120.0;
     let (rect, resp) = ui.allocate_exact_size(egui::vec2(w, h), Sense::click());
 
-    // Copy needed visual values (no long-lived borrow of ui)
-    let (bg_inactive, bg_hovered, bg_active, sel_bg) = {
+    let (bg_inactive, bg_hovered, bg_active, sel_bg, text_inactive) = {
         let v = ui.visuals();
         (
             v.widgets.inactive.bg_fill,
             v.widgets.hovered.bg_fill,
             v.widgets.active.bg_fill,
             v.selection.bg_fill,
+            v.widgets.inactive.fg_stroke.color,
         )
     };
 
@@ -240,21 +240,14 @@ fn show_kind(ctx: &mut CogsApp, ui: &mut Ui) {
     };
     ui.painter().rect_filled(rect, 4.0, bg);
 
-    let text_rect = egui::Rect::from_min_max(
-        egui::pos2(rect.left() + 10.0, rect.top()),
-        egui::pos2(rect.right() - 20.0, rect.bottom()),
-    );
-
-    ui.scope_builder(egui::UiBuilder::new().max_rect(text_rect), |ui| {
-        ui.with_layout(egui::Layout::left_to_right(egui::Align::Center), |ui| {
-            let rt = if is_all {
-                RichText::new(selected_text.as_str()).italics()
-            } else {
-                RichText::new(selected_text.as_str())
-            };
-            ui.label(rt);
-        });
-    });
+    // Paint selected text inside rect (no inner widget / no extra layout effects)
+    let mut rt = RichText::new(selected_text).color(text_inactive);
+    if is_all {
+        rt = rt.italics();
+    }
+    let galley = WidgetText::from(rt).into_galley(ui, Some(egui::TextWrapMode::Extend), f32::INFINITY, TextStyle::Button);
+    let text_pos = egui::pos2(rect.left() + 10.0, rect.center().y - galley.size().y * 0.5);
+    ui.painter().galley(text_pos, galley, text_inactive);
 
     paint_combo_chevron(ui, rect);
 
@@ -295,7 +288,6 @@ fn show_kind(ctx: &mut CogsApp, ui: &mut Ui) {
             }
         });
 
-    ui.add_space(94.0);
     ui.label(RichText::new(ICON_HELP).color(Color32::GRAY).size(10.0))
         .on_hover_text(
             "If category is 'Items', you may filter by their templates.\nIf category is 'Templates', you may filter by their types.",
