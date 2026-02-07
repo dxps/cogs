@@ -33,6 +33,9 @@ pub use password_input::*;
 mod user_menu;
 pub use user_menu::*;
 
+mod menu_utils;
+pub use menu_utils::*;
+
 use crate::messages::UiMessage;
 use eframe::egui::Ui;
 

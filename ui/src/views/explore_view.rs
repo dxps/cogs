@@ -2,15 +2,17 @@ use crate::{
     CogsApp,
     comps::{
         AppComponent, AttrTemplateForm, AttrTemplateProps, ExploreTable, ItemTemplateForm, ItemTemplateProps, LinkTemplateForm,
+        menu_row,
     },
-    constants::{EXPLORE_ELEMENT, ICON_HELP},
+    constants::{EXPLORE_ELEMENT, ICON_HELP, ICON_SETTINGS, POPUP_MIN_WIDTH, POPUP_ROW_WIDTH},
     views::AppView,
 };
 use cogs_shared::domain::model::{
     Id,
     meta::{AttrTemplate, ItemTemplate, Kind, LinkTemplate},
 };
-use egui::{Color32, ComboBox, CursorIcon, Popup, RichText, Sense};
+use const_format::concatcp;
+use egui::{Color32, ComboBox, CursorIcon, Popup, PopupAnchor, PopupCloseBehavior, PopupKind, RichText, Sense};
 use egui_extras::{Size, StripBuilder};
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
@@ -109,43 +111,45 @@ impl AppView for Explore {
                                     .on_hover_text_at_pointer("Add")
                                     .on_hover_cursor(CursorIcon::PointingHand);
 
-                                ui.horizontal_top(|_ui| {
-                                    Popup::menu(&btn).id(egui::Id::new("xplore_add_popup")).gap(5.0).show(|ui| {
-                                        if ui.label(" Item ").on_hover_cursor(CursorIcon::PointingHand).clicked() {
-                                            // TODO: open the item form for creating one.
-                                        };
+                                let mut style = ui.style_mut().clone();
+                                style.visuals.window_fill = style.visuals.extreme_bg_color;
+
+                                Popup::menu(&btn)
+                                    .id(egui::Id::new("explore_add_popup"))
+                                    .style(style.clone())
+                                    .gap(5.0)
+                                    .show(|ui| {
+                                        ui.set_min_width(POPUP_MIN_WIDTH);
+
+                                        if menu_row(ui, concatcp!(ICON_SETTINGS, "  Item"), None).clicked() {
+                                            // TODO: open item creation
+                                            ui.close();
+                                        }
+
                                         ui.separator();
-                                        ui.menu_button("Template", |ui| {
-                                            if ui
-                                                .label("Item Template").on_hover_cursor(CursorIcon::PointingHand).clicked() {
-                                                    ctx.state
-                                                    .explore
-                                                    .open_windows_item_template
-                                                    .insert(Id::default(), Arc::new(Mutex::new(ItemTemplate::default())));
-                                            };
-                                            if ui
-                                                .label("Attribute Template")
-                                                .on_hover_cursor(CursorIcon::PointingHand)
-                                                .clicked()
-                                            {
-                                                ctx.state
-                                                    .explore
-                                                    .open_windows_attr_template
-                                                    .insert(Id::default(), Arc::new(Mutex::new(AttrTemplate::default())));
-                                            };
-                                            if ui
-                                                .label("Link Template")
-                                                .on_hover_cursor(CursorIcon::PointingHand)
-                                                .clicked()
-                                            {
-                                                ctx.state
-                                                    .explore
-                                                    .open_windows_link_template
-                                                    .insert(Id::default(), Arc::new(Mutex::new(LinkTemplate::default())));
-                                            };
-                                        });
+                                        
+                                        if menu_row(ui, "  Item Template", None).clicked() {
+                                            ctx.state.explore.open_windows_item_template.insert(
+                                                Id::default(),
+                                                Arc::new(Mutex::new(ItemTemplate::default())),
+                                            );
+                                            ui.close();
+                                        }
+                                        if menu_row(ui, "  Attribute Template", None).clicked() {
+                                            ctx.state.explore.open_windows_attr_template.insert(
+                                                Id::default(),
+                                                Arc::new(Mutex::new(AttrTemplate::default())),
+                                            );
+                                            ui.close();
+                                        }
+                                        if menu_row(ui, "  Link Template", None).clicked() {
+                                            ctx.state.explore.open_windows_link_template.insert(
+                                                Id::default(),
+                                                Arc::new(Mutex::new(LinkTemplate::default())),
+                                            );
+                                            ui.close();
+                                        }
                                     });
-                                });
                             })
                         });
 
