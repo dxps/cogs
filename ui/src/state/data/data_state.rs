@@ -12,19 +12,25 @@ use std::sync::mpsc::Sender;
 #[derive(Clone, Default, Debug, serde::Deserialize, serde::Serialize)]
 #[serde(default)]
 pub struct DataState {
-    /// It tells whether we have fetched the data or not.
     #[serde(skip)]
-    pub fetch_done: bool,
+    attr_templates: Vec<AttrTemplate>,
 
     #[serde(skip)]
-    fetched_attr_templates: Vec<AttrTemplate>,
+    fetched_attr_templates: bool,
 
     #[serde(skip)]
-    fetched_item_templates: Vec<ItemTemplate>,
+    item_templates: Vec<ItemTemplate>,
+
+    #[serde(skip)]
+    fetched_item_templates: bool,
 }
 
 impl DataState {
     //
+
+    pub fn is_fetched(&self) -> bool {
+        self.fetched_attr_templates && self.fetched_item_templates
+    }
 
     // ------------------------
     // Attribute Templates mgmt
@@ -62,15 +68,17 @@ impl DataState {
     }
 
     pub fn set_attr_templates(&mut self, data: Vec<AttrTemplate>) {
-        self.fetched_attr_templates = data;
+        self.attr_templates = data;
+        self.fetched_attr_templates = true;
     }
 
     pub fn set_item_templates(&mut self, data: Vec<ItemTemplate>) {
-        self.fetched_item_templates = data;
+        self.item_templates = data;
+        self.fetched_item_templates = true;
     }
 
     pub fn get_attr_templates(&self) -> Vec<AttrTemplate> {
-        self.fetched_attr_templates.clone()
+        self.attr_templates.clone()
     }
 
     pub fn fetch_all_attr_templates(&self, ectx: &egui::Context, sender: Sender<UiMessage>) {
@@ -82,11 +90,10 @@ impl DataState {
             if let Ok(rsp) = rsp {
                 let data: Vec<AttrTemplate> = serde_json::from_str(rsp.text().unwrap_or_default()).unwrap();
                 log::info!("[DataState::fetch_all_attr_templates] Got {} elements.", data.len());
-                ectx.request_repaint(); // wake up UI thread
                 if let Err(e) = sender.send(UiMessage::AttrTemplatesFetched(Ok(data))) {
                     log::info!("[DataState::fetch_all_attr_templates] Failed to send UiMessage. Error: {e}");
-                    return;
                 }
+                ectx.request_repaint();
             }
         });
     }
@@ -158,17 +165,16 @@ impl DataState {
             if let Ok(rsp) = rsp {
                 let data: Vec<ItemTemplate> = serde_json::from_str(rsp.text().unwrap_or_default()).unwrap();
                 log::info!("[DataState::fetch_all_item_templates] Got {} elements.", data.len());
-                ectx.request_repaint(); // wake up UI thread
                 if let Err(e) = sender.send(UiMessage::ItemTemplatesFetched(Ok(data))) {
                     log::info!("[DataState::fetch_all_item_templates] Failed to send UiMessage. Error: {e}");
-                    return;
                 }
+                ectx.request_repaint();
             }
         });
     }
 
     pub fn get_item_templates(&self) -> Vec<ItemTemplate> {
-        self.fetched_item_templates.clone()
+        self.item_templates.clone()
     }
 
     pub fn delete_item_template(&self, id: Id, ectx: &egui::Context, sender: Sender<UiMessage>) {

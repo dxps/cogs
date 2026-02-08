@@ -78,7 +78,7 @@ pub fn init_logging() {
         {
             use tracing_subscriber::{EnvFilter, fmt};
 
-            let filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info,eframe=warn,egui_glow=warn"));
+            let filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("debug,eframe=warn,egui_glow=warn"));
 
             let _ = fmt().with_env_filter(filter).try_init(); // <- do not panic if already set
         }
@@ -88,7 +88,7 @@ pub fn init_logging() {
             use tracing_subscriber::{EnvFilter, fmt, prelude::*};
             use tracing_subscriber_wasm::MakeConsoleWriter;
 
-            let filter = EnvFilter::new("info,eframe=warn,egui_glow=warn");
+            let filter = EnvFilter::new("debug,eframe=warn,egui_glow=warn");
 
             let subscriber = tracing_subscriber::registry().with(filter).with(
                 fmt::layer()

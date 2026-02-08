@@ -13,7 +13,7 @@ use cogs_shared::domain::model::{
 };
 use const_format::concatcp;
 use egui::{Color32, CursorIcon, Popup, RichText, Sense, TextStyle, TextWrapMode, Ui, WidgetText, pos2};
-use egui_extras::{Size, StripBuilder};
+use egui_extras::{Size, Strip, StripBuilder};
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
 
@@ -40,7 +40,6 @@ impl AppView for Explore {
 
     fn show(ctx: &mut Self::Context, ectx: &egui::Context) {
         //
-        // The central panel is the region left after adding TopPanel's and SidePanel's.
         let style = ectx.style();
         egui::CentralPanel::default()
         .frame(egui::Frame::central_panel(&style).inner_margin(egui::Margin::symmetric(20, 0)))
@@ -55,77 +54,82 @@ impl AppView for Explore {
             ui.add_space(20.0);
 
             StripBuilder::new(ui)
-                .size(Size::relative(0.6).at_least(500.0)) // left
-                .size(Size::exact(20.0)) // middle
-                .size(Size::remainder().at_least(80.0)) // /right
+                .size(Size::relative(0.6).at_least(500.0)) // Table cell.
+                .size(Size::exact(20.0)) // middle (space) cell.
+                .size(Size::remainder().at_least(80.0)) // Preview cell.
                 .horizontal(|mut strip| {
-                    // The left cell.
-                    strip.cell(|ui| {
-                        ui.vertical(|ui| {
-                            ui.horizontal(|ui| {
-                                show_category(ctx, ui);
-                                ui.add_space(15.0);
-                                show_kind(ctx, ui);
-                                ui.add_space(15.0);
-                                // The "+" button and its menu.
-                                show_add_menu(ctx, ui);
-                            })
-                        });
-
-                        ExploreTable::show(ctx, ui);
-
-                        for (_, element) in ctx.state.explore.open_windows_item_template.clone().iter() {
-                            ectx.data_mut(|d| d.insert_temp(egui::Id::from(EXPLORE_ELEMENT), element.clone()));
-                            ItemTemplateForm::show(ctx, ui);
-                        }
-                        for (_, element) in ctx.state.explore.open_windows_attr_template.clone().iter() {
-                            ectx.data_mut(|d| d.insert_temp(egui::Id::from(EXPLORE_ELEMENT), element.clone()));
-                            AttrTemplateForm::show(ctx, ui);
-                        }
-                        for (_, element) in ctx.state.explore.open_windows_link_template.clone().iter() {
-                            ectx.data_mut(|d| d.insert_temp(egui::Id::from(EXPLORE_ELEMENT), element.clone()));
-                            LinkTemplateForm::show(ctx, ui);
-                        }
-                    });
-
-                    strip.cell(|_| {}); // Just a space in the middle.
-
-                    // The right cell.
-                    strip.cell(|ui| {
-                        ui.vertical(|ui| {
-                            ui.add_space(45.0);
-                            if let Some((kind, id)) = &ctx.state.explore.curr_sel_elem {
-                                match kind {
-                                    Kind::AttributeTemplate => {
-                                        for elem in ctx.state.data.get_attr_templates().iter() {
-                                            if elem.id == *id {
-                                                ectx.data_mut(|d| {
-                                                    d.insert_temp(egui::Id::from(EXPLORE_ELEMENT), elem.clone())
-                                                });
-                                                break;
-                                            }
-                                        }
-                                        AttrTemplateProps::show(ctx, ui);
-                                    }
-                                    Kind::ItemTemplate => {
-                                        for elem in ctx.state.data.get_item_templates().iter() {
-                                            if elem.id == *id {
-                                                ectx.data_mut(|d| {
-                                                    d.insert_temp(egui::Id::from(EXPLORE_ELEMENT), elem.clone())
-                                                });
-                                                break;
-                                            }
-                                        }
-                                        ItemTemplateProps::show(ctx, ui);
-                                    }
-                                    _ => {}
-                                }
-                            }
-                        });
-                    });
+                    show_table_cell(ctx, ectx, &mut strip);
+                    strip.cell(|_| {}); // For that middle space.
+                    show_preview_cell(ctx, ectx, &mut strip);
+                    
                 });
         });
     }
+}
+
+fn show_table_cell(ctx: &mut CogsApp, ectx: &egui::Context, strip: &mut Strip<'_, '_>) {
+    strip.cell(|ui| {
+        ui.vertical(|ui| {
+            ui.horizontal(|ui| {
+                show_category(ctx, ui);
+                ui.add_space(15.0);
+                show_kind(ctx, ui);
+                ui.add_space(15.0);
+                // The "+" button and its menu.
+                show_add_menu(ctx, ui);
+            })
+        });
+
+        ExploreTable::show(ctx, ui);
+
+        for (_, element) in ctx.state.explore.open_windows_item_template.clone().iter() {
+            ectx.data_mut(|d| d.insert_temp(egui::Id::from(EXPLORE_ELEMENT), element.clone()));
+            ItemTemplateForm::show(ctx, ui);
+        }
+        for (_, element) in ctx.state.explore.open_windows_attr_template.clone().iter() {
+            ectx.data_mut(|d| d.insert_temp(egui::Id::from(EXPLORE_ELEMENT), element.clone()));
+            AttrTemplateForm::show(ctx, ui);
+        }
+        for (_, element) in ctx.state.explore.open_windows_link_template.clone().iter() {
+            ectx.data_mut(|d| d.insert_temp(egui::Id::from(EXPLORE_ELEMENT), element.clone()));
+            LinkTemplateForm::show(ctx, ui);
+        }
+    });
+}
+
+fn show_preview_cell(ctx: &mut CogsApp, ectx: &egui::Context,  strip: &mut Strip<'_, '_>) {
+    strip.cell(|ui| {
+        ui.vertical(|ui| {
+            ui.add_space(45.0);
+            if let Some((kind, id)) = &ctx.state.explore.curr_sel_elem {
+                match kind {
+                    Kind::AttributeTemplate => {
+                        for elem in ctx.state.data.get_attr_templates().iter() {
+                            if elem.id == *id {
+                                ectx.data_mut(|d| {
+                                    d.insert_temp(egui::Id::from(EXPLORE_ELEMENT), elem.clone())
+                                });
+                                break;
+                            }
+                        }
+                        AttrTemplateProps::show(ctx, ui);
+                    }
+                    Kind::ItemTemplate => {
+                        for elem in ctx.state.data.get_item_templates().iter() {
+                            if elem.id == *id {
+                                ectx.data_mut(|d| {
+                                    d.insert_temp(egui::Id::from(EXPLORE_ELEMENT), elem.clone())
+                                });
+                                break;
+                            }
+                        }
+                        ItemTemplateProps::show(ctx, ui);
+                    }
+                    _ => {}
+                }
+            }
+        });
+    });
 }
 
 fn show_category(ctx: &mut CogsApp, ui: &mut egui::Ui) {
@@ -148,9 +152,9 @@ fn show_category(ctx: &mut CogsApp, ui: &mut egui::Ui) {
         } else if resp.hovered() {
             ui.visuals().widgets.hovered.bg_fill
         } else {
-            // This matches ComboBox-like resting background best in most themes:
+            // This matches ComboBox-like resting background best in most themes.
             ui.visuals().widgets.inactive.bg_fill
-            // If you want even closer to popup/button body in your theme, try:
+            // For an even closer to popup/button body in your theme.
             // ui.visuals().widgets.open.bg_fill
         };
 

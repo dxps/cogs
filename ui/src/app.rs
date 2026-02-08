@@ -108,7 +108,7 @@ impl eframe::App for CogsApp {
     }
 
     /// Called each time the UI needs repainting, which may be many times per second.
-    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+    fn update(&mut self, ectx: &egui::Context, _frame: &mut eframe::Frame) {
         //
 
         // State related logistics.
@@ -120,7 +120,7 @@ impl eframe::App for CogsApp {
         // `SidePanel`, `TopBottomPanel`, `CentralPanel`, `Window` or `Area`.
         // For inspiration and more examples, go to https://emilk.github.io/egui
 
-        Header::show(self, ctx);
+        Header::show(self, ectx);
 
         if let Ok(res) = self.recvr.try_recv() {
             log::info!("Received msg {:?}", res);
@@ -153,15 +153,13 @@ impl eframe::App for CogsApp {
                 UiMessage::Settings => {}
 
                 UiMessage::AttrTemplateUpserted(_) => {
-                    self.state.data.fetch_all_attr_templates(ctx, self.sendr.clone());
-                    self.state.data.fetch_done = true;
-                    ctx.request_repaint();
+                    self.state.data.fetch_all_attr_templates(ectx, self.sendr.clone());
+                    ectx.request_repaint();
                 }
 
                 UiMessage::AttrTemplateDeleted(_) => {
-                    self.state.data.fetch_all_attr_templates(ctx, self.sendr.clone());
-                    self.state.data.fetch_done = true;
-                    ctx.request_repaint();
+                    self.state.data.fetch_all_attr_templates(ectx, self.sendr.clone());
+                    ectx.request_repaint();
                 }
 
                 UiMessage::ElementCreated(kind, ars) => {
@@ -170,14 +168,12 @@ impl eframe::App for CogsApp {
                             Kind::Item => todo!(),
                             Kind::ItemTemplate => {
                                 self.state.explore.open_windows_item_template.remove(&id);
-                                self.state.data.fetch_all_item_templates(ctx, self.sendr.clone());
-                                self.state.data.fetch_done = true;
-                                ctx.request_repaint();
+                                self.state.data.fetch_all_item_templates(ectx, self.sendr.clone());
+                                ectx.request_repaint();
                             }
                             Kind::AttributeTemplate => {
-                                self.state.data.fetch_all_attr_templates(ctx, self.sendr.clone());
-                                self.state.data.fetch_done = true;
-                                ctx.request_repaint();
+                                self.state.data.fetch_all_attr_templates(ectx, self.sendr.clone());
+                                ectx.request_repaint();
                             }
                             Kind::LinkTemplate => todo!(),
                         },
@@ -192,9 +188,8 @@ impl eframe::App for CogsApp {
                         Kind::Item => todo!(),
                         Kind::ItemTemplate => todo!(),
                         Kind::AttributeTemplate => {
-                            self.state.data.fetch_all_attr_templates(ctx, self.sendr.clone());
-                            self.state.data.fetch_done = true;
-                            ctx.request_repaint();
+                            self.state.data.fetch_all_attr_templates(ectx, self.sendr.clone());
+                            ectx.request_repaint();
                         }
                         Kind::LinkTemplate => todo!(),
                     },
@@ -207,59 +202,51 @@ impl eframe::App for CogsApp {
                     Ok(_id) => match kind {
                         Kind::Item => todo!(),
                         Kind::ItemTemplate => {
-                            self.state.data.fetch_all_item_templates(ctx, self.sendr.clone());
-                            self.state.data.fetch_done = true;
-                            ctx.request_repaint();
+                            self.state.data.fetch_all_item_templates(ectx, self.sendr.clone());
+                            ectx.request_repaint();
                         }
                         Kind::AttributeTemplate => {
-                            self.state.data.fetch_all_attr_templates(ctx, self.sendr.clone());
-                            self.state.data.fetch_done = true;
-                            ctx.request_repaint();
+                            self.state.data.fetch_all_attr_templates(ectx, self.sendr.clone());
+                            ectx.request_repaint();
                         }
                         Kind::LinkTemplate => todo!(),
                     },
                     Err(_) => todo!(),
                 },
 
-                UiMessage::AttrTemplatesFetched(data) => {
-                    self.state.data.fetch_done = true;
-                    match data {
-                        Ok(attr_templates) => {
-                            self.state.data.set_attr_templates(attr_templates);
-                        }
-                        Err(err) => {
-                            log::error!("[app.update] Error fetching attr templates: {}", err);
-                        }
+                UiMessage::AttrTemplatesFetched(data) => match data {
+                    Ok(attr_templates) => {
+                        self.state.data.set_attr_templates(attr_templates);
                     }
-                }
+                    Err(err) => {
+                        log::error!("[app.update] Error fetching attr templates: {}", err);
+                    }
+                },
 
-                UiMessage::ItemTemplatesFetched(data) => {
-                    self.state.data.fetch_done = true;
-                    match data {
-                        Ok(item_templates) => {
-                            self.state.data.set_item_templates(item_templates);
-                        }
-                        Err(err) => {
-                            log::error!("[app.update] Error fetching item templates: {}", err);
-                        }
+                UiMessage::ItemTemplatesFetched(data) => match data {
+                    Ok(data) => {
+                        self.state.data.set_item_templates(data);
                     }
-                }
+                    Err(err) => {
+                        log::error!("[app.update] Error fetching item templates: {}", err);
+                    }
+                },
             }
         }
 
         match self.state.curr_view() {
-            ViewName::Home => Home::show(self, ctx),
-            ViewName::Explore => Explore::show(self, ctx),
-            ViewName::Settings => Settings::show(self, ctx),
+            ViewName::Home => Home::show(self, ectx),
+            ViewName::Explore => Explore::show(self, ectx),
+            ViewName::Settings => Settings::show(self, ectx),
             ViewName::Login => {
                 self.state.set_curr_view(ViewName::Login);
-                Login::show(self, ctx);
+                Login::show(self, ectx);
             }
         }
 
         egui::TopBottomPanel::bottom("footer_panel")
             .show_separator_line(false)
-            .show(ctx, |ui| {
+            .show(ectx, |ui| {
                 Footer::show(self, ui);
             });
     }

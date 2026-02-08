@@ -21,9 +21,9 @@ impl AppComponent for ItemTemplateForm {
     fn show(ctx: &mut Self::Context, ui: &mut egui::Ui) {
         //
         let ectx = ui.ctx();
-        // Make sure all attribute templates are loaded.
-        if ctx.state.data.get_attr_templates().is_empty() {
-            ctx.state.data.fetch_all_attr_templates(ectx, ctx.sendr.clone());
+        // Make sure all item templates are loaded.
+        if ctx.state.data.get_item_templates().is_empty() {
+            ctx.state.data.fetch_all_item_templates(ectx, ctx.sendr.clone());
         }
 
         let binding = ectx
