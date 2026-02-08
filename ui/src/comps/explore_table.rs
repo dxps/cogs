@@ -25,7 +25,7 @@ impl AppComponent for ExploreTable {
             }
         }
 
-        egui::ScrollArea::horizontal().show(ui, |ui| {
+        egui::ScrollArea::vertical().show(ui, |ui| {
             ui.add_space(10.0);
 
             let available_height = ui.available_height();
@@ -35,7 +35,7 @@ impl AppComponent for ExploreTable {
                 .cell_layout(egui::Layout::left_to_right(egui::Align::Center))
                 .column(Column::auto().at_least(50.0)) // type
                 .column(Column::auto().at_least(200.0)) // name
-                .column(Column::remainder().resizable(true)) // description
+                .column(Column::remainder()) // description
                 .max_scroll_height(available_height)
                 .sense(Sense::click());
 

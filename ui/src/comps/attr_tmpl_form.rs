@@ -3,8 +3,7 @@ use cogs_shared::domain::model::{
     Action,
     meta::{AttrTemplate, AttributeValueType},
 };
-use egui::{Align, Color32, ComboBox, CursorIcon, Direction, Grid, Label, Layout, RichText, Window};
-use log::debug;
+use egui::{Align, Color32, ComboBox, CursorIcon, Direction, Grid, Label, Layout, RichText, Window, vec2};
 use std::sync::{Arc, Mutex};
 
 pub struct AttrTemplateForm {}
@@ -41,10 +40,7 @@ impl AppComponent for AttrTemplateForm {
         Window::new(format!("attr_tmpl_win_{}", element.id))
             .title_bar(false)
             .resizable(false)
-            .min_width(300.0)
-            .max_width(400.0)
-            .min_height(200.0)
-            .max_height(400.0)
+            .fixed_size(vec2(400.0, 300.0))
             .show(ectx, |ui| {
                 ui.vertical(|ui| {
                     ui.vertical_centered(|ui| {

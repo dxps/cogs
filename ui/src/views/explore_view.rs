@@ -168,9 +168,7 @@ fn show_category(ctx: &mut CogsApp, ui: &mut egui::Ui) {
         // Show the chevron (down arrow) symbol.
         paint_combo_chevron(ui, rect);
 
-        let resp = resp
-            .on_hover_cursor(egui::CursorIcon::PointingHand)
-            .on_hover_text("Select category");
+        let resp = resp.on_hover_cursor(egui::CursorIcon::PointingHand);
 
         // Popup style that follows current theme (FRAPPE/LATTE).
         let mut popup_style: egui::Style = ui.style().as_ref().clone();
@@ -251,7 +249,7 @@ fn show_kind(ctx: &mut CogsApp, ui: &mut Ui) {
 
     paint_combo_chevron(ui, rect);
 
-    let resp = resp.on_hover_cursor(CursorIcon::PointingHand).on_hover_text("Select kind");
+    let resp = resp.on_hover_cursor(CursorIcon::PointingHand);
 
     let mut popup_style: egui::Style = ui.style().as_ref().clone();
     popup_style.visuals.window_fill = bg_inactive;
@@ -300,7 +298,7 @@ fn show_add_menu(ctx: &mut CogsApp, ui: &mut Ui) {
     let btn = ui
         .button(" + ")
         .interact(Sense::click())
-        .on_hover_text_at_pointer("Add")
+        .on_hover_text_at_pointer("Add an element")
         .on_hover_cursor(CursorIcon::PointingHand);
 
     let (bg_inactive, bg_hovered, bg_active, sel_bg) = {
