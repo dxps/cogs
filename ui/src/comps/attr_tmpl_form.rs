@@ -22,7 +22,7 @@ impl AppComponent for AttrTemplateForm {
             .unwrap_or_default();
         let mut element = binding.lock().unwrap();
         let id = element.id.clone();
-        let act_id = egui::Id::from(format!("xp_attr_tmpl_id_{}_action", id));
+        let act_id = egui::Id::from(format!("attr_tmpl_id_{}_action", id));
 
         let action = match id.is_zero() {
             true => Action::Create,
@@ -37,7 +37,7 @@ impl AppComponent for AttrTemplateForm {
             _ => "View Attribute Template",
         };
 
-        Window::new(format!("attr_tmpl_win_{}", element.id))
+        Window::new(format!("attr_tmpl_form_{}_win", element.id))
             .title_bar(false)
             .resizable(false)
             .fixed_size(vec2(400.0, 300.0))
@@ -55,17 +55,18 @@ impl AppComponent for AttrTemplateForm {
                     ui.add_space(20.0);
                     ui.horizontal(|ui| {
                         ui.add_space(14.0);
-                        Grid::new(format!("atf_grid_{}", id))
+                        Grid::new(format!("attr_tmpl_form_{}_grid", id))
                             .spacing([10.0, 10.0])
                             .num_columns(2)
                             .show(ui, |ui| {
-                                // ui.label("            Name");
                                 ui.add_enabled(false, Label::new("            Name"));
                                 ui.add(egui::TextEdit::singleline(&mut element.name).interactive(!action.is_view()));
                                 ui.end_row();
+
                                 ui.add_enabled(false, Label::new("   Description"));
                                 ui.add(egui::TextEdit::singleline(&mut element.description).interactive(!action.is_view()));
                                 ui.end_row();
+
                                 ui.add_enabled(false, Label::new("    Value Type"));
                                 if action.is_view() {
                                     ui.add(egui::TextEdit::singleline(&mut element.value_type.to_string()).interactive(false));

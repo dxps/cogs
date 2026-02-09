@@ -1,3 +1,4 @@
+use crate::utils::uuid_from;
 use cogs_shared::{
     app::{AppError, AppResult},
     domain::model::{
@@ -30,10 +31,10 @@ impl ItemTemplateRepo {
              VALUES ($1, $2, $3, $4)
              ON CONFLICT (id) DO UPDATE SET name = $2, description = $3, listing_attr_templ_id = $4",
         )
-        .bind(item_templ.id.to_string())
+        .bind(uuid_from(&item_templ.id))
         .bind(item_templ.name.clone())
         .bind(item_templ.description.clone())
-        .bind(item_templ.listing_attr.id.to_string())
+        .bind(uuid_from(&item_templ.listing_attr.id))
         .execute(&mut *txn)
         .await
         {
@@ -44,7 +45,7 @@ impl ItemTemplateRepo {
 
         if !item_templ.id.is_zero() {
             if let Err(e) = sqlx::query("DELETE FROM item_templates_attr_templates_xref WHERE item_templ_id = $1")
-                .bind(item_templ.id.to_string())
+                .bind(uuid_from(&item_templ.id))
                 .execute(&mut *txn)
                 .await
             {
@@ -61,8 +62,8 @@ impl ItemTemplateRepo {
             if let Err(e) = sqlx::query(
                 "INSERT INTO item_templates_attr_templates_xref (item_templ_id, attr_templ_id, show_index) VALUES ($1, $2, $3)",
             )
-            .bind(item_templ.id.to_string())
-            .bind(attr_def.id.to_string())
+            .bind(uuid_from(&item_templ.id))
+            .bind(uuid_from(&attr_def.id))
             .bind((index + 1) as i16)
             .execute(&mut *txn)
             .await
@@ -86,6 +87,7 @@ impl ItemTemplateRepo {
             .await
             .map_err(|err| AppError::from(err.to_string()))
             .map(|rows| rows.iter().map(|row| from_row(row).unwrap()).collect::<Vec<ItemTemplate>>())?;
+        // TODO: fetch the attribute templates of each item template.
         Ok(data)
     }
 
@@ -93,7 +95,7 @@ impl ItemTemplateRepo {
     pub async fn delete(&self, id: Id) -> AppResult<()> {
         //
         sqlx::query("DELETE FROM item_templates WHERE id = $1")
-            .bind(id.0)
+            .bind(uuid_from(&id))
             .execute(self.dbcp.as_ref())
             .await
             .map_err(|err| AppError::from(err.to_string()))?;

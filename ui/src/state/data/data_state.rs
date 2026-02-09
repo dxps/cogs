@@ -28,8 +28,16 @@ pub struct DataState {
 impl DataState {
     //
 
-    pub fn is_fetched(&self) -> bool {
+    pub fn has_fetched_all(&self) -> bool {
         self.fetched_attr_templates && self.fetched_item_templates
+    }
+
+    pub fn has_fetched_attr_templates(&self) -> bool {
+        self.fetched_attr_templates
+    }
+
+    pub fn has_fetched_item_templates(&self) -> bool {
+        self.fetched_item_templates
     }
 
     // ------------------------

@@ -54,7 +54,10 @@ pub async fn upsert_item_template(
     log::debug!("Upserting item template {input:?} ...");
     match state.data_mgmt.upsert_item_template(input).await {
         Ok(id) => (StatusCode::OK, Json(json!({ "id": id }))),
-        Err(err) => respond_not_found(err),
+        Err(err) => match err {
+            cogs_shared::app::AppError::NotFound => respond_not_found(err),
+            _ => respond_internal_server_error(err),
+        },
     }
 }
 

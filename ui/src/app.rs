@@ -123,7 +123,7 @@ impl eframe::App for CogsApp {
         Header::show(self, ectx);
 
         if let Ok(res) = self.recvr.try_recv() {
-            log::info!("Received msg {:?}", res);
+            log::info!("Received {:?}", res);
             match res {
                 UiMessage::Login(data) => match data {
                     Ok(acc_sess) => match acc_sess {
@@ -167,7 +167,6 @@ impl eframe::App for CogsApp {
                         Ok(id) => match kind {
                             Kind::Item => todo!(),
                             Kind::ItemTemplate => {
-                                self.state.explore.open_windows_item_template.remove(&id);
                                 self.state.data.fetch_all_item_templates(ectx, self.sendr.clone());
                                 ectx.request_repaint();
                             }

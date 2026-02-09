@@ -1,6 +1,6 @@
 use crate::{CogsApp, comps::AppComponent, constants::EXPLORE_ELEMENT};
-use cogs_shared::domain::model::meta::ItemTemplate;
-use egui::{Align, Color32, ComboBox, CursorIcon, Direction, Frame, Grid, Layout, RichText, Window};
+use cogs_shared::domain::model::{Action, meta::ItemTemplate};
+use egui::{Align, Color32, ComboBox, CursorIcon, Direction, Frame, Grid, Label, Layout, RichText, Window};
 use std::sync::{Arc, Mutex};
 
 pub struct ItemTemplateForm {}
@@ -21,9 +21,9 @@ impl AppComponent for ItemTemplateForm {
     fn show(ctx: &mut Self::Context, ui: &mut egui::Ui) {
         //
         let ectx = ui.ctx();
-        // Make sure all item templates are loaded.
-        if ctx.state.data.get_item_templates().is_empty() {
-            ctx.state.data.fetch_all_item_templates(ectx, ctx.sendr.clone());
+        // Make sure all attr templates are fetched, as we need them to build an item template.
+        if !ctx.state.data.has_fetched_attr_templates() {
+            ctx.state.data.fetch_all_attr_templates(ectx, ctx.sendr.clone());
         }
 
         let binding = ectx
@@ -33,17 +33,20 @@ impl AppComponent for ItemTemplateForm {
         let mut element = binding.lock().unwrap();
 
         let id = element.id.clone();
-        let title: &str;
-        match element.id.is_zero() {
-            true => {
-                title = "New Item Template";
-            }
-            false => {
-                title = "Edit Item Template";
-            }
-        }
+        let act_id = egui::Id::from(format!("item_tmpl_form_{}_action", id));
 
-        Window::new(format!("ItemTemplateForm_id_{}", element.id))
+        let action = match id.is_zero() {
+            true => Action::Create,
+            false => ectx.data(|d| d.get_temp::<Action>(act_id)).unwrap_or(Action::View),
+        };
+
+        let title = match action {
+            Action::Create => "New Item Template",
+            Action::Edit => "Edit Item Template",
+            _ => "View Item Template",
+        };
+
+        Window::new(format!("item_tmpl_form_{}_win", element.id))
             .title_bar(false)
             .resizable(false)
             .min_width(300.0)
@@ -53,29 +56,31 @@ impl AppComponent for ItemTemplateForm {
             .show(ectx, |ui| {
                 ui.vertical(|ui| {
                     ui.vertical_centered(|ui| {
-                        ui.label(RichText::new(title).size(13.0));
+                        ui.add_enabled(false, Label::new(RichText::new(title).size(13.0)));
                         if !id.is_zero() {
-                            ui.label(RichText::new(format!("   (id: {})", id)).color(Color32::GRAY).size(10.0));
+                            ui.add_enabled(
+                                action.is_edit(),
+                                Label::new(RichText::new(format!("   (id: {})", id)).color(Color32::GRAY).size(10.0)),
+                            );
                         }
                     });
                     ui.add_space(20.0);
                     ui.horizontal(|ui| {
                         ui.add_space(14.0);
-                        Grid::new(format!("attr_templ_id_{}_grid", id))
+                        Grid::new(format!("item_tmpl_id_{}_grid", id))
                             .spacing([10.0, 10.0])
                             .num_columns(2)
                             .show(ui, |ui| {
-                                ui.label("                  Name");
+                                ui.add_enabled(false, Label::new("                  Name"));
                                 ui.text_edit_singleline(&mut element.name);
                                 ui.end_row();
-
-                                ui.label("        Description");
+                                ui.add_enabled(false, Label::new("        Description"));
                                 ui.text_edit_singleline(&mut element.description);
                                 ui.end_row();
 
-                                ui.label("Listing Attribute");
+                                ui.add_enabled(false, Label::new("Listing Attribute"));
                                 ComboBox::from_id_salt(format!("item_templ_form_{}_listing_attr_", id))
-                                    .width(285.0)
+                                    .width(280.0)
                                     .selected_text(element.listing_attr.name.clone())
                                     .show_ui(ui, |ui| {
                                         for attr in &element.attributes.clone() {
@@ -84,7 +89,7 @@ impl AppComponent for ItemTemplateForm {
                                     });
                                 ui.end_row();
 
-                                ui.label("           Attributes");
+                                ui.add_enabled(false, Label::new("           Attributes"));
                                 if !element.attributes.is_empty() {
                                     let mut from_idx = 0;
                                     let mut to_idx = 0;
@@ -98,6 +103,7 @@ impl AppComponent for ItemTemplateForm {
                                                 let frame = Frame::default().corner_radius(3.0).inner_margin(4.0);
 
                                                 ui.dnd_drop_zone::<usize, ()>(frame, |ui| {
+                                                    ui.set_min_width(272.0);
                                                     for (idx, item) in &mut element.attributes.iter().enumerate() {
                                                         let item_id = egui::Id::new(item.id.clone());
                                                         let item_idx = idx;
@@ -163,13 +169,13 @@ impl AppComponent for ItemTemplateForm {
                                 ui.label("");
                                 ui.end_row();
 
-                                ui.label(RichText::new("     Add Attribute").color(Color32::GRAY));
+                                ui.add_enabled(false, Label::new("     Add Attribute"));
                                 let frame = Frame::default().corner_radius(3.0);
 
                                 ui.horizontal(|ui| {
                                     ui.dnd_drop_zone::<usize, ()>(frame, |ui| {
                                         let response = ComboBox::from_id_salt(format!("item_templ_form_{}_add_attr_", id))
-                                            .width(256.0)
+                                            .width(250.0)
                                             .selected_text(
                                                 if ctx.state.explore.add_item_template_add_attr_template.id.is_zero() {
                                                     "".to_string()
@@ -222,9 +228,7 @@ impl AppComponent for ItemTemplateForm {
                         ctx.state
                             .data
                             .save_item_template(element.clone(), ui.ctx(), ctx.sendr.clone());
-                        // FYI: This window is closed based on the UiMessage
-                        // that is received (by the app itself, in `app.rs`)
-                        // after the HTTP call to the svc ends.
+                        ctx.state.explore.open_windows_item_template.remove(&id);
                     }
                     ui.add_space(8.0);
                     if ui.button("  Cancel  ").clicked() {

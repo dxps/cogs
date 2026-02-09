@@ -11,7 +11,7 @@ impl AppComponent for ExploreTable {
 
     fn show(ctx: &mut Self::Context, ui: &mut Ui) {
         //
-        if !ctx.state.data.is_fetched() {
+        if !ctx.state.data.has_fetched_all() {
             match ctx.state.explore.category {
                 crate::views::ExploreCategory::Items => {
                     // TODO
