@@ -4,7 +4,7 @@ use crate::{
         AppComponent, AttrTemplateForm, AttrTemplateProps, ExploreTable, ItemTemplateForm, ItemTemplateProps, LinkTemplateForm,
         menu_row, paint_combo_chevron,
     },
-    constants::{EXPLORE_ELEMENT, ICON_HELP, ICON_SETTINGS, POPUP_ROW_WIDTH},
+    constants::{CORNER_RADIUS, EXPLORE_ELEMENT, ICON_HELP, ICON_SETTINGS, POPUP_ROW_WIDTH},
     views::AppView,
 };
 use cogs_shared::domain::model::{
@@ -158,7 +158,7 @@ fn show_category(ctx: &mut CogsApp, ui: &mut egui::Ui) {
             // ui.visuals().widgets.open.bg_fill
         };
 
-        ui.painter().rect_filled(rect, 4.0, bg);
+        ui.painter().rect_filled(rect, CORNER_RADIUS, bg);
 
         // Show the text w/ the selected category.
         ui.painter().text(
@@ -240,7 +240,7 @@ fn show_kind(ctx: &mut CogsApp, ui: &mut Ui) {
     } else {
         bg_inactive
     };
-    ui.painter().rect_filled(rect, 4.0, bg);
+    ui.painter().rect_filled(rect, CORNER_RADIUS, bg);
 
     // Paint selected text inside rect (no inner widget / no extra layout effects)
     let mut rt = RichText::new(selected_text).color(text_inactive);

@@ -19,6 +19,8 @@ pub const ICON_HELP: &str = "\u{E66A}";
 
 pub const APP_KEY: &str = "cogs";
 
+pub const CORNER_RADIUS: f32 = 4.0;
+
 pub const POPUP_MIN_WIDTH: f32 = 100.0;
 pub const POPUP_ROW_WIDTH_MIN: f32 = 100.0;
 pub const POPUP_ROW_WIDTH: f32 = 130.0;

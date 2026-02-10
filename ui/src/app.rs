@@ -1,7 +1,7 @@
 use crate::{
     UiState,
     comps::{AppComponent, Footer, Header},
-    constants::APP_KEY,
+    constants::{APP_KEY, CORNER_RADIUS},
     handle_msg,
     messages::UiMessage,
     views::{AppView, Explore, ExploreCategory, ExploreKind, Home, Login, Settings, ViewName},
@@ -164,7 +164,7 @@ impl eframe::App for CogsApp {
 
                 UiMessage::ElementCreated(kind, ars) => {
                     match ars {
-                        Ok(id) => match kind {
+                        Ok(_) => match kind {
                             Kind::Item => todo!(),
                             Kind::ItemTemplate => {
                                 self.state.data.fetch_all_item_templates(ectx, self.sendr.clone());
@@ -252,6 +252,19 @@ impl eframe::App for CogsApp {
 }
 
 fn ui_init_cosmetics(ctx: &egui::Context) {
+    ctx.style_mut(|style| {
+        // Remove border for non interactive widgets.
+        style.visuals.widgets.noninteractive.bg_stroke = egui::Stroke::NONE;
+
+        // Set corner radius for all.
+        let r = egui::CornerRadius::same(CORNER_RADIUS as u8);
+        style.visuals.widgets.inactive.corner_radius = r; // normal button
+        style.visuals.widgets.hovered.corner_radius = r; // hover
+        style.visuals.widgets.active.corner_radius = r; // pressed
+        style.visuals.widgets.open.corner_radius = r; // e.g. open menu button
+        style.visuals.widgets.noninteractive.corner_radius = r; // optional consistency
+    });
+
     // Set the theme.
     match ctx.theme() {
         egui::Theme::Light => {
