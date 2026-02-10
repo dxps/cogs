@@ -1,5 +1,5 @@
 #[derive(
-    Debug, Default, PartialEq, Clone, strum::Display, serde::Serialize, serde::Deserialize,
+    Debug, Default, PartialEq, Eq, Clone, strum::Display, serde::Serialize, serde::Deserialize,
 )]
 /// The type of a value of an attribute.
 pub enum AttributeValueType {

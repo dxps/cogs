@@ -76,7 +76,7 @@ pub async fn delete_item_template(State(state): State<ServerState>, Path(id): Pa
     //
     log::debug!("Delete item_template w/ id {id} ...",);
     match state.data_mgmt.delete_item_template(id).await {
-        Ok(()) => (StatusCode::ACCEPTED, Json::default()),
+        Ok(()) => (StatusCode::OK, Json::default()),
         Err(err) => respond_not_found(err),
     }
 }

@@ -1,9 +1,9 @@
 use crate::{CogsApp, comps::AppComponent, constants::EXPLORE_ELEMENT};
 use cogs_shared::domain::model::{
-    Action,
+    Action, Id,
     meta::{AttrTemplate, AttributeValueType},
 };
-use egui::{Align, Color32, ComboBox, CursorIcon, Direction, Grid, Label, Layout, RichText, Window, vec2};
+use egui::{Align, Button, Color32, ComboBox, CursorIcon, Direction, Grid, Label, Layout, RichText, Window, vec2};
 use std::sync::{Arc, Mutex};
 
 pub struct AttrTemplateForm {}
@@ -29,13 +29,14 @@ impl AppComponent for AttrTemplateForm {
             false => ectx.data(|d| d.get_temp::<Action>(act_id)).unwrap_or(Action::View),
         };
 
-        log::info!("act_id: {:?} id.is_zero(): {} action: {}", act_id, id.is_zero(), action);
-
         let title = match action {
             Action::Create => "New Attribute Template",
             Action::Edit => "Edit Attribute Template",
             _ => "View Attribute Template",
         };
+
+        let focus_id = egui::Id::new("new_attr_template_form_focus_name_once");
+        let focus_name_once = ui.ctx().data_mut(|d| d.get_temp::<bool>(focus_id).unwrap_or(true));
 
         Window::new(format!("attr_tmpl_form_{}_win", element.id))
             .title_bar(false)
@@ -60,7 +61,11 @@ impl AppComponent for AttrTemplateForm {
                             .num_columns(2)
                             .show(ui, |ui| {
                                 ui.add_enabled(false, Label::new("            Name"));
-                                ui.add(egui::TextEdit::singleline(&mut element.name).interactive(!action.is_view()));
+                                let resp = ui.add(egui::TextEdit::singleline(&mut element.name).interactive(!action.is_view()));
+                                if action.is_create() && focus_name_once {
+                                    resp.request_focus();
+                                    ui.ctx().data_mut(|d| d.insert_temp(focus_id, false));
+                                }
                                 ui.end_row();
 
                                 ui.add_enabled(false, Label::new("   Description"));
@@ -111,18 +116,20 @@ impl AppComponent for AttrTemplateForm {
                                 ectx.data_mut(|d| d.insert_temp(act_id, Action::Edit));
                             }
                         } else {
-                            if ui.button("    Save    ").clicked() {
+                            let enabled = !element.name.is_empty();
+                            let resp = ui
+                                .add_enabled(enabled, Button::new("    Save    "))
+                                .on_disabled_hover_text("Provide the at least a name before saving.");
+                            if resp.clicked() {
                                 ctx.state
                                     .data
                                     .save_attr_template(element.clone(), ui.ctx(), ctx.sendr.clone());
-                                ctx.state.explore.open_windows_attr_template.remove(&id);
-                                ectx.data_mut(|d| d.remove::<Action>(act_id));
+                                cleanup(ctx, ectx, &id, act_id, focus_id);
                             }
                         }
                         ui.add_space(8.0);
                         if ui.button("  Cancel  ").clicked() {
-                            ctx.state.explore.open_windows_attr_template.remove(&id);
-                            ectx.data_mut(|d| d.remove::<Action>(act_id));
+                            cleanup(ctx, ectx, &id, act_id, focus_id);
                         }
                         if !element.id.is_zero() {
                             ui.with_layout(
@@ -131,8 +138,7 @@ impl AppComponent for AttrTemplateForm {
                                     ui.add_space(18.0);
                                     if ui.button("  Delete   ").clicked() {
                                         ctx.state.data.delete_attr_template(id.clone(), ectx, ctx.sendr.clone());
-                                        ctx.state.explore.open_windows_attr_template.remove(&id);
-                                        ectx.data_mut(|d| d.remove::<Action>(act_id));
+                                        cleanup(ctx, ectx, &id, act_id, focus_id);
                                     }
                                 },
                             );
@@ -144,4 +150,10 @@ impl AppComponent for AttrTemplateForm {
                 .on_hover_cursor(CursorIcon::Grab);
             });
     }
+}
+
+fn cleanup(ctx: &mut CogsApp, ectx: &egui::Context, id: &Id, act_id: egui::Id, focus_id: egui::Id) {
+    ctx.state.explore.open_windows_attr_template.remove(id);
+    ectx.data_mut(|d| d.remove::<Action>(act_id));
+    ectx.data_mut(|d| d.remove::<bool>(focus_id));
 }

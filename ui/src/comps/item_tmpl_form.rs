@@ -1,6 +1,10 @@
-use crate::{CogsApp, comps::AppComponent, constants::EXPLORE_ELEMENT};
-use cogs_shared::domain::model::{Action, meta::ItemTemplate};
-use egui::{Align, Color32, ComboBox, CursorIcon, Direction, Frame, Grid, Label, Layout, RichText, Window};
+use crate::{
+    CogsApp,
+    comps::AppComponent,
+    constants::{CORNER_RADIUS, EXPLORE_ELEMENT},
+};
+use cogs_shared::domain::model::{Action, Id, meta::ItemTemplate};
+use egui::{Align, Button, Color32, ComboBox, CursorIcon, Direction, Frame, Grid, Label, Layout, RichText, TextEdit, Window};
 use std::sync::{Arc, Mutex};
 
 pub struct ItemTemplateForm {}
@@ -46,6 +50,9 @@ impl AppComponent for ItemTemplateForm {
             _ => "View Item Template",
         };
 
+        let focus_id = egui::Id::new("new_item_template_form_focus_name_once");
+        let focus_name_once = ectx.data_mut(|d| d.get_temp::<bool>(focus_id).unwrap_or(true));
+
         Window::new(format!("item_tmpl_form_{}_win", element.id))
             .title_bar(false)
             .resizable(false)
@@ -71,25 +78,33 @@ impl AppComponent for ItemTemplateForm {
                             .spacing([10.0, 10.0])
                             .num_columns(2)
                             .show(ui, |ui| {
-                                ui.add_enabled(false, Label::new("                  Name"));
-                                ui.text_edit_singleline(&mut element.name);
+                                ui.add_enabled(false, Label::new("                                   Name"));
+                                let resp = ui.add(TextEdit::singleline(&mut element.name).interactive(!action.is_view()));
+                                if action.is_create() && focus_name_once {
+                                    resp.request_focus();
+                                    ectx.data_mut(|d| d.insert_temp(focus_id, false));
+                                }
                                 ui.end_row();
-                                ui.add_enabled(false, Label::new("        Description"));
-                                ui.text_edit_singleline(&mut element.description);
-                                ui.end_row();
-
-                                ui.add_enabled(false, Label::new("Listing Attribute"));
-                                ComboBox::from_id_salt(format!("item_templ_form_{}_listing_attr_", id))
-                                    .width(280.0)
-                                    .selected_text(element.listing_attr.name.clone())
-                                    .show_ui(ui, |ui| {
-                                        for attr in &element.attributes.clone() {
-                                            ui.selectable_value(&mut element.listing_attr, attr.clone(), attr.name.clone());
-                                        }
-                                    });
+                                ui.add_enabled(false, Label::new("                         Description"));
+                                ui.add(TextEdit::singleline(&mut element.description).interactive(!action.is_view()));
                                 ui.end_row();
 
-                                ui.add_enabled(false, Label::new("           Attributes"));
+                                ui.add_enabled(false, Label::new("Listing Attribute Template"));
+                                if action.is_view() {
+                                    ui.add(TextEdit::singleline(&mut element.listing_attr.name).interactive(false));
+                                } else {
+                                    ComboBox::from_id_salt(format!("item_templ_form_{}_listing_attr_", id))
+                                        .width(280.0)
+                                        .selected_text(element.listing_attr.name.clone())
+                                        .show_ui(ui, |ui| {
+                                            for attr in &element.attributes.clone() {
+                                                ui.selectable_value(&mut element.listing_attr, attr.clone(), attr.name.clone());
+                                            }
+                                        });
+                                }
+                                ui.end_row();
+
+                                ui.add_enabled(false, Label::new("                           Attributes"));
                                 if !element.attributes.is_empty() {
                                     let mut from_idx = 0;
                                     let mut to_idx = 0;
@@ -100,66 +115,85 @@ impl AppComponent for ItemTemplateForm {
                                             .vscroll(false)
                                             .show(ui, |ui| {
                                                 //
-                                                let frame = Frame::default().corner_radius(3.0).inner_margin(4.0);
+                                                let frame = Frame::default().corner_radius(CORNER_RADIUS).inner_margin(4.0);
 
-                                                ui.dnd_drop_zone::<usize, ()>(frame, |ui| {
-                                                    ui.set_min_width(272.0);
-                                                    for (idx, item) in &mut element.attributes.iter().enumerate() {
-                                                        let item_id = egui::Id::new(item.id.clone());
-                                                        let item_idx = idx;
+                                                if action.is_view() {
+                                                    let mut attrs_text = element
+                                                        .attributes
+                                                        .iter()
+                                                        .map(|a| a.name.clone())
+                                                        .collect::<Vec<_>>()
+                                                        .join("\n");
+                                                    let rows = element.attributes.len().max(1); // avoid 0 rows
+                                                    ui.add(
+                                                        TextEdit::multiline(&mut attrs_text)
+                                                            .frame(true)
+                                                            .interactive(false)
+                                                            .desired_rows(rows)
+                                                            .desired_width(f32::INFINITY),
+                                                    );
+                                                } else {
+                                                    ui.dnd_drop_zone::<usize, ()>(frame, |ui| {
+                                                        ui.set_min_width(272.0);
+                                                        for (idx, item) in &mut element.attributes.iter().enumerate() {
+                                                            let item_id = egui::Id::new(item.id.clone());
+                                                            let item_idx = idx;
 
-                                                        let response = ui
-                                                            .push_id(item_id, |ui| {
-                                                                ui.dnd_drag_source(item_id, item_idx, |ui| ui.label(&item.name))
-                                                            })
-                                                            .response;
+                                                            let response = ui
+                                                                .push_id(item_id, |ui| {
+                                                                    ui.dnd_drag_source(item_id, item_idx, |ui| {
+                                                                        ui.label(&item.name)
+                                                                    })
+                                                                })
+                                                                .response;
 
-                                                        // Detect drops onto this item:
-                                                        if let (Some(pointer), Some(hovered_idx)) = (
-                                                            ui.input(|i| i.pointer.interact_pos()),
-                                                            response.dnd_hover_payload::<usize>(),
-                                                        ) {
-                                                            // Preview insertion:
-                                                            let rect = response.rect;
-                                                            let stroke = egui::Stroke::new(1.4, Color32::WHITE);
-                                                            let drop_idx: usize = if *hovered_idx == item_idx {
-                                                                // We are dragged onto ourselves.
-                                                                item_idx
-                                                            } else if pointer.y < rect.center().y {
-                                                                // Above us.
-                                                                ui.painter().hline(
-                                                                    rect.x_range().shrink(1.0),
-                                                                    rect.top(),
-                                                                    stroke,
-                                                                );
-                                                                item_idx
-                                                            } else {
-                                                                // Below us.
-                                                                ui.painter().hline(
-                                                                    rect.x_range().shrink(1.0),
-                                                                    rect.bottom(),
-                                                                    stroke,
-                                                                );
-                                                                // item_idx + 1
-                                                                item_idx
-                                                            };
-
-                                                            let attrs_len = element.attributes.len();
-                                                            if let Some(drag_idx) = response.dnd_release_payload::<usize>() {
-                                                                log::info!("Dropped {drag_idx} to {drop_idx}.");
-                                                                // The user dropped onto this item.
-                                                                from_idx = *drag_idx;
-                                                                to_idx = match drop_idx {
-                                                                    val if val == attrs_len => attrs_len - 1,
-                                                                    _ => drop_idx,
+                                                            // Detect drops onto this item:
+                                                            if let (Some(pointer), Some(hovered_idx)) = (
+                                                                ui.input(|i| i.pointer.interact_pos()),
+                                                                response.dnd_hover_payload::<usize>(),
+                                                            ) {
+                                                                // Preview insertion:
+                                                                let rect = response.rect;
+                                                                let stroke = egui::Stroke::new(1.4, Color32::WHITE);
+                                                                let drop_idx: usize = if *hovered_idx == item_idx {
+                                                                    // We are dragged onto ourselves.
+                                                                    item_idx
+                                                                } else if pointer.y < rect.center().y {
+                                                                    // Above us.
+                                                                    ui.painter().hline(
+                                                                        rect.x_range().shrink(1.0),
+                                                                        rect.top(),
+                                                                        stroke,
+                                                                    );
+                                                                    item_idx
+                                                                } else {
+                                                                    // Below us.
+                                                                    ui.painter().hline(
+                                                                        rect.x_range().shrink(1.0),
+                                                                        rect.bottom(),
+                                                                        stroke,
+                                                                    );
+                                                                    // item_idx + 1
+                                                                    item_idx
                                                                 };
+
+                                                                let attrs_len = element.attributes.len();
+                                                                if let Some(drag_idx) = response.dnd_release_payload::<usize>() {
+                                                                    log::info!("Dropped {drag_idx} to {drop_idx}.");
+                                                                    // The user dropped onto this item.
+                                                                    from_idx = *drag_idx;
+                                                                    to_idx = match drop_idx {
+                                                                        val if val == attrs_len => attrs_len - 1,
+                                                                        _ => drop_idx,
+                                                                    };
+                                                                }
                                                             }
                                                         }
-                                                    }
-                                                    if from_idx != to_idx {
-                                                        ItemTemplateForm::reorder_attrs(&mut element, from_idx, to_idx);
-                                                    }
-                                                });
+                                                        if from_idx != to_idx {
+                                                            ItemTemplateForm::reorder_attrs(&mut element, from_idx, to_idx);
+                                                        }
+                                                    });
+                                                }
                                             });
                                     });
                                 } else {
@@ -169,26 +203,23 @@ impl AppComponent for ItemTemplateForm {
                                 ui.label("");
                                 ui.end_row();
 
-                                ui.add_enabled(false, Label::new("     Add Attribute"));
-                                let frame = Frame::default().corner_radius(3.0);
+                                if action != Action::View {
+                                    ui.add_enabled(false, Label::new("     Add Attribute Template"));
 
-                                ui.horizontal(|ui| {
-                                    ui.dnd_drop_zone::<usize, ()>(frame, |ui| {
+                                    ui.horizontal(|ui| {
+                                        let curr_attr_tmpl = ctx.state.explore.add_item_template_add_attr_template.clone();
                                         let response = ComboBox::from_id_salt(format!("item_templ_form_{}_add_attr_", id))
                                             .width(250.0)
-                                            .selected_text(
-                                                if ctx.state.explore.add_item_template_add_attr_template.id.is_zero() {
-                                                    "".to_string()
-                                                } else {
-                                                    ctx.state.explore.add_item_template_add_attr_template.name.clone()
-                                                },
-                                            )
+                                            .selected_text(match &curr_attr_tmpl {
+                                                Some(at) => at.name.clone(),
+                                                None => "".to_string(),
+                                            })
                                             .show_ui(ui, |ui| {
                                                 ctx.state.data.get_attr_templates().iter().for_each(|at| {
                                                     if element.attributes.iter().find(|a| a.id == at.id).is_none() {
                                                         ui.selectable_value(
                                                             &mut ctx.state.explore.add_item_template_add_attr_template,
-                                                            at.clone(),
+                                                            Some(at.clone()),
                                                             at.name.clone(),
                                                         );
                                                     }
@@ -199,19 +230,22 @@ impl AppComponent for ItemTemplateForm {
                                         // The user dropped an attribute template onto this element.
                                         if let Some(drag_idx) = response.dnd_release_payload::<usize>() {
                                             log::info!(
-                                                "[ItemTemplateForm] Attr templ id {drag_idx} is removed from the item template."
+                                                "[ItemTemplateForm] attr tmpl id {drag_idx} is removed from the item template."
                                             );
                                             element.attributes.remove(*drag_idx);
                                         }
-                                    });
-                                    if ui.button(" + ").clicked() {
-                                        let elem = ctx.state.explore.add_item_template_add_attr_template.clone();
-                                        element.attributes.push(elem);
-                                        ctx.state.explore.add_item_template_add_attr_template = Default::default();
-                                        log::debug!("[ItemTemplateForm] Its attributes: {:#?}", element.attributes);
-                                    }
-                                });
 
+                                        let btn = ui
+                                            .add_enabled(curr_attr_tmpl.is_some(), Button::new(" + "))
+                                            .on_disabled_hover_text("Select an attribute template first");
+
+                                        if btn.clicked() {
+                                            element.attributes.push(curr_attr_tmpl.unwrap());
+                                            ctx.state.explore.add_item_template_add_attr_template = Default::default();
+                                            log::debug!("[ItemTemplateForm] its attributes: {:#?}", element.attributes);
+                                        }
+                                    });
+                                }
                                 ui.end_row();
                             });
                         ui.add_space(8.0);
@@ -224,24 +258,36 @@ impl AppComponent for ItemTemplateForm {
 
                 ui.with_layout(Layout::right_to_left(Align::Min), |ui| {
                     ui.add_space(18.0);
-                    if ui.button("    Save    ").clicked() {
-                        ctx.state
-                            .data
-                            .save_item_template(element.clone(), ui.ctx(), ctx.sendr.clone());
-                        ctx.state.explore.open_windows_item_template.remove(&id);
+                    if action.is_view() {
+                        if ui.button("    Edit    ").clicked() {
+                            ectx.data_mut(|d| d.insert_temp(act_id, Action::Edit));
+                        }
+                    } else {
+                        let enabled = element.name.len() > 0 && !element.attributes.is_empty() && !element.listing_attr.is_default();
+                        log::debug!("[ItemTemplateForm] Enabled: {enabled} because name.len() > 0: {}, !element.attributes.is_empty(): {}, element.listing_attr.is_default(): {}", 
+                            element.name.len() > 0, !element.attributes.is_empty(), element.listing_attr.is_default());
+                        let resp = ui.add_enabled(enabled, Button::new("    Save    ")).on_disabled_hover_text(
+                            "Provide the following parts before saving:\n- name\n- one or more attribute templates\n- listing attribute template",
+                        );
+                        if resp.clicked() {
+                            ctx.state
+                                .data
+                                .save_item_template(element.clone(), ui.ctx(), ctx.sendr.clone());
+                            cleanup(ctx, ectx, &id, act_id, focus_id);
+                        }
                     }
                     ui.add_space(8.0);
                     if ui.button("  Cancel  ").clicked() {
-                        ctx.state.explore.open_windows_item_template.remove(&id);
+                        cleanup(ctx, ectx, &id, act_id, focus_id);
                     }
                     if !element.id.is_zero() {
                         ui.with_layout(
                             Layout::from_main_dir_and_cross_align(Direction::LeftToRight, Align::Min),
                             |ui| {
                                 ui.add_space(18.0);
-                                if ui.button("  Delete   ").clicked() {
+                                if ui.button("  Delete  ").clicked() {
                                     ctx.state.data.delete_item_template(id.clone(), ectx, ctx.sendr.clone());
-                                    ctx.state.explore.open_windows_item_template.remove(&id);
+                                    cleanup(ctx, ectx, &id, act_id, focus_id);
                                 }
                             },
                         );
@@ -250,4 +296,10 @@ impl AppComponent for ItemTemplateForm {
                 ui.add_space(12.0);
             });
     }
+}
+
+fn cleanup(ctx: &mut CogsApp, ectx: &egui::Context, id: &Id, act_id: egui::Id, focus_id: egui::Id) {
+    ctx.state.explore.open_windows_item_template.remove(id);
+    ectx.data_mut(|d| d.remove::<Action>(act_id));
+    ectx.data_mut(|d| d.remove::<bool>(focus_id));
 }

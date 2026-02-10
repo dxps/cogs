@@ -19,6 +19,10 @@ pub enum Action {
 
 impl Action {
     //
+    pub fn is_create(&self) -> bool {
+        self == &Action::Create
+    }
+
     pub fn is_view(&self) -> bool {
         self == &Action::View
     }

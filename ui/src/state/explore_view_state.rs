@@ -39,7 +39,7 @@ pub struct ExploreViewState {
     #[serde(skip)]
     pub add_item_template_listing_attr_template: AttrTemplate,
 
-    /// The attribute template that is selected to be added.
+    /// The attribute template that is selected to be added to the item template.
     #[serde(skip)]
-    pub add_item_template_add_attr_template: AttrTemplate,
+    pub add_item_template_add_attr_template: Option<AttrTemplate>,
 }

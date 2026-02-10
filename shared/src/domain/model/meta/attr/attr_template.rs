@@ -3,7 +3,7 @@ use std::hash::Hash;
 use crate::domain::model::{Id, meta::AttributeValueType};
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Default, PartialEq, Clone, Serialize, Deserialize)]
+#[derive(Debug, Default, PartialEq, Eq, Clone, Serialize, Deserialize)]
 /// A template for an attribute.
 pub struct AttrTemplate {
     pub id: Id,
@@ -17,5 +17,11 @@ pub struct AttrTemplate {
 impl Hash for AttrTemplate {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.id.hash(state);
+    }
+}
+
+impl AttrTemplate {
+    pub fn is_default(&self) -> bool {
+        self == &Self::default()
     }
 }
