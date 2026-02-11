@@ -112,7 +112,7 @@ impl AppComponent for AttrTemplateForm {
                     ui.with_layout(Layout::right_to_left(Align::Min), |ui| {
                         ui.add_space(18.0);
                         if action.is_view() {
-                            if ui.button("    Edit    ").clicked() {
+                            if ui.button("    Edit    ").on_hover_cursor(CursorIcon::PointingHand).clicked() {
                                 ectx.data_mut(|d| d.insert_temp(act_id, Action::Edit));
                             }
                         } else {
@@ -128,7 +128,7 @@ impl AppComponent for AttrTemplateForm {
                             }
                         }
                         ui.add_space(8.0);
-                        if ui.button("  Cancel  ").clicked() {
+                        if ui.button("  Cancel  ").on_hover_cursor(CursorIcon::PointingHand).clicked() {
                             cleanup(ctx, ectx, &id, act_id, focus_id);
                         }
                         if !element.id.is_zero() {
@@ -136,7 +136,7 @@ impl AppComponent for AttrTemplateForm {
                                 Layout::from_main_dir_and_cross_align(Direction::LeftToRight, Align::Min),
                                 |ui| {
                                     ui.add_space(18.0);
-                                    if ui.button("  Delete   ").clicked() {
+                                    if ui.button("  Delete   ").on_hover_cursor(CursorIcon::PointingHand).clicked() {
                                         ctx.state.data.delete_attr_template(id.clone(), ectx, ctx.sendr.clone());
                                         cleanup(ctx, ectx, &id, act_id, focus_id);
                                     }

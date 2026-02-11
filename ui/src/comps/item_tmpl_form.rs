@@ -3,9 +3,15 @@ use crate::{
     comps::AppComponent,
     constants::{CORNER_RADIUS, EXPLORE_ELEMENT},
 };
-use cogs_shared::domain::model::{Action, Id, meta::ItemTemplate};
+use cogs_shared::domain::model::{
+    Action, Id,
+    meta::{AttrTemplate, ItemTemplate},
+};
 use egui::{Align, Button, Color32, ComboBox, CursorIcon, Direction, Frame, Grid, Label, Layout, RichText, TextEdit, Window};
-use std::sync::{Arc, Mutex};
+use std::{
+    collections::HashMap,
+    sync::{Arc, Mutex},
+};
 
 pub struct ItemTemplateForm {}
 
@@ -67,7 +73,7 @@ impl AppComponent for ItemTemplateForm {
                         if !id.is_zero() {
                             ui.add_enabled(
                                 action.is_edit(),
-                                Label::new(RichText::new(format!("   (id: {})", id)).color(Color32::GRAY).size(10.0)),
+                                Label::new(RichText::new(format!("(id: {})", id)).color(Color32::GRAY).size(10.0)),
                             );
                         }
                     });
@@ -79,7 +85,9 @@ impl AppComponent for ItemTemplateForm {
                             .num_columns(2)
                             .show(ui, |ui| {
                                 ui.add_enabled(false, Label::new("                                   Name"));
-                                let resp = ui.add(TextEdit::singleline(&mut element.name).interactive(!action.is_view()));
+                                let resp = ui.add_sized([250.0, ui.spacing().interact_size.y],
+                                    TextEdit::singleline(&mut element.name).interactive(!action.is_view()),
+                                );
                                 if action.is_create() && focus_name_once {
                                     resp.request_focus();
                                     ectx.data_mut(|d| d.insert_temp(focus_id, false));
@@ -94,7 +102,7 @@ impl AppComponent for ItemTemplateForm {
                                     ui.add(TextEdit::singleline(&mut element.listing_attr.name).interactive(false));
                                 } else {
                                     ComboBox::from_id_salt(format!("item_templ_form_{}_listing_attr_", id))
-                                        .width(280.0)
+                                        .width(250.0)
                                         .selected_text(element.listing_attr.name.clone())
                                         .show_ui(ui, |ui| {
                                             for attr in &element.attributes.clone() {
@@ -109,14 +117,11 @@ impl AppComponent for ItemTemplateForm {
                                     let mut from_idx = 0;
                                     let mut to_idx = 0;
 
-                                    ui.with_layout(egui::Layout::top_down(egui::Align::LEFT), |ui| {
+                                    ui.with_layout(Layout::top_down(Align::LEFT), |ui| {
                                         egui::ScrollArea::vertical()
                                             .auto_shrink([true; 2])
                                             .vscroll(false)
                                             .show(ui, |ui| {
-                                                //
-                                                let frame = Frame::default().corner_radius(CORNER_RADIUS).inner_margin(4.0);
-
                                                 if action.is_view() {
                                                     let mut attrs_text = element
                                                         .attributes
@@ -133,8 +138,9 @@ impl AppComponent for ItemTemplateForm {
                                                             .desired_width(f32::INFINITY),
                                                     );
                                                 } else {
+                                                    let frame = Frame::default().corner_radius(CORNER_RADIUS).inner_margin(4.0);
                                                     ui.dnd_drop_zone::<usize, ()>(frame, |ui| {
-                                                        ui.set_min_width(272.0);
+                                                        ui.set_min_width(242.0);
                                                         for (idx, item) in &mut element.attributes.iter().enumerate() {
                                                             let item_id = egui::Id::new(item.id.clone());
                                                             let item_idx = idx;
@@ -173,7 +179,6 @@ impl AppComponent for ItemTemplateForm {
                                                                         rect.bottom(),
                                                                         stroke,
                                                                     );
-                                                                    // item_idx + 1
                                                                     item_idx
                                                                 };
 
@@ -207,23 +212,36 @@ impl AppComponent for ItemTemplateForm {
                                     ui.add_enabled(false, Label::new("     Add Attribute Template"));
 
                                     ui.horizontal(|ui| {
-                                        let curr_attr_tmpl = ctx.state.explore.add_item_template_add_attr_template.clone();
+                                        let curr_attr_tmpl = ctx.state.explore.item_template_cu_add_attr_template.clone();
                                         let response = ComboBox::from_id_salt(format!("item_templ_form_{}_add_attr_", id))
-                                            .width(250.0)
-                                            .selected_text(match &curr_attr_tmpl {
-                                                Some(at) => at.name.clone(),
-                                                None => "".to_string(),
-                                            })
+                                            .width(220.0)
+                                            // .selected_text(match &curr_attr_tmpl.contains_key(&element.id) {
+                                            //     Some(at) => at.name.clone(),
+                                            //     None => "".to_string(),
+                                            // })
+                                            .selected_text(selected_attr_name(&curr_attr_tmpl, &element.id))
                                             .show_ui(ui, |ui| {
-                                                ctx.state.data.get_attr_templates().iter().for_each(|at| {
-                                                    if element.attributes.iter().find(|a| a.id == at.id).is_none() {
-                                                        ui.selectable_value(
-                                                            &mut ctx.state.explore.add_item_template_add_attr_template,
-                                                            Some(at.clone()),
-                                                            at.name.clone(),
-                                                        );
+                                                // ctx.state.data.get_attr_templates().iter().for_each(|at| {
+                                                //     if element.attributes.iter().find(|a| a.id == at.id).is_none() {
+                                                //         ui.selectable_value(
+                                                //             &mut ctx.state.explore.add_item_template_add_attr_template,
+                                                //             Some(at.clone()),
+                                                //             at.name.clone(),
+                                                //         );
+                                                //     }
+                                                // });
+                                                let selected_for_element = ctx
+                                                    .state
+                                                    .explore
+                                                    .item_template_cu_add_attr_template
+                                                    .entry(element.id.clone())
+                                                    .or_insert(None);
+
+                                                for at in ctx.state.data.get_attr_templates() {
+                                                    if element.attributes.iter().all(|a| a.id != at.id) {
+                                                        ui.selectable_value(selected_for_element, Some(at.clone()), at.name.clone());
                                                     }
-                                                });
+                                                }
                                             })
                                             .response;
 
@@ -233,16 +251,41 @@ impl AppComponent for ItemTemplateForm {
                                                 "[ItemTemplateForm] attr tmpl id {drag_idx} is removed from the item template."
                                             );
                                             element.attributes.remove(*drag_idx);
+                                            if element.attributes.is_empty() {
+                                                element.listing_attr = Default::default();
+                                            }
                                         }
 
+                                        // let btn = ui
+                                        //     .add_enabled(curr_attr_tmpl.is_some(), Button::new(" + "))
+                                        //     .on_disabled_hover_text("Select an attribute template first");
+
+                                        // if btn.clicked() {
+                                        //     element.attributes.push(curr_attr_tmpl.unwrap());
+                                        //     ctx.state.explore.add_item_template_add_attr_template = Default::default();
+                                        //     log::debug!("[ItemTemplateForm] its attributes: {:#?}", element.attributes);
+                                        // }
+                                        let has_selected = ctx.state.explore
+                                            .item_template_cu_add_attr_template
+                                            .get(&element.id)
+                                            .and_then(|o| o.as_ref())
+                                            .is_some();
+
                                         let btn = ui
-                                            .add_enabled(curr_attr_tmpl.is_some(), Button::new(" + "))
+                                            .add_enabled(has_selected, Button::new(" + "))
                                             .on_disabled_hover_text("Select an attribute template first");
 
                                         if btn.clicked() {
-                                            element.attributes.push(curr_attr_tmpl.unwrap());
-                                            ctx.state.explore.add_item_template_add_attr_template = Default::default();
-                                            log::debug!("[ItemTemplateForm] its attributes: {:#?}", element.attributes);
+                                            if let Some(attr) = ctx.state.explore
+                                                .item_template_cu_add_attr_template
+                                                .get(&element.id)
+                                                .and_then(|o| o.clone())
+                                            {
+                                                element.attributes.push(attr);
+                                                ctx.state.explore
+                                                    .item_template_cu_add_attr_template
+                                                    .insert(element.id.clone(), None);
+                                            }
                                         }
                                     });
                                 }
@@ -251,43 +294,49 @@ impl AppComponent for ItemTemplateForm {
                         ui.add_space(8.0);
                     });
                 })
-                .response
-                .on_hover_cursor(CursorIcon::Grab);
+                    .response
+                    .on_hover_cursor(CursorIcon::Grab);
 
                 ui.add_space(20.0);
 
                 ui.with_layout(Layout::right_to_left(Align::Min), |ui| {
                     ui.add_space(18.0);
                     if action.is_view() {
-                        if ui.button("    Edit    ").clicked() {
+                        if ui.button("    Edit    ")
+                            .on_hover_cursor(CursorIcon::PointingHand)
+                            .clicked() {
                             ectx.data_mut(|d| d.insert_temp(act_id, Action::Edit));
                         }
                     } else {
                         let enabled = element.name.len() > 0 && !element.attributes.is_empty() && !element.listing_attr.is_default();
-                        log::debug!("[ItemTemplateForm] Enabled: {enabled} because name.len() > 0: {}, !element.attributes.is_empty(): {}, element.listing_attr.is_default(): {}", 
-                            element.name.len() > 0, !element.attributes.is_empty(), element.listing_attr.is_default());
-                        let resp = ui.add_enabled(enabled, Button::new("    Save    ")).on_disabled_hover_text(
-                            "Provide the following parts before saving:\n- name\n- one or more attribute templates\n- listing attribute template",
-                        );
+                        let resp = ui.add_enabled(enabled, Button::new("    Save    "))
+                            .on_hover_cursor(CursorIcon::PointingHand)
+                            .on_disabled_hover_text(
+                                "Provide the following parts before saving:\n- name\n- listing attribute template\n- one or more attribute templates",
+                            );
                         if resp.clicked() {
                             ctx.state
                                 .data
                                 .save_item_template(element.clone(), ui.ctx(), ctx.sendr.clone());
-                            cleanup(ctx, ectx, &id, act_id, focus_id);
+                            shutdown(ctx, ectx, &id, act_id, focus_id);
                         }
                     }
                     ui.add_space(8.0);
-                    if ui.button("  Cancel  ").clicked() {
-                        cleanup(ctx, ectx, &id, act_id, focus_id);
+                    if ui.button("  Cancel  ")
+                        .on_hover_cursor(CursorIcon::PointingHand)
+                        .clicked() {
+                        shutdown(ctx, ectx, &id, act_id, focus_id);
                     }
                     if !element.id.is_zero() {
                         ui.with_layout(
                             Layout::from_main_dir_and_cross_align(Direction::LeftToRight, Align::Min),
                             |ui| {
                                 ui.add_space(18.0);
-                                if ui.button("  Delete  ").clicked() {
+                                if ui.button("  Delete  ")
+                                    .on_hover_cursor(CursorIcon::PointingHand)
+                                    .clicked() {
                                     ctx.state.data.delete_item_template(id.clone(), ectx, ctx.sendr.clone());
-                                    cleanup(ctx, ectx, &id, act_id, focus_id);
+                                    shutdown(ctx, ectx, &id, act_id, focus_id);
                                 }
                             },
                         );
@@ -298,7 +347,14 @@ impl AppComponent for ItemTemplateForm {
     }
 }
 
-fn cleanup(ctx: &mut CogsApp, ectx: &egui::Context, id: &Id, act_id: egui::Id, focus_id: egui::Id) {
+fn selected_attr_name(map: &HashMap<Id, Option<AttrTemplate>>, id: &Id) -> String {
+    map.get(id)
+        .and_then(|o| o.as_ref())
+        .map(|at| at.name.clone())
+        .unwrap_or_default()
+}
+
+fn shutdown(ctx: &mut CogsApp, ectx: &egui::Context, id: &Id, act_id: egui::Id, focus_id: egui::Id) {
     ctx.state.explore.open_windows_item_template.remove(id);
     ectx.data_mut(|d| d.remove::<Action>(act_id));
     ectx.data_mut(|d| d.remove::<bool>(focus_id));
