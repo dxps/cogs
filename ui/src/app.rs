@@ -164,7 +164,7 @@ impl eframe::App for CogsApp {
 
                 UiMessage::ElementCreated(kind, ars) => {
                     match ars {
-                        Ok(_) => match kind {
+                        Ok(_id) => match kind {
                             Kind::Item => todo!(),
                             Kind::ItemTemplate => {
                                 self.state.data.fetch_all_item_templates(ectx, self.sendr.clone());

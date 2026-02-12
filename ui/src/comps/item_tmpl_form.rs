@@ -142,12 +142,12 @@ impl AppComponent for ItemTemplateForm {
                                                     ui.dnd_drop_zone::<usize, ()>(frame, |ui| {
                                                         ui.set_min_width(242.0);
                                                         for (idx, item) in &mut element.attributes.iter().enumerate() {
-                                                            let item_id = egui::Id::new(item.id.clone());
+                                                            let row_id = egui::Id::new(("item_tmpl_attr_row", element.id.clone(), item.id.clone(), idx));
                                                             let item_idx = idx;
 
                                                             let response = ui
-                                                                .push_id(item_id, |ui| {
-                                                                    ui.dnd_drag_source(item_id, item_idx, |ui| {
+                                                                .push_id(row_id, |ui| {
+                                                                    ui.dnd_drag_source(row_id, item_idx, |ui| {
                                                                         ui.label(&item.name)
                                                                     })
                                                                 })
@@ -215,21 +215,8 @@ impl AppComponent for ItemTemplateForm {
                                         let curr_attr_tmpl = ctx.state.explore.item_template_cu_add_attr_template.clone();
                                         let response = ComboBox::from_id_salt(format!("item_templ_form_{}_add_attr_", id))
                                             .width(220.0)
-                                            // .selected_text(match &curr_attr_tmpl.contains_key(&element.id) {
-                                            //     Some(at) => at.name.clone(),
-                                            //     None => "".to_string(),
-                                            // })
                                             .selected_text(selected_attr_name(&curr_attr_tmpl, &element.id))
                                             .show_ui(ui, |ui| {
-                                                // ctx.state.data.get_attr_templates().iter().for_each(|at| {
-                                                //     if element.attributes.iter().find(|a| a.id == at.id).is_none() {
-                                                //         ui.selectable_value(
-                                                //             &mut ctx.state.explore.add_item_template_add_attr_template,
-                                                //             Some(at.clone()),
-                                                //             at.name.clone(),
-                                                //         );
-                                                //     }
-                                                // });
                                                 let selected_for_element = ctx
                                                     .state
                                                     .explore
@@ -255,16 +242,6 @@ impl AppComponent for ItemTemplateForm {
                                                 element.listing_attr = Default::default();
                                             }
                                         }
-
-                                        // let btn = ui
-                                        //     .add_enabled(curr_attr_tmpl.is_some(), Button::new(" + "))
-                                        //     .on_disabled_hover_text("Select an attribute template first");
-
-                                        // if btn.clicked() {
-                                        //     element.attributes.push(curr_attr_tmpl.unwrap());
-                                        //     ctx.state.explore.add_item_template_add_attr_template = Default::default();
-                                        //     log::debug!("[ItemTemplateForm] its attributes: {:#?}", element.attributes);
-                                        // }
                                         let has_selected = ctx.state.explore
                                             .item_template_cu_add_attr_template
                                             .get(&element.id)
