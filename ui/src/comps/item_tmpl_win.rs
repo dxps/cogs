@@ -7,12 +7,16 @@ use cogs_shared::domain::model::{
     Action, Id,
     meta::{AttrTemplate, ItemTemplate, ItemTemplateLink},
 };
-use egui::{Align, Button, Color32, ComboBox, CursorIcon, Direction, Frame, Grid, Label, Layout, RichText, TextEdit, Window};
+use egui::{
+    Align, Button, Color32, ComboBox, CursorIcon, Direction, Frame, Grid, Label, Layout, RichText, Stroke, TextEdit, Window,
+};
 use serde::{Deserialize, Serialize};
 use std::{
     collections::HashMap,
     sync::{Arc, Mutex},
 };
+
+const FORM_FIELD_W: f32 = 240.0;
 
 pub struct ItemTemplateWindow;
 
@@ -137,24 +141,64 @@ impl ItemTemplateWindow {
 
     fn row_tabs(ui: &mut egui::Ui, ectx: &egui::Context, s: &mut FormUiState) {
         ui.add_enabled(false, Label::new(""));
-        ui.horizontal(|ui| {
-            let attrs_selected = s.tab == ItemTemplateTab::Attributes;
-            if ui.selectable_label(attrs_selected, "Attributes").clicked() {
-                s.tab = ItemTemplateTab::Attributes;
-                ectx.data_mut(|d| d.insert_temp(s.tab_id, s.tab));
-            }
 
-            let links_selected = s.tab == ItemTemplateTab::Links;
-            if ui.selectable_label(links_selected, "Links").clicked() {
-                s.tab = ItemTemplateTab::Links;
-                ectx.data_mut(|d| d.insert_temp(s.tab_id, s.tab));
-            }
+        ui.scope(|ui| {
+            // Reduce only tab button padding (local scope).
+            ui.spacing_mut().button_padding.x = 4.0; // try 2.0..6.0
+            ui.spacing_mut().button_padding.y = 2.0;
+
+            ui.horizontal(|ui| {
+                let attrs_selected = s.tab == ItemTemplateTab::Attributes;
+                if Self::tab_button(ui, "Attributes", attrs_selected).clicked() {
+                    s.tab = ItemTemplateTab::Attributes;
+                    ectx.data_mut(|d| d.insert_temp(s.tab_id, s.tab));
+                }
+
+                let links_selected = s.tab == ItemTemplateTab::Links;
+                if Self::tab_button(ui, "Links", links_selected).clicked() {
+                    s.tab = ItemTemplateTab::Links;
+                    ectx.data_mut(|d| d.insert_temp(s.tab_id, s.tab));
+                }
+            });
         });
+
         ui.end_row();
     }
 
+    fn tab_button(ui: &mut egui::Ui, text: &str, selected: bool) -> egui::Response {
+        // Copy needed colors first (no long-lived borrow of `ui`)
+        let text_color = ui.visuals().text_color();
+        let hover_bg = ui.visuals().widgets.hovered.weak_bg_fill;
+
+        let selected_fg = text_color;
+        let unselected_fg = text_color.gamma_multiply(0.60);
+        let fg = if selected { selected_fg } else { unselected_fg };
+
+        let resp = ui
+            .add(
+                Button::new(RichText::new(text).color(fg))
+                    .fill(Color32::TRANSPARENT)
+                    .stroke(egui::Stroke::NONE)
+                    .corner_radius(CORNER_RADIUS),
+            )
+            .on_hover_cursor(CursorIcon::PointingHand);
+
+        if resp.hovered() {
+            ui.painter().rect_filled(resp.rect, CORNER_RADIUS, hover_bg);
+            ui.painter().text(
+                resp.rect.center(),
+                egui::Align2::CENTER_CENTER,
+                text,
+                egui::TextStyle::Button.resolve(ui.style()),
+                fg,
+            );
+        }
+
+        resp
+    }
+
     fn row_links(app: &CogsApp, ui: &mut egui::Ui, element: &mut ItemTemplate, s: &FormUiState) {
-        ui.add_enabled(false, Label::new("                                Links"));
+        ui.add_enabled(false, Label::new("                    Links"));
 
         if element.links.is_empty() {
             ui.label(RichText::new("None").italics().color(Color32::GRAY));
@@ -183,35 +227,107 @@ impl ItemTemplateWindow {
                             .join("\n");
 
                         let rows = element.links.len().max(1);
-                        ui.add(
+                        ui.add_sized(
+                            [FORM_FIELD_W, (rows as f32) * ui.spacing().interact_size.y],
                             TextEdit::multiline(&mut links_text)
                                 .frame(true)
                                 .interactive(false)
                                 .desired_rows(rows)
-                                .desired_width(f32::INFINITY),
+                                .desired_width(FORM_FIELD_W),
                         );
                     } else {
                         Frame::default()
                             .corner_radius(CORNER_RADIUS)
                             .inner_margin(4.0)
                             .show(ui, |ui| {
-                                ui.set_min_width(242.0);
+                                ui.set_min_width(232.0);
 
                                 let mut to_remove: Option<usize> = None;
-                                for (idx, l) in element.links.iter().enumerate() {
-                                    ui.horizontal(|ui| {
-                                        let target_name = link_target_name(app, &l.item_template_id);
-                                        let txt = if l.name.is_empty() {
-                                            target_name
-                                        } else {
-                                            format!("{} -> {}", l.name, target_name)
-                                        };
-                                        ui.label(txt);
 
-                                        if ui.small_button("x").on_hover_text("Remove").clicked() {
+                                let row_h = ui.spacing().interact_size.y.max(20.0);
+                                let btn_size = egui::vec2(18.0, 18.0);
+                                let right_pad = 2.0;
+                                let gap = 6.0;
+
+                                for (idx, l) in element.links.iter().enumerate() {
+                                    let target_name = link_target_name(app, &l.item_template_id);
+                                    let txt = if l.name.is_empty() {
+                                        target_name
+                                    } else {
+                                        format!("{} -> {}", l.name, target_name)
+                                    };
+
+                                    // 1) Reserve one full-width row
+                                    let (row_rect, _row_resp) =
+                                        ui.allocate_exact_size(egui::vec2(ui.available_width(), row_h), egui::Sense::hover());
+
+                                    // 2) Compute button rect pinned to the row's right edge
+                                    let btn_rect = egui::Rect::from_min_size(
+                                        egui::pos2(
+                                            row_rect.right() - right_pad - btn_size.x,
+                                            row_rect.center().y - btn_size.y * 0.5,
+                                        ),
+                                        btn_size,
+                                    );
+
+                                    // 3) Text rect is row minus button slot => true left alignment
+                                    let text_rect = egui::Rect::from_min_max(
+                                        row_rect.min,
+                                        egui::pos2((btn_rect.min.x - gap).max(row_rect.min.x), row_rect.max.y),
+                                    );
+
+                                    // Paint text left-aligned in text_rect
+                                    let font_id = egui::TextStyle::Body.resolve(ui.style());
+                                    let text_color = ui.visuals().text_color();
+                                    ui.painter().text(
+                                        egui::pos2(text_rect.left(), row_rect.center().y),
+                                        egui::Align2::LEFT_CENTER,
+                                        txt,
+                                        font_id,
+                                        text_color,
+                                    );
+
+                                    // 4) Stable hover: row OR button-zone keeps button visible
+                                    let pointer_pos = ui.input(|i| i.pointer.hover_pos());
+                                    let show_btn = pointer_pos
+                                        .map(|p| row_rect.contains(p) || btn_rect.contains(p))
+                                        .unwrap_or(false);
+
+                                    if show_btn {
+                                        let mut child = ui.new_child(
+                                            egui::UiBuilder::new()
+                                                .max_rect(btn_rect)
+                                                .layout(Layout::right_to_left(Align::Center)),
+                                        );
+
+                                        let pointer_pos = ui.input(|i| i.pointer.hover_pos());
+                                        let btn_hovered = pointer_pos.map(|p| btn_rect.contains(p)).unwrap_or(false);
+
+                                        let visuals = ui.visuals();
+                                        let link_color = visuals.hyperlink_color;
+
+                                        // Transparent when not hovered, normal hovered bg when hovered.
+                                        let fill = if btn_hovered {
+                                            visuals.widgets.hovered.weak_bg_fill
+                                        } else {
+                                            Color32::TRANSPARENT
+                                        };
+
+                                        if child
+                                            .add_sized(
+                                                [btn_size.x, btn_size.y],
+                                                Button::new(RichText::new("x").color(link_color))
+                                                    .fill(fill)
+                                                    .stroke(Stroke::NONE)
+                                                    .corner_radius(999.0), // pill/rounded look
+                                            )
+                                            .on_hover_text("Remove")
+                                            .on_hover_cursor(CursorIcon::PointingHand)
+                                            .clicked()
+                                        {
                                             to_remove = Some(idx);
                                         }
-                                    });
+                                    }
                                 }
 
                                 if let Some(idx) = to_remove {
@@ -226,7 +342,7 @@ impl ItemTemplateWindow {
     }
 
     fn row_add_link_template(app: &mut CogsApp, ui: &mut egui::Ui, element: &mut ItemTemplate, s: &FormUiState) {
-        ui.add_enabled(false, Label::new("                      Add Link"));
+        ui.add_enabled(false, Label::new("              Add Link"));
 
         ui.vertical(|ui| {
             let link_name_id = egui::Id::from(format!("item_templ_form_{}_new_link_name", s.id));
@@ -235,7 +351,7 @@ impl ItemTemplateWindow {
             ui.horizontal(|ui| {
                 ui.label(" Name");
                 ui.add_sized(
-                    [170.0, ui.spacing().interact_size.y],
+                    [190.0, ui.spacing().interact_size.y],
                     TextEdit::singleline(&mut new_link_name),
                 );
             });
@@ -246,7 +362,7 @@ impl ItemTemplateWindow {
                 ui.label("Target");
                 let curr_add_link = app.state.explore.item_template_cu_add_link_template.clone();
                 ComboBox::from_id_salt(format!("item_templ_form_{}_add_link_", s.id))
-                    .width(170.0)
+                    .width(160.0)
                     .selected_text(selected_link_target_name(app, &curr_add_link, &element.id))
                     .show_ui(ui, |ui| {
                         let selected_for_element = app
@@ -278,7 +394,7 @@ impl ItemTemplateWindow {
 
                 let btn = ui
                     .add_enabled(has_selected && name_ok, Button::new(" + "))
-                    .on_disabled_hover_text("Provide link name and select an item template first");
+                    .on_disabled_hover_text("Provide the link name and\nselect an item template first.");
 
                 if btn.clicked() {
                     if let Some(linked_id) = app
@@ -360,32 +476,44 @@ impl ItemTemplateWindow {
     }
 
     fn row_name(ui: &mut egui::Ui, ectx: &egui::Context, element: &mut ItemTemplate, s: &mut FormUiState) {
-        ui.add_enabled(false, Label::new("                                   Name"));
+        const FORM_FIELD_W: f32 = 240.0;
+
+        ui.add_enabled(false, Label::new("                   Name"));
         let resp = ui.add_sized(
-            [250.0, ui.spacing().interact_size.y],
+            [FORM_FIELD_W, ui.spacing().interact_size.y],
             TextEdit::singleline(&mut element.name).interactive(!s.action.is_view()),
         );
+
         if s.action.is_create() && s.focus_name_once {
             resp.request_focus();
             ectx.data_mut(|d| d.insert_temp(s.focus_id, false));
             s.focus_name_once = false;
         }
+
         ui.end_row();
     }
 
     fn row_description(ui: &mut egui::Ui, element: &mut ItemTemplate, s: &FormUiState) {
-        ui.add_enabled(false, Label::new("                         Description"));
-        ui.add(TextEdit::singleline(&mut element.description).interactive(!s.action.is_view()));
+        const FORM_FIELD_W: f32 = 240.0;
+
+        ui.add_enabled(false, Label::new("         Description"));
+        ui.add_sized(
+            [FORM_FIELD_W, ui.spacing().interact_size.y],
+            TextEdit::singleline(&mut element.description).interactive(!s.action.is_view()),
+        );
         ui.end_row();
     }
 
     fn row_listing_attr(ui: &mut egui::Ui, element: &mut ItemTemplate, s: &FormUiState) {
-        ui.add_enabled(false, Label::new("Listing Attribute Template"));
+        ui.add_enabled(false, Label::new("Listing Attribute"));
         if s.action.is_view() {
-            ui.add(TextEdit::singleline(&mut element.listing_attr.name).interactive(false));
+            ui.add_sized(
+                [FORM_FIELD_W, ui.spacing().interact_size.y],
+                TextEdit::singleline(&mut element.listing_attr.name).interactive(false),
+            );
         } else {
             ComboBox::from_id_salt(format!("item_templ_form_{}_listing_attr_", s.id))
-                .width(250.0)
+                .width(FORM_FIELD_W)
                 .selected_text(element.listing_attr.name.clone())
                 .show_ui(ui, |ui| {
                     for attr in &element.attributes.clone() {
@@ -397,7 +525,7 @@ impl ItemTemplateWindow {
     }
 
     fn row_attributes(ui: &mut egui::Ui, element: &mut ItemTemplate, s: &FormUiState) {
-        ui.add_enabled(false, Label::new("                           Attributes"));
+        ui.add_enabled(false, Label::new("           Attributes"));
 
         if element.attributes.is_empty() {
             ui.label(RichText::new("None").italics().color(Color32::GRAY));
@@ -418,12 +546,13 @@ impl ItemTemplateWindow {
                             .collect::<Vec<_>>()
                             .join("\n");
                         let rows = element.attributes.len().max(1);
-                        ui.add(
+                        ui.add_sized(
+                            [FORM_FIELD_W, (rows as f32) * ui.spacing().interact_size.y],
                             TextEdit::multiline(&mut attrs_text)
                                 .frame(true)
                                 .interactive(false)
                                 .desired_rows(rows)
-                                .desired_width(f32::INFINITY),
+                                .desired_width(FORM_FIELD_W),
                         );
                     } else {
                         Self::render_dnd_attr_list(ui, element);
@@ -440,7 +569,7 @@ impl ItemTemplateWindow {
         let mut to_idx = None::<usize>;
 
         ui.dnd_drop_zone::<usize, ()>(frame, |ui| {
-            ui.set_min_width(242.0);
+            ui.set_min_width(FORM_FIELD_W - 8.0);
 
             for (idx, item) in element.attributes.iter().enumerate() {
                 let row_id = egui::Id::new(("item_tmpl_attr_row", element.id.clone(), item.id.clone(), idx));
@@ -483,13 +612,18 @@ impl ItemTemplateWindow {
     }
 
     fn row_add_attr_template(app: &mut CogsApp, ui: &mut egui::Ui, element: &mut ItemTemplate, s: &FormUiState) {
-        ui.add_enabled(false, Label::new("     Add Attribute Template"));
+        const FORM_FIELD_W: f32 = 240.0;
+        const INLINE_GAP: f32 = 6.0;
+        const PLUS_W: f32 = 32.0;
+
+        ui.add_enabled(false, Label::new("      Add Attribute"));
 
         ui.horizontal(|ui| {
             let curr_attr_tmpl = app.state.explore.item_template_cu_add_attr_template.clone();
+            let combo_w = (FORM_FIELD_W - PLUS_W - INLINE_GAP).max(80.0);
 
             let response = ComboBox::from_id_salt(format!("item_templ_form_{}_add_attr_", s.id))
-                .width(220.0)
+                .width(combo_w)
                 .selected_text(selected_attr_name(&curr_attr_tmpl, &element.id))
                 .show_ui(ui, |ui| {
                     let selected_for_element = app
@@ -514,6 +648,8 @@ impl ItemTemplateWindow {
                 }
             }
 
+            ui.add_space(INLINE_GAP);
+
             let has_selected = app
                 .state
                 .explore
@@ -526,7 +662,7 @@ impl ItemTemplateWindow {
                 .add_enabled(has_selected, Button::new(" + "))
                 .on_disabled_hover_text("Select an attribute template first");
 
-            if btn.clicked() {
+            if has_selected && btn.clicked() {
                 if let Some(attr) = app
                     .state
                     .explore
@@ -550,6 +686,7 @@ impl AppComponent for ItemTemplateWindow {
 
     fn show(ctx: &mut Self::Context, ui: &mut egui::Ui) {
         let ectx = ui.ctx();
+        // ectx.set_debug_on_hover(true);
 
         if !ctx.state.data.has_fetched_attr_templates() {
             ctx.state.data.fetch_all_attr_templates(ectx, ctx.sendr.clone());
@@ -572,7 +709,7 @@ impl AppComponent for ItemTemplateWindow {
             .title_bar(false)
             .resizable(false)
             .min_width(300.0)
-            .max_width(400.0)
+            .max_width(300.0)
             .min_height(200.0)
             .max_height(400.0)
             .show(ectx, |ui| {
