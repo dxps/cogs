@@ -3,8 +3,8 @@ use std::sync::mpsc::Sender;
 mod attr_templ_props;
 pub use attr_templ_props::*;
 
-mod attr_tmpl_form;
-pub use attr_tmpl_form::*;
+mod attr_tmpl_win;
+pub use attr_tmpl_win::*;
 
 mod explore_table;
 pub use explore_table::*;

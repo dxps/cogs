@@ -1,7 +1,6 @@
-use std::hash::Hash;
-
 use crate::domain::model::{Id, meta::AttributeValueType};
 use serde::{Deserialize, Serialize};
+use std::hash::Hash;
 
 #[derive(Debug, Default, PartialEq, Eq, Clone, Serialize, Deserialize)]
 /// A template for an attribute.
