@@ -6,7 +6,7 @@ use cogs_shared::domain::model::{
 use egui::{Align, Button, Color32, ComboBox, CursorIcon, Direction, Grid, Label, Layout, RichText, Window, vec2};
 use std::sync::{Arc, Mutex};
 
-pub struct AttrTemplateForm;
+pub struct AttrTemplateWindow;
 
 struct FormUiState {
     id: Id,
@@ -47,7 +47,7 @@ impl FormUiState {
     }
 }
 
-impl AttrTemplateForm {
+impl AttrTemplateWindow {
     fn render_header(ui: &mut egui::Ui, s: &FormUiState) {
         ui.vertical_centered(|ui| {
             ui.add_enabled(false, Label::new(RichText::new(s.title).size(13.0)));
@@ -188,7 +188,7 @@ impl AttrTemplateForm {
     }
 }
 
-impl AppComponent for AttrTemplateForm {
+impl AppComponent for AttrTemplateWindow {
     type Context = CogsApp;
 
     /// It shows the form for creating or editing an attribute template.

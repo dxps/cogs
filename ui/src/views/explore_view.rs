@@ -1,7 +1,7 @@
 use crate::{
     CogsApp,
     comps::{
-        AppComponent, AttrTemplateForm, AttrTemplateProps, ExploreTable, ItemTemplateForm, ItemTemplateProps, LinkTemplateForm,
+        AppComponent, AttrTemplateWindow, AttrTemplateProps, ExploreTable, ItemTemplateWindow, ItemTemplateProps, LinkTemplateForm,
         menu_row, paint_combo_chevron,
     },
     constants::{CORNER_RADIUS, EXPLORE_ELEMENT, ICON_HELP, ICON_SETTINGS, POPUP_ROW_WIDTH},
@@ -84,11 +84,11 @@ fn show_table_cell(ctx: &mut CogsApp, ectx: &egui::Context, strip: &mut Strip<'_
 
         for (_, element) in ctx.state.explore.open_windows_item_template.clone().iter() {
             ectx.data_mut(|d| d.insert_temp(egui::Id::from(EXPLORE_ELEMENT), element.clone()));
-            ItemTemplateForm::show(ctx, ui);
+            ItemTemplateWindow::show(ctx, ui);
         }
         for (_, element) in ctx.state.explore.open_windows_attr_template.clone().iter() {
             ectx.data_mut(|d| d.insert_temp(egui::Id::from(EXPLORE_ELEMENT), element.clone()));
-            AttrTemplateForm::show(ctx, ui);
+            AttrTemplateWindow::show(ctx, ui);
         }
         for (_, element) in ctx.state.explore.open_windows_link_template.clone().iter() {
             ectx.data_mut(|d| d.insert_temp(egui::Id::from(EXPLORE_ELEMENT), element.clone()));

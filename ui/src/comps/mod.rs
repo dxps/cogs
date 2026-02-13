@@ -18,11 +18,11 @@ pub use footer::*;
 mod item_templ_props;
 pub use item_templ_props::*;
 
-mod item_tmpl_form;
-pub use item_tmpl_form::*;
+mod item_tmpl_win;
+pub use item_tmpl_win::*;
 
-mod link_tmpl_form;
-pub use link_tmpl_form::*;
+mod link_tmpl_win;
+pub use link_tmpl_win::*;
 
 mod modal;
 pub use modal::*;

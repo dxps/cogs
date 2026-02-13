@@ -31,9 +31,9 @@ pub struct ExploreViewState {
     #[serde(skip)]
     pub curr_sel_elem: Option<(Kind, Id)>,
 
-    // --------------------------------
-    // State of new item template form.
-    // --------------------------------
+    // --------------------------------------------------------
+    // State of `ItemTemplateWindow`s when creating or editing.
+    // --------------------------------------------------------
     //
     /// The attribute template that is selected as listing attribute.
     #[serde(skip)]
@@ -43,4 +43,9 @@ pub struct ExploreViewState {
     /// when creating or editing an item template.
     #[serde(skip)]
     pub item_template_cu_add_attr_template: HashMap<Id, Option<AttrTemplate>>,
+
+    /// The item template that is selected to be added as a link
+    /// when creating or editing an item template.
+    #[serde(skip)]
+    pub item_template_cu_add_link_template: HashMap<Id, Option<Id>>,
 }

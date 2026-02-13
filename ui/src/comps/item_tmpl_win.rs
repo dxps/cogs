@@ -5,15 +5,22 @@ use crate::{
 };
 use cogs_shared::domain::model::{
     Action, Id,
-    meta::{AttrTemplate, ItemTemplate},
+    meta::{AttrTemplate, ItemTemplate, ItemTemplateLink},
 };
 use egui::{Align, Button, Color32, ComboBox, CursorIcon, Direction, Frame, Grid, Label, Layout, RichText, TextEdit, Window};
+use serde::{Deserialize, Serialize};
 use std::{
     collections::HashMap,
     sync::{Arc, Mutex},
 };
 
-pub struct ItemTemplateForm;
+pub struct ItemTemplateWindow;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+enum ItemTemplateTab {
+    Attributes,
+    Links,
+}
 
 struct FormUiState {
     id: Id,
@@ -22,6 +29,8 @@ struct FormUiState {
     action: Action,
     title: &'static str,
     focus_name_once: bool,
+    tab_id: egui::Id,
+    tab: ItemTemplateTab,
 }
 
 impl FormUiState {
@@ -43,6 +52,11 @@ impl FormUiState {
         let focus_id = egui::Id::new("new_item_template_form_focus_name_once");
         let focus_name_once = ectx.data_mut(|d| d.get_temp::<bool>(focus_id).unwrap_or(true));
 
+        let tab_id = egui::Id::from(format!("item_tmpl_form_{}_tab", id));
+        let tab = ectx
+            .data(|d| d.get_temp::<ItemTemplateTab>(tab_id))
+            .unwrap_or(ItemTemplateTab::Attributes);
+
         Self {
             id,
             act_id,
@@ -50,11 +64,13 @@ impl FormUiState {
             action,
             title,
             focus_name_once,
+            tab_id,
+            tab,
         }
     }
 }
 
-impl ItemTemplateForm {
+impl ItemTemplateWindow {
     fn reorder_attrs(element: &mut ItemTemplate, from_idx: usize, to_idx: usize) {
         let attr = element.attributes.remove(from_idx);
         element.attributes.insert(to_idx, attr);
@@ -88,19 +104,207 @@ impl ItemTemplateForm {
                 .show(ui, |ui| {
                     Self::row_name(ui, ectx, element, s);
                     Self::row_description(ui, element, s);
-                    Self::row_listing_attr(ui, element, s);
-                    Self::row_attributes(ui, element, s);
-                    ui.label("");
-                    ui.end_row();
+                    Self::row_tabs(ui, ectx, s);
 
-                    if s.action != Action::View {
-                        Self::row_add_attr_template(app, ui, element, s);
-                        ui.end_row();
+                    match s.tab {
+                        ItemTemplateTab::Attributes => {
+                            Self::row_listing_attr(ui, element, s);
+                            Self::row_attributes(ui, element, s);
+                            ui.label("");
+                            ui.end_row();
+
+                            if s.action != Action::View {
+                                Self::row_add_attr_template(app, ui, element, s);
+                                ui.end_row();
+                            }
+                        }
+                        ItemTemplateTab::Links => {
+                            Self::row_links(app, ui, element, s);
+                            ui.label("");
+                            ui.end_row();
+
+                            if s.action != Action::View {
+                                Self::row_add_link_template(app, ui, element, s);
+                                ui.end_row();
+                            }
+                        }
                     }
                 });
 
             ui.add_space(8.0);
         });
+    }
+
+    fn row_tabs(ui: &mut egui::Ui, ectx: &egui::Context, s: &mut FormUiState) {
+        ui.add_enabled(false, Label::new(""));
+        ui.horizontal(|ui| {
+            let attrs_selected = s.tab == ItemTemplateTab::Attributes;
+            if ui.selectable_label(attrs_selected, "Attributes").clicked() {
+                s.tab = ItemTemplateTab::Attributes;
+                ectx.data_mut(|d| d.insert_temp(s.tab_id, s.tab));
+            }
+
+            let links_selected = s.tab == ItemTemplateTab::Links;
+            if ui.selectable_label(links_selected, "Links").clicked() {
+                s.tab = ItemTemplateTab::Links;
+                ectx.data_mut(|d| d.insert_temp(s.tab_id, s.tab));
+            }
+        });
+        ui.end_row();
+    }
+
+    fn row_links(app: &CogsApp, ui: &mut egui::Ui, element: &mut ItemTemplate, s: &FormUiState) {
+        ui.add_enabled(false, Label::new("                                Links"));
+
+        if element.links.is_empty() {
+            ui.label(RichText::new("None").italics().color(Color32::GRAY));
+            ui.end_row();
+            return;
+        }
+
+        ui.with_layout(Layout::top_down(Align::LEFT), |ui| {
+            egui::ScrollArea::vertical()
+                .auto_shrink([true; 2])
+                .vscroll(false)
+                .show(ui, |ui| {
+                    if s.action.is_view() {
+                        let mut links_text = element
+                            .links
+                            .iter()
+                            .map(|l| {
+                                let target_name = link_target_name(app, &l.item_template_id);
+                                if l.name.is_empty() {
+                                    target_name
+                                } else {
+                                    format!("{} -> {}", l.name, target_name)
+                                }
+                            })
+                            .collect::<Vec<_>>()
+                            .join("\n");
+
+                        let rows = element.links.len().max(1);
+                        ui.add(
+                            TextEdit::multiline(&mut links_text)
+                                .frame(true)
+                                .interactive(false)
+                                .desired_rows(rows)
+                                .desired_width(f32::INFINITY),
+                        );
+                    } else {
+                        Frame::default()
+                            .corner_radius(CORNER_RADIUS)
+                            .inner_margin(4.0)
+                            .show(ui, |ui| {
+                                ui.set_min_width(242.0);
+
+                                let mut to_remove: Option<usize> = None;
+                                for (idx, l) in element.links.iter().enumerate() {
+                                    ui.horizontal(|ui| {
+                                        let target_name = link_target_name(app, &l.item_template_id);
+                                        let txt = if l.name.is_empty() {
+                                            target_name
+                                        } else {
+                                            format!("{} -> {}", l.name, target_name)
+                                        };
+                                        ui.label(txt);
+
+                                        if ui.small_button("x").on_hover_text("Remove").clicked() {
+                                            to_remove = Some(idx);
+                                        }
+                                    });
+                                }
+
+                                if let Some(idx) = to_remove {
+                                    element.links.remove(idx);
+                                }
+                            });
+                    }
+                });
+        });
+
+        ui.end_row();
+    }
+
+    fn row_add_link_template(app: &mut CogsApp, ui: &mut egui::Ui, element: &mut ItemTemplate, s: &FormUiState) {
+        ui.add_enabled(false, Label::new("                      Add Link"));
+
+        ui.vertical(|ui| {
+            let link_name_id = egui::Id::from(format!("item_templ_form_{}_new_link_name", s.id));
+            let mut new_link_name = ui.ctx().data(|d| d.get_temp::<String>(link_name_id)).unwrap_or_default();
+
+            ui.horizontal(|ui| {
+                ui.label(" Name");
+                ui.add_sized(
+                    [170.0, ui.spacing().interact_size.y],
+                    TextEdit::singleline(&mut new_link_name),
+                );
+            });
+
+            ui.ctx().data_mut(|d| d.insert_temp(link_name_id, new_link_name.clone()));
+
+            ui.horizontal(|ui| {
+                ui.label("Target");
+                let curr_add_link = app.state.explore.item_template_cu_add_link_template.clone();
+                ComboBox::from_id_salt(format!("item_templ_form_{}_add_link_", s.id))
+                    .width(170.0)
+                    .selected_text(selected_link_target_name(app, &curr_add_link, &element.id))
+                    .show_ui(ui, |ui| {
+                        let selected_for_element = app
+                            .state
+                            .explore
+                            .item_template_cu_add_link_template
+                            .entry(element.id.clone())
+                            .or_insert(None);
+
+                        for it in app.state.data.get_item_templates() {
+                            let is_self = it.id == element.id;
+                            let already_linked = element.links.iter().any(|l| l.item_template_id == it.id);
+
+                            if !is_self && !already_linked {
+                                ui.selectable_value(selected_for_element, Some(it.id.clone()), it.name);
+                            }
+                        }
+                    });
+
+                let has_selected = app
+                    .state
+                    .explore
+                    .item_template_cu_add_link_template
+                    .get(&element.id)
+                    .and_then(|o| o.as_ref())
+                    .is_some();
+
+                let name_ok = !new_link_name.trim().is_empty();
+
+                let btn = ui
+                    .add_enabled(has_selected && name_ok, Button::new(" + "))
+                    .on_disabled_hover_text("Provide link name and select an item template first");
+
+                if btn.clicked() {
+                    if let Some(linked_id) = app
+                        .state
+                        .explore
+                        .item_template_cu_add_link_template
+                        .get(&element.id)
+                        .and_then(|o| o.clone())
+                    {
+                        element.links.push(ItemTemplateLink {
+                            name: new_link_name.trim().to_string(),
+                            item_template_id: linked_id,
+                        });
+
+                        app.state
+                            .explore
+                            .item_template_cu_add_link_template
+                            .insert(element.id.clone(), None);
+
+                        ui.ctx().data_mut(|d| d.insert_temp(link_name_id, String::new()));
+                    }
+                }
+            });
+        });
+
+        ui.end_row();
     }
 
     fn render_footer_buttons(
@@ -114,16 +318,12 @@ impl ItemTemplateForm {
             ui.add_space(18.0);
 
             if s.action.is_view() {
-                if ui.button("    Edit    ")
-                    .on_hover_cursor(CursorIcon::PointingHand)
-                    .clicked()
-                {
+                if ui.button("    Edit    ").on_hover_cursor(CursorIcon::PointingHand).clicked() {
                     ectx.data_mut(|d| d.insert_temp(s.act_id, Action::Edit));
                 }
             } else {
-                let enabled = !element.name.is_empty()
-                    && !element.attributes.is_empty()
-                    && !element.listing_attr.is_default();
+                let enabled =
+                    !element.name.is_empty() && !element.attributes.is_empty() && !element.listing_attr.is_default();
 
                 let resp = ui
                     .add_enabled(enabled, Button::new("    Save    "))
@@ -133,19 +333,14 @@ impl ItemTemplateForm {
                     );
 
                 if resp.clicked() {
-                    app.state
-                        .data
-                        .save_item_template(element.clone(), ui.ctx(), app.sendr.clone());
+                    app.state.data.save_item_template(element.clone(), ui.ctx(), app.sendr.clone());
                     shutdown(app, ectx, &s.id, s.act_id, s.focus_id);
                 }
             }
 
             ui.add_space(8.0);
 
-            if ui.button("  Cancel  ")
-                .on_hover_cursor(CursorIcon::PointingHand)
-                .clicked()
-            {
+            if ui.button("  Cancel  ").on_hover_cursor(CursorIcon::PointingHand).clicked() {
                 shutdown(app, ectx, &s.id, s.act_id, s.focus_id);
             }
 
@@ -154,13 +349,8 @@ impl ItemTemplateForm {
                     Layout::from_main_dir_and_cross_align(Direction::LeftToRight, Align::Min),
                     |ui| {
                         ui.add_space(18.0);
-                        if ui.button("  Delete  ")
-                            .on_hover_cursor(CursorIcon::PointingHand)
-                            .clicked()
-                        {
-                            app.state
-                                .data
-                                .delete_item_template(s.id.clone(), ectx, app.sendr.clone());
+                        if ui.button("  Delete  ").on_hover_cursor(CursorIcon::PointingHand).clicked() {
+                            app.state.data.delete_item_template(s.id.clone(), ectx, app.sendr.clone());
                             shutdown(app, ectx, &s.id, s.act_id, s.focus_id);
                         }
                     },
@@ -355,7 +545,7 @@ impl ItemTemplateForm {
     }
 }
 
-impl AppComponent for ItemTemplateForm {
+impl AppComponent for ItemTemplateWindow {
     type Context = CogsApp;
 
     fn show(ctx: &mut Self::Context, ui: &mut egui::Ui) {
@@ -363,6 +553,11 @@ impl AppComponent for ItemTemplateForm {
 
         if !ctx.state.data.has_fetched_attr_templates() {
             ctx.state.data.fetch_all_attr_templates(ectx, ctx.sendr.clone());
+        }
+
+        // Needed for Links tab target resolution
+        if !ctx.state.data.has_fetched_item_templates() {
+            ctx.state.data.fetch_all_item_templates(ectx, ctx.sendr.clone());
         }
 
         let binding = ectx
@@ -403,8 +598,32 @@ fn selected_attr_name(map: &HashMap<Id, Option<AttrTemplate>>, id: &Id) -> Strin
         .unwrap_or_default()
 }
 
+fn selected_link_target_name(app: &CogsApp, map: &HashMap<Id, Option<Id>>, id: &Id) -> String {
+    map.get(id)
+        .and_then(|o| o.as_ref())
+        // .map(ToString::to_string)
+        .map(|id| link_target_name(app, id))
+        .unwrap_or_default()
+}
+
+fn link_target_name(app: &CogsApp, id: &Id) -> String {
+    app.state
+        .data
+        .get_item_templates()
+        .into_iter()
+        .find(|it| &it.id == id)
+        .map(|it| it.name)
+        .unwrap_or_else(|| format!("<missing:{}>", id))
+}
+
 fn shutdown(ctx: &mut CogsApp, ectx: &egui::Context, id: &Id, act_id: egui::Id, focus_id: egui::Id) {
     ctx.state.explore.open_windows_item_template.remove(id);
     ectx.data_mut(|d| d.remove::<Action>(act_id));
     ectx.data_mut(|d| d.remove::<bool>(focus_id));
+
+    let tab_id = egui::Id::from(format!("item_tmpl_form_{}_tab", id));
+    ectx.data_mut(|d| d.remove::<ItemTemplateTab>(tab_id));
+
+    let link_name_id = egui::Id::from(format!("item_templ_form_{}_new_link_name", id));
+    ectx.data_mut(|d| d.remove::<String>(link_name_id));
 }
