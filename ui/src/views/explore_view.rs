@@ -1,7 +1,7 @@
 use crate::{
     CogsApp,
     comps::{
-        AppComponent, AttrTemplateWindow, AttrTemplateProps, ExploreTable, ItemTemplateWindow, ItemTemplateProps, LinkTemplateForm,
+        AppComponent, AttrTemplateWindow, AttrTemplatePreview, ExploreTable, ItemTemplateWindow, ItemTemplatePreview, LinkTemplateForm,
         menu_row, paint_combo_chevron,
     },
     constants::{CORNER_RADIUS, EXPLORE_ELEMENT, ICON_HELP, ICON_SETTINGS, POPUP_ROW_WIDTH},
@@ -75,8 +75,7 @@ fn show_table_cell(ctx: &mut CogsApp, ectx: &egui::Context, strip: &mut Strip<'_
                 ui.add_space(15.0);
                 show_kind(ctx, ui);
                 ui.add_space(15.0);
-                // The "+" button and its menu.
-                show_add_menu(ctx, ui);
+                show_add_menu(ctx, ui); // The "+" button and its menu.
             })
         });
 
@@ -112,7 +111,7 @@ fn show_preview_cell(ctx: &mut CogsApp, ectx: &egui::Context,  strip: &mut Strip
                                 break;
                             }
                         }
-                        AttrTemplateProps::show(ctx, ui);
+                        AttrTemplatePreview::show(ctx, ui);
                     }
                     Kind::ItemTemplate => {
                         for elem in ctx.state.data.get_item_templates().iter() {
@@ -123,7 +122,7 @@ fn show_preview_cell(ctx: &mut CogsApp, ectx: &egui::Context,  strip: &mut Strip
                                 break;
                             }
                         }
-                        ItemTemplateProps::show(ctx, ui);
+                        ItemTemplatePreview::show(ctx, ui);
                     }
                     _ => {}
                 }

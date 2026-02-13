@@ -1,7 +1,7 @@
 use std::sync::mpsc::Sender;
 
-mod attr_templ_props;
-pub use attr_templ_props::*;
+mod attr_templ_preview;
+pub use attr_templ_preview::*;
 
 mod attr_tmpl_win;
 pub use attr_tmpl_win::*;
@@ -15,8 +15,8 @@ pub use header::*;
 mod footer;
 pub use footer::*;
 
-mod item_templ_props;
-pub use item_templ_props::*;
+mod item_templ_preview;
+pub use item_templ_preview::*;
 
 mod item_tmpl_win;
 pub use item_tmpl_win::*;
