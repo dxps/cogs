@@ -185,6 +185,14 @@ impl DataState {
         self.item_templates.clone()
     }
 
+    pub fn get_item_template_name(&self, id: &Id) -> String {
+        self.item_templates
+            .iter()
+            .find(|it| &it.id == id)
+            .map(|it| it.name.clone())
+            .unwrap_or_default()
+    }
+
     pub fn delete_item_template(&self, id: Id, ectx: &egui::Context, sender: Sender<UiMessage>) {
         //
         let mut req = ehttp::Request::post(format!("http://localhost:9010/api/item_templates/{}/delete", id), vec![]);

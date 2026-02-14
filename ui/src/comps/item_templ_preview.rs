@@ -9,7 +9,7 @@ impl AppComponent for ItemTemplatePreview {
 
     /// It shows the properties of an item template.
     /// It expects to get the item template in `ui`'s `.data()` key named `EXPLORE_ELEMENT`.
-    fn show(_: &mut Self::Context, ui: &mut egui::Ui) {
+    fn show(ctx: &mut Self::Context, ui: &mut egui::Ui) {
         let element = ui
             .ctx()
             .data(|d| d.get_temp::<ItemTemplate>(egui::Id::from(EXPLORE_ELEMENT)))
@@ -22,22 +22,18 @@ impl AppComponent for ItemTemplatePreview {
             ui.style_mut().text_styles.insert(TextStyle::Body, font.clone());
 
             Grid::new("explore_curr_elem_preview").num_columns(2).show(ui, |ui| {
-                // name
                 ui.add_enabled(false, Label::new("name"));
                 ui.add(Label::new(element.name.as_str()));
                 ui.end_row();
 
-                // description
                 ui.add_enabled(false, Label::new("description"));
                 ui.add(Label::new(element.description.as_str()));
                 ui.end_row();
 
-                // listing attribute
                 ui.add_enabled(false, Label::new("listing attribute"));
                 ui.add(Label::new(element.listing_attr.name.as_str()));
                 ui.end_row();
 
-                // attributes (top-aligned label)
                 ui.with_layout(Layout::top_down(Align::Min), |ui| {
                     ui.add_enabled(false, Label::new("attributes"));
                 });
@@ -54,7 +50,6 @@ impl AppComponent for ItemTemplatePreview {
                 });
                 ui.end_row();
 
-                // links (top-aligned label)
                 ui.with_layout(Layout::top_down(Align::Min), |ui| {
                     ui.add_enabled(false, Label::new("links"));
                 });
@@ -62,7 +57,13 @@ impl AppComponent for ItemTemplatePreview {
                 let links_str = element
                     .links
                     .iter()
-                    .map(|l| l.name.clone())
+                    .map(|l| {
+                        format!(
+                            "{} -> {}",
+                            l.name.clone(),
+                            ctx.state.data.get_item_template_name(&l.item_template_id)
+                        )
+                    })
                     .collect::<Vec<String>>()
                     .join("\n");
 
