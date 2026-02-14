@@ -8,7 +8,8 @@ use cogs_shared::domain::model::{
     meta::{AttrTemplate, ItemTemplate, ItemTemplateLink},
 };
 use egui::{
-    Align, Button, Color32, ComboBox, CursorIcon, Direction, Frame, Grid, Label, Layout, RichText, Stroke, TextEdit, Window,
+    Align, Button, Color32, ComboBox, CursorIcon, Direction, Frame, Grid, Label, Layout, Margin, RichText, Stroke, TextEdit,
+    Window,
 };
 use serde::{Deserialize, Serialize};
 use std::{
@@ -50,7 +51,7 @@ impl FormUiState {
         let title = match action {
             Action::Create => "New Item Template",
             Action::Edit => "Edit Item Template",
-            _ => "View Item Template",
+            _ => "Item Template",
         };
 
         let focus_id = egui::Id::new("new_item_template_form_focus_name_once");
@@ -81,14 +82,26 @@ impl ItemTemplateWindow {
     }
 
     fn render_header(ui: &mut egui::Ui, s: &FormUiState) {
-        ui.vertical_centered(|ui| {
-            ui.add_enabled(false, Label::new(RichText::new(s.title).size(13.0)));
-            if !s.id.is_zero() {
-                ui.add_enabled(
-                    s.action.is_edit(),
-                    Label::new(RichText::new(format!("(id: {})", s.id)).color(Color32::GRAY).size(10.0)),
-                );
-            }
+        ui.horizontal(|ui| {
+            ui.add_space(80.0);
+            let w = ui.available_width() - 8.0; // right pad used in grid
+            ui.allocate_ui_with_layout(
+                egui::vec2(w.max(0.0), 0.0),
+                egui::Layout::top_down(egui::Align::Center),
+                |ui| {
+                    ui.add_enabled(false, egui::Label::new(egui::RichText::new(s.title).size(13.0)));
+                    if !s.id.is_zero() {
+                        ui.add_enabled(
+                            s.action.is_edit(),
+                            egui::Label::new(
+                                egui::RichText::new(format!("(id: {})", s.id))
+                                    .color(egui::Color32::GRAY)
+                                    .size(10.0),
+                            ),
+                        );
+                    }
+                },
+            );
         });
     }
 
@@ -102,7 +115,7 @@ impl ItemTemplateWindow {
         ui.horizontal(|ui| {
             ui.add_space(14.0);
 
-            Grid::new(format!("item_tmpl_id_{}_grid", s.id))
+            Grid::new(format!("item_tmpl_win_{}_grid", s.id))
                 .spacing([10.0, 10.0])
                 .num_columns(2)
                 .show(ui, |ui| {
@@ -356,6 +369,7 @@ impl ItemTemplateWindow {
                 );
             });
 
+            ui.add_space(6.0); // A small vertical gap between Name and Target rows.
             ui.ctx().data_mut(|d| d.insert_temp(link_name_id, new_link_name.clone()));
 
             ui.horizontal(|ui| {
@@ -438,18 +452,19 @@ impl ItemTemplateWindow {
                     ectx.data_mut(|d| d.insert_temp(s.act_id, Action::Edit));
                 }
             } else {
-                let enabled =
-                    !element.name.is_empty() && !element.attributes.is_empty() && !element.listing_attr.is_default();
+                let enabled = !element.name.is_empty() && !element.attributes.is_empty() && !element.listing_attr.is_default();
 
                 let resp = ui
                     .add_enabled(enabled, Button::new("    Save    "))
                     .on_hover_cursor(CursorIcon::PointingHand)
                     .on_disabled_hover_text(
-                        "Provide the following parts before saving:\n- name\n- listing attribute template\n- one or more attribute templates",
+                        "Provide the following parts:\n- name\n- listing attribute template\n- one or more attribute templates",
                     );
 
                 if resp.clicked() {
-                    app.state.data.save_item_template(element.clone(), ui.ctx(), app.sendr.clone());
+                    app.state
+                        .data
+                        .save_item_template(element.clone(), ui.ctx(), app.sendr.clone());
                     shutdown(app, ectx, &s.id, s.act_id, s.focus_id);
                 }
             }
@@ -613,14 +628,13 @@ impl ItemTemplateWindow {
 
     fn row_add_attr_template(app: &mut CogsApp, ui: &mut egui::Ui, element: &mut ItemTemplate, s: &FormUiState) {
         const FORM_FIELD_W: f32 = 240.0;
-        const INLINE_GAP: f32 = 6.0;
         const PLUS_W: f32 = 32.0;
 
         ui.add_enabled(false, Label::new("      Add Attribute"));
 
         ui.horizontal(|ui| {
             let curr_attr_tmpl = app.state.explore.item_template_cu_add_attr_template.clone();
-            let combo_w = (FORM_FIELD_W - PLUS_W - INLINE_GAP).max(80.0);
+            let combo_w = FORM_FIELD_W - PLUS_W;
 
             let response = ComboBox::from_id_salt(format!("item_templ_form_{}_add_attr_", s.id))
                 .width(combo_w)
@@ -647,8 +661,6 @@ impl ItemTemplateWindow {
                     element.listing_attr = Default::default();
                 }
             }
-
-            ui.add_space(INLINE_GAP);
 
             let has_selected = app
                 .state
@@ -712,6 +724,7 @@ impl AppComponent for ItemTemplateWindow {
             .max_width(300.0)
             .min_height(200.0)
             .max_height(400.0)
+            .frame(egui::Frame::window(&ectx.style()).inner_margin(Margin::ZERO))
             .show(ectx, |ui| {
                 ui.vertical(|ui| {
                     Self::render_header(ui, &s);
@@ -719,7 +732,7 @@ impl AppComponent for ItemTemplateWindow {
                     Self::render_form_grid(ctx, ui, ectx, &mut element, &mut s);
                     ui.add_space(20.0);
                     Self::render_footer_buttons(ctx, ui, ectx, &mut element, &s);
-                    ui.add_space(12.0);
+                    ui.add_space(10.0);
                 })
                 .response
                 .on_hover_cursor(CursorIcon::Grab);

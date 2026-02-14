@@ -3,7 +3,7 @@ use cogs_shared::domain::model::{
     Action, Id,
     meta::{AttrTemplate, AttributeValueType},
 };
-use egui::{Align, Button, Checkbox, Color32, ComboBox, CursorIcon, Direction, Grid, Label, Layout, RichText, Window, vec2};
+use egui::{Align, Button, Checkbox, ComboBox, CursorIcon, Direction, Grid, Label, Layout, Margin, Window, vec2};
 use std::sync::{Arc, Mutex};
 use strum::IntoEnumIterator;
 
@@ -31,7 +31,7 @@ impl FormUiState {
         let title = match action {
             Action::Create => "New Attribute Template",
             Action::Edit => "Edit Attribute Template",
-            _ => "View Attribute Template",
+            _ => "Attribute Template",
         };
 
         let focus_id = egui::Id::new("new_attr_template_form_focus_name_once");
@@ -50,22 +50,33 @@ impl FormUiState {
 
 impl AttrTemplateWindow {
     fn render_header(ui: &mut egui::Ui, s: &FormUiState) {
-        ui.vertical_centered(|ui| {
-            ui.add_enabled(false, Label::new(RichText::new(s.title).size(13.0)));
-            if !s.id.is_zero() {
-                ui.add_enabled(
-                    s.action.is_edit(),
-                    Label::new(RichText::new(format!("   (id: {})", s.id)).color(Color32::GRAY).size(10.0)),
-                );
-            }
+        ui.horizontal(|ui| {
+            ui.add_space(40.0);
+            let w = ui.available_width() - 8.0; // right pad used in grid
+            ui.allocate_ui_with_layout(
+                egui::vec2(w.max(0.0), 0.0),
+                egui::Layout::top_down(egui::Align::Center),
+                |ui| {
+                    ui.add_enabled(false, egui::Label::new(egui::RichText::new(s.title).size(13.0)));
+                    if !s.id.is_zero() {
+                        ui.add_enabled(
+                            s.action.is_edit(),
+                            egui::Label::new(
+                                egui::RichText::new(format!("(id: {})", s.id))
+                                    .color(egui::Color32::GRAY)
+                                    .size(10.0),
+                            ),
+                        );
+                    }
+                },
+            );
         });
     }
 
     fn render_form_grid(ui: &mut egui::Ui, ectx: &egui::Context, element: &mut AttrTemplate, s: &mut FormUiState) {
         ui.horizontal(|ui| {
             ui.add_space(14.0);
-
-            Grid::new(format!("attr_tmpl_form_{}_grid", s.id))
+            Grid::new(format!("attr_tmpl_win_{}_grid", s.id))
                 .spacing([10.0, 10.0])
                 .num_columns(2)
                 .show(ui, |ui| {
@@ -75,7 +86,6 @@ impl AttrTemplateWindow {
                     Self::row_default_value(ui, element, s);
                     Self::row_mandatory(ui, element, s);
                 });
-
             ui.add_space(8.0);
         });
     }
@@ -98,7 +108,7 @@ impl AttrTemplateWindow {
                 let enabled = !element.name.is_empty();
                 let resp = ui
                     .add_enabled(enabled, Button::new("    Save    "))
-                    .on_disabled_hover_text("Provide the at least a name before saving.");
+                    .on_disabled_hover_text("Provide at least a name.");
 
                 if resp.clicked() {
                     app.state
@@ -154,7 +164,7 @@ impl AttrTemplateWindow {
             ui.add(egui::TextEdit::singleline(&mut element.value_type.to_string()).interactive(false));
         } else {
             ComboBox::from_id_salt(format!("at_val_type_{}", s.id))
-                .width(287.0)
+                .width(220.0)
                 .selected_text(element.value_type.to_string())
                 .show_ui(ui, |ui| {
                     for vb in AttributeValueType::iter() {
@@ -176,7 +186,7 @@ impl AttrTemplateWindow {
             } else {
                 let mut checked = element.default_value.parse::<bool>().unwrap_or(false);
                 if ui.add(Checkbox::new(&mut checked, "")).changed() {
-                    element.default_value = checked.to_string(); // "true" / "false"
+                    element.default_value = checked.to_string(); // "true" or "false"
                 }
             }
         } else {
@@ -215,18 +225,16 @@ impl AppComponent for AttrTemplateWindow {
         Window::new(format!("attr_tmpl_form_{}_win", element.id))
             .title_bar(false)
             .resizable(false)
-            .fixed_size(vec2(400.0, 300.0))
+            .fixed_size(vec2(320.0, 300.0))
+            .frame(egui::Frame::window(&ectx.style()).inner_margin(Margin::ZERO))
             .show(ectx, |ui| {
                 ui.vertical(|ui| {
                     Self::render_header(ui, &s);
-                    ui.add_space(20.0);
-
+                    ui.add_space(20.0); // only the space you explicitly want
                     Self::render_form_grid(ui, ectx, &mut element, &mut s);
-
                     ui.add_space(20.0);
                     Self::render_footer_buttons(ctx, ui, ectx, &mut element, &s);
-
-                    ui.add_space(12.0);
+                    ui.add_space(10.0);
                 })
                 .response
                 .on_hover_cursor(CursorIcon::Grab);

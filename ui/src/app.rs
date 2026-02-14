@@ -55,7 +55,7 @@ impl CogsApp {
 
         ui_init_cosmetics(ectx);
 
-        // Load previous app state (if any).
+        // Load previous app state, if any.
         // Note: The `persistence` feature must be enabled for this to work.
         if let Some(storage) = cc.storage {
             eframe::get_value(storage, APP_KEY).unwrap_or_default()
