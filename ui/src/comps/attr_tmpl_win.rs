@@ -184,7 +184,12 @@ impl AttrTemplateWindow {
                     Checkbox::new(&mut element.default_value.parse::<bool>().unwrap_or(false), ""),
                 );
             } else {
-                let mut checked = element.default_value.parse::<bool>().unwrap_or(false);
+                let mut checked = element.default_value.parse::<bool>().unwrap_or_else(|_| {
+                    // chore: If switching from another type to boolean, default to false.
+                    //        Just to persist a valid value in the database.
+                    element.default_value = "false".to_string();
+                    false
+                });
                 if ui.add(Checkbox::new(&mut checked, "")).changed() {
                     element.default_value = checked.to_string(); // "true" or "false"
                 }
