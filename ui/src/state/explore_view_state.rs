@@ -16,7 +16,7 @@ pub struct ExploreViewState {
     pub kind: ExploreKind,
 
     /// The open windows for creating (one) or editing attribute templates.
-    #[serde(skip)]
+    // #[serde(skip)]  todo: temporary used during form dev.
     pub open_windows_attr_template: HashMap<Id, Arc<Mutex<AttrTemplate>>>,
 
     /// The open windows for creating (one) or editing link templates.

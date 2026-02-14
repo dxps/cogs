@@ -3,7 +3,7 @@ use cogs_shared::domain::model::{
     Action, Id,
     meta::{AttrTemplate, AttributeValueType},
 };
-use egui::{Align, Button, Color32, ComboBox, CursorIcon, Direction, Grid, Label, Layout, RichText, Window, vec2};
+use egui::{Align, Button, Checkbox, Color32, ComboBox, CursorIcon, Direction, Grid, Label, Layout, RichText, Window, vec2};
 use std::sync::{Arc, Mutex};
 use strum::IntoEnumIterator;
 
@@ -153,7 +153,7 @@ impl AttrTemplateWindow {
         if s.action.is_view() {
             ui.add(egui::TextEdit::singleline(&mut element.value_type.to_string()).interactive(false));
         } else {
-            ComboBox::from_id_salt(format!("atf_val_type_{}", s.id))
+            ComboBox::from_id_salt(format!("at_val_type_{}", s.id))
                 .width(287.0)
                 .selected_text(element.value_type.to_string())
                 .show_ui(ui, |ui| {
@@ -167,7 +167,21 @@ impl AttrTemplateWindow {
 
     fn row_default_value(ui: &mut egui::Ui, element: &mut AttrTemplate, s: &FormUiState) {
         ui.add_enabled(false, Label::new("Default value"));
-        ui.add(egui::TextEdit::singleline(&mut element.default_value).interactive(!s.action.is_view()));
+        if element.value_type == AttributeValueType::Boolean {
+            if s.action.is_view() {
+                ui.add_enabled(
+                    false,
+                    Checkbox::new(&mut element.default_value.parse::<bool>().unwrap_or(false), ""),
+                );
+            } else {
+                let mut checked = element.default_value.parse::<bool>().unwrap_or(false);
+                if ui.add(Checkbox::new(&mut checked, "")).changed() {
+                    element.default_value = checked.to_string(); // "true" / "false"
+                }
+            }
+        } else {
+            ui.add(egui::TextEdit::singleline(&mut element.default_value).interactive(!s.action.is_view()));
+        }
         ui.end_row();
     }
 

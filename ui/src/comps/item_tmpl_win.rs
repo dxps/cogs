@@ -717,13 +717,12 @@ impl AppComponent for ItemTemplateWindow {
                     Self::render_header(ui, &s);
                     ui.add_space(20.0);
                     Self::render_form_grid(ctx, ui, ectx, &mut element, &mut s);
+                    ui.add_space(20.0);
+                    Self::render_footer_buttons(ctx, ui, ectx, &mut element, &s);
+                    ui.add_space(12.0);
                 })
                 .response
                 .on_hover_cursor(CursorIcon::Grab);
-
-                ui.add_space(20.0);
-                Self::render_footer_buttons(ctx, ui, ectx, &mut element, &s);
-                ui.add_space(12.0);
             });
     }
 }
