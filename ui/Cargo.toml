@@ -4,7 +4,7 @@
 
 name = "cogs_ui"
 description = "A cognitive platform for cognitive needs"
-version = "0.5.0"
+version = "0.5.1"
 authors = ["Marius Ileana <dev@devisions.org>"]
 edition = "2024"
 include = ["LICENSE-APACHE", "LICENSE-MIT", "**/*.rs", "Cargo.toml"]
@@ -25,11 +25,11 @@ targets = ["x86_64-unknown-linux-gnu", "wasm32-unknown-unknown"]
 
 cogs_shared = { path = "../shared" }
 
-egui = { version = "=0.33.3", features = [
+egui               = { version = "=0.33.3", features = [
     "persistence",   # Enable persistence of memory (window positions etc).
     "serde",         # Allow serialization using `serde`.
  ] }
-eframe = { version = "=0.33.3", default-features = false, features = [
+eframe             = { version = "=0.33.3", default-features = false, features = [
     "accesskit",     # Make egui compatible with screen readers. Note: It adds a lot of dependencies.
     "default_fonts", # Embed the default egui fonts.
     "glow",          # Use the glow rendering backend. Alternative: "wgpu".
@@ -37,18 +37,18 @@ eframe = { version = "=0.33.3", default-features = false, features = [
     "wayland",       # To support Linux (and CI).
     "x11",           # To support older Linux distributions (restores one of the default features).
 ] }
-catppuccin-egui = { version = "=5.7.0", default-features = false, features = [ "egui33" ] }
+catppuccin-egui    = { version = "=5.7.0", default-features = false, features = [ "egui33" ] }
 
-log = "=0.4.29"
-tracing = "0.1"
-tracing-log = "0.2"
-tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
-
-serde             = { version = "=1.0.228", features = [ "derive" ] }      # For the app persistence.
-egui_extras       = { version = "=0.33.3", features = [ "all_loaders" ] }
-const_format      = { version = "=0.2.35" }
-ehttp             = { version = "=0.6.0", features = [ "json" ] }
-serde_json        = { version = "=1.0.149" }
+log                = { version = "=0.4.29"   }
+tracing            = { version = "=0.1.44"   }
+tracing-log        = { version = "=0.2.0"    }
+tracing-subscriber = { version = "=0.3.22",  features = ["env-filter", "fmt"] }
+serde              = { version = "=1.0.228", features = [ "derive" ] }      # For the app persistence.
+egui_extras        = { version = "=0.33.3",  features = [ "all_loaders" ] }
+const_format       = { version = "=0.2.35"   }
+ehttp              = { version = "=0.6.0",   features = [ "json" ] }
+serde_json         = { version = "=1.0.149"  }
+strum              = { version = "=0.27.2",  features = [ "derive" ] }
 
 
 # Native deps
@@ -56,7 +56,7 @@ serde_json        = { version = "=1.0.149" }
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 ########################################################
 
-env_logger = { version =  "=0.11.8" }
+env_logger         = { version =  "=0.11.9" }
 
 
 # Web deps

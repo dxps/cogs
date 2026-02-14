@@ -1,18 +1,18 @@
 [package]
 name = "cogs_shared"
 description = "The shared domain (model & logic) and DTOs between the Svc and UI."
-version = "0.2.0"
+version = "0.3.0"
 edition = "2024"
 
 [dependencies]
 serde         = { version = "=1.0.228", features = [ "derive" ] }
 serde_json    = { version = "=1.0.149"  }
 thiserror     = { version = "=2.0.18"   }
-anyhow        = { version = "=1.0.100"  }
+anyhow        = { version = "=1.0.101"  }
 chrono        = { version = "=0.4.43",  features = [ "serde" ] }
 strum         = { version = "=0.27.2",  features = [ "derive" ] }
 log           = { version = "=0.4.29",  features = [ "serde" ] }   # serde support for Level and LevelFilter.
-serde_with    = { version = "3.16.1"    }
+serde_with    = { version = "=3.16.1"   }
 
 [lints]
 workspace = true

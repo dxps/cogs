@@ -5,6 +5,7 @@ use cogs_shared::domain::model::{
 };
 use egui::{Align, Button, Color32, ComboBox, CursorIcon, Direction, Grid, Label, Layout, RichText, Window, vec2};
 use std::sync::{Arc, Mutex};
+use strum::IntoEnumIterator;
 
 pub struct AttrTemplateWindow;
 
@@ -156,16 +157,9 @@ impl AttrTemplateWindow {
                 .width(287.0)
                 .selected_text(element.value_type.to_string())
                 .show_ui(ui, |ui| {
-                    ui.selectable_value(
-                        &mut element.value_type,
-                        AttributeValueType::Text,
-                        AttributeValueType::Text.to_string(),
-                    );
-                    ui.selectable_value(
-                        &mut element.value_type,
-                        AttributeValueType::SmallInteger,
-                        AttributeValueType::SmallInteger.to_string(),
-                    );
+                    for vb in AttributeValueType::iter() {
+                        ui.selectable_value(&mut element.value_type, vb.clone(), vb.to_string());
+                    }
                 });
         }
         ui.end_row();

@@ -3,7 +3,7 @@
 #########
 
 name = "cogs_svc"
-version = "0.1.0"
+version = "0.5.0"
 edition = "2024"
 
 
@@ -28,11 +28,11 @@ sqlx              = { version = "=0.8.6", features = [
 
 axum_session      = { version = "=0.18.0"  }
 axum_session_auth = { version = "=0.18.0", features = [ "rest_mode" ] }
-axum_session_sqlx = { version = "=0.7",  features = [ "postgres", "tls-rustls" ] }
+axum_session_sqlx = { version = "=0.7",    features = [ "postgres", "tls-rustls" ] }
 async-trait       = { version = "=0.1.89"  }
 
 thiserror         = { version = "=2.0.18"  }
-anyhow            = { version = "=1.0.100"  }
+anyhow            = { version = "=1.0.101" }
 log               = { version = "=0.4.29"  }
 simple_logger     = { version = "=5.1.0"   }
 
@@ -41,11 +41,10 @@ randoid           = { version = "=0.3.0"   }
 md5               = { version = "=0.8.0"   }
 config            = { version = "=0.15.19" }
 chrono            = { version = "=0.4.43"  }
-uuid          = { version = "=1.20.0", features = ["v7", "std"] }
+uuid              = { version = "=1.21.0", features = ["v7", "std"] }
 
 #######
 [lints]
 #######
 
 workspace = true
-
