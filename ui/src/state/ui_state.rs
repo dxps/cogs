@@ -2,7 +2,7 @@ use crate::{AuthState, DataState, ExploreViewState, messages::UiMessage, views::
 use serde::{Deserialize, Serialize};
 use std::sync::mpsc::Sender;
 
-#[derive(Clone, Default, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(default)]
 pub struct UiState {
     //
@@ -19,6 +19,8 @@ pub struct UiState {
 
     #[serde(skip)]
     sender: Option<Sender<UiMessage>>,
+
+    pub ui_theme: egui::Theme,
 }
 
 impl UiState {
@@ -60,5 +62,19 @@ impl UiState {
         };
         let window = web_sys::window().unwrap();
         window.location().set_hash(hash).unwrap();
+    }
+}
+
+impl Default for UiState {
+    fn default() -> Self {
+        Self {
+            curr_view: ViewName::default(),
+            prev_view: ViewName::default(),
+            auth: AuthState::default(),
+            explore: ExploreViewState::default(),
+            data: DataState::default(),
+            sender: None,
+            ui_theme: egui::Theme::Dark,
+        }
     }
 }

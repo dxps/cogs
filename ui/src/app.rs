@@ -116,9 +116,11 @@ impl eframe::App for CogsApp {
             self.state.explore.kind = ExploreKind::All;
         }
 
-        // Note: Put your widgets into one of the following containers:
-        // `SidePanel`, `TopBottomPanel`, `CentralPanel`, `Window` or `Area`.
-        // For inspiration and more examples, go to https://emilk.github.io/egui
+        let curr_theme = ectx.theme();
+        if self.state.ui_theme != curr_theme {
+            self.state.ui_theme = curr_theme;
+            ui_init_cosmetics(ectx);
+        }
 
         Header::show(self, ectx);
 
@@ -252,26 +254,30 @@ impl eframe::App for CogsApp {
 }
 
 fn ui_init_cosmetics(ctx: &egui::Context) {
+    // 1) Set the theme.
+    match ctx.theme() {
+        egui::Theme::Light => catppuccin_egui::set_theme(ctx, catppuccin_egui::LATTE),
+        egui::Theme::Dark => catppuccin_egui::set_theme(ctx, catppuccin_egui::FRAPPE),
+    }
+
+    // 2) Apply custom tweaks.
     ctx.style_mut(|style| {
-        // Remove border for non interactive widgets.
         style.visuals.widgets.noninteractive.bg_stroke = egui::Stroke::NONE;
 
-        // Set corner radius for all.
         let r = egui::CornerRadius::same(CORNER_RADIUS as u8);
-        style.visuals.widgets.inactive.corner_radius = r; // normal button
-        style.visuals.widgets.hovered.corner_radius = r; // hover
-        style.visuals.widgets.active.corner_radius = r; // pressed
-        style.visuals.widgets.open.corner_radius = r; // e.g. open menu button
-        style.visuals.widgets.noninteractive.corner_radius = r; // optional consistency
-    });
+        style.visuals.widgets.inactive.corner_radius = r;
+        style.visuals.widgets.hovered.corner_radius = r;
+        style.visuals.widgets.active.corner_radius = r;
+        style.visuals.widgets.open.corner_radius = r;
+        style.visuals.widgets.noninteractive.corner_radius = r;
 
-    // Set the theme.
-    match ctx.theme() {
-        egui::Theme::Light => {
-            catppuccin_egui::set_theme(ctx, catppuccin_egui::LATTE);
-        }
-        egui::Theme::Dark => {
-            catppuccin_egui::set_theme(ctx, catppuccin_egui::FRAPPE);
-        }
-    }
+        // Centered shadow on windows.
+        let alpha = if style.visuals.dark_mode { 75 } else { 40 };
+        style.visuals.window_shadow = egui::epaint::Shadow {
+            offset: [0, 0],
+            blur: 25,
+            spread: 5,
+            color: egui::Color32::from_black_alpha(alpha),
+        };
+    });
 }
