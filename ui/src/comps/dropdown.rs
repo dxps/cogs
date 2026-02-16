@@ -1,9 +1,4 @@
-use egui::{CursorIcon, Id, Popup, Response, RichText, Sense, Style, TextStyle, TextWrapMode, Ui, WidgetText, pos2};
-
-use crate::{
-    comps::{menu_row, paint_combo_chevron},
-    constants::CORNER_RADIUS,
-};
+use egui::{Popup, Style, Ui};
 
 #[derive(Clone, Copy, Debug)]
 pub struct DropdownStyle {
@@ -47,11 +42,6 @@ impl<T: Clone> DropdownItem<T> {
             italic: false,
         }
     }
-
-    pub fn italic(mut self, yes: bool) -> Self {
-        self.italic = yes;
-        self
-    }
 }
 
 pub struct Dropdown;
@@ -71,24 +61,25 @@ impl Dropdown {
             .unwrap_or(("", false));
 
         let resolved_width = resolve_width(ui, items, selected_label, style);
-        let row_width = style.row_width.unwrap_or(resolved_width);
-
         let trigger = Self::trigger(ui, selected_label, resolved_width, style, selected_italic);
         let popup_style = Self::popup_style(ui);
 
         let mut picked: Option<T> = None;
-        egui::Popup::menu(&trigger)
-            .id(id)
-            .style(popup_style)
-            .gap(style.gap)
-            .show(|ui| {
-                for item in items {
-                    if crate::comps::menu_row(ui, &item.label, item.italic, Some(row_width)).clicked() {
-                        picked = Some(item.value.clone());
-                        ui.close();
-                    }
+        Popup::menu(&trigger).id(id).style(popup_style).gap(style.gap).show(|ui| {
+            // Keep popup anchored to dropdown width (or explicit override)
+            let popup_w = style.row_width.unwrap_or(resolved_width);
+
+            // Constrain popup/frame width
+            ui.set_min_width(popup_w);
+            ui.set_max_width(popup_w);
+
+            for item in items {
+                if crate::comps::menu_row(ui, &item.label, item.italic, Some(popup_w)).clicked() {
+                    picked = Some(item.value.clone());
+                    ui.close();
                 }
-            });
+            }
+        });
 
         picked
     }
@@ -180,4 +171,5 @@ fn text_width(ui: &Ui, font_id: &egui::FontId, text: &str) -> f32 {
         .layout_no_wrap(text.to_owned(), font_id.clone(), ui.visuals().text_color())
         .size()
         .x
+        + 8.0 // add some padding to prevent text from being too close to the chevron.
 }

@@ -27,10 +27,16 @@ pub enum ExploreCategory {
 pub enum ExploreKind {
     #[default]
     All,
-    Attribute,
-    AttributeTemplate,
-    Item,
+    // Used when Category::Templates.
+    TemplateType(TemplateTypeFilter),
+    // Used when Category::Items.
+    ItemTemplateId(Id),
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub enum TemplateTypeFilter {
     ItemTemplate,
+    AttributeTemplate,
 }
 
 pub struct Explore {}
@@ -68,6 +74,68 @@ impl AppView for Explore {
 }
 
 fn show_table_cell(ctx: &mut CogsApp, ectx: &egui::Context, strip: &mut Strip<'_, '_>) {
+    // Keep `kind` valid whenever category changes or persisted state is stale.
+    fn normalize_kind_for_category(ctx: &mut CogsApp) {
+        match ctx.state.explore.category {
+            ExploreCategory::Templates => match ctx.state.explore.kind {
+                ExploreKind::All | ExploreKind::TemplateType(_) => {}
+                ExploreKind::ItemTemplateId(_) => {
+                    ctx.state.explore.kind = ExploreKind::All;
+                }
+            },
+            ExploreCategory::Items => match ctx.state.explore.kind {
+                ExploreKind::All | ExploreKind::ItemTemplateId(_) => {}
+                ExploreKind::TemplateType(_) => {
+                    ctx.state.explore.kind = ExploreKind::All;
+                }
+            },
+        }
+    }
+
+    // Optional: clear current selection if it no longer passes active filter.
+    fn selection_passes_filter(ctx: &CogsApp) -> bool {
+        let Some((sel_kind, sel_id)) = &ctx.state.explore.curr_sel_elem else {
+            return true;
+        };
+
+        match ctx.state.explore.category {
+            ExploreCategory::Templates => match &ctx.state.explore.kind {
+                ExploreKind::All => {
+                    // Any template kind visible.
+                    *sel_kind == Kind::ItemTemplate || *sel_kind == Kind::AttributeTemplate
+                }
+                ExploreKind::TemplateType(TemplateTypeFilter::ItemTemplate) => {
+                    *sel_kind == Kind::ItemTemplate
+                }
+                ExploreKind::TemplateType(TemplateTypeFilter::AttributeTemplate) => {
+                    *sel_kind == Kind::AttributeTemplate
+                }
+                ExploreKind::ItemTemplateId(_) => true, // normalized away above
+            },
+
+            ExploreCategory::Items => match &ctx.state.explore.kind {
+                ExploreKind::All => {
+                    // Any item visible in Items category.
+                    // Assuming you store selected item as Kind::ItemTemplate? adjust if you have Kind::Item.
+                    true
+                }
+                ExploreKind::ItemTemplateId(tpl_id) => {
+                    // If selection points to an item, keep only if item's template matches tpl_id.
+                    // TODO
+                    // ctx.state
+                    //     .data
+                    //     .get_items() // TODO
+                    //     .iter()
+                    //     .find(|it| it.id == *sel_id)
+                    //     .map(|it| it.template_id == *tpl_id) // <- replace field name if different
+                    //     .unwrap_or(false)
+                    true 
+                }
+                ExploreKind::TemplateType(_) => true, // normalized away above
+            },
+        }
+    }
+
     strip.cell(|ui| {
         ui.vertical(|ui| {
             ui.horizontal(|ui| {
@@ -75,12 +143,23 @@ fn show_table_cell(ctx: &mut CogsApp, ectx: &egui::Context, strip: &mut Strip<'_
                 ui.add_space(15.0);
                 show_kind(ctx, ui);
                 ui.add_space(15.0);
-                show_add_menu(ctx, ui); // The "+" button and its menu.
-            })
+                show_add_menu(ctx, ui);
+            });
         });
 
+        // Ensure filter state coherence before rendering table.
+        normalize_kind_for_category(ctx);
+
+        // If current selection is not visible with current filters, clear it.
+        if !selection_passes_filter(ctx) {
+            ctx.state.explore.curr_sel_elem = None;
+        }
+
+        // Table is expected to read `ctx.state.explore.category` and `ctx.state.explore.kind`
+        // and apply filtering internally.
         ExploreTable::show(ctx, ui);
 
+        // Open windows (unchanged).
         for (_, element) in ctx.state.explore.open_windows_item_template.clone().iter() {
             ectx.data_mut(|d| d.insert_temp(egui::Id::from(EXPLORE_ELEMENT), element.clone()));
             ItemTemplateWindow::show(ctx, ui);
@@ -90,41 +169,7 @@ fn show_table_cell(ctx: &mut CogsApp, ectx: &egui::Context, strip: &mut Strip<'_
             AttrTemplateWindow::show(ctx, ui);
         }
     });
-}
 
-fn show_preview_cell(ctx: &mut CogsApp, ectx: &egui::Context,  strip: &mut Strip<'_, '_>) {
-    strip.cell(|ui| {
-        ui.vertical(|ui| {
-            ui.add_space(45.0);
-            if let Some((kind, id)) = &ctx.state.explore.curr_sel_elem {
-                match kind {
-                    Kind::AttributeTemplate => {
-                        for elem in ctx.state.data.get_attr_templates().iter() {
-                            if elem.id == *id {
-                                ectx.data_mut(|d| {
-                                    d.insert_temp(egui::Id::from(EXPLORE_ELEMENT), elem.clone())
-                                });
-                                break;
-                            }
-                        }
-                        AttrTemplatePreview::show(ctx, ui);
-                    }
-                    Kind::ItemTemplate => {
-                        for elem in ctx.state.data.get_item_templates().iter() {
-                            if elem.id == *id {
-                                ectx.data_mut(|d| {
-                                    d.insert_temp(egui::Id::from(EXPLORE_ELEMENT), elem.clone())
-                                });
-                                break;
-                            }
-                        }
-                        ItemTemplatePreview::show(ctx, ui);
-                    }
-                    _ => {}
-                }
-            }
-        });
-    });
 }
 
 fn show_category(ctx: &mut CogsApp, ui: &mut egui::Ui) {
@@ -152,20 +197,73 @@ fn show_category(ctx: &mut CogsApp, ui: &mut egui::Ui) {
     });
 }
 
+// ///////// kind related parts, which are conditional on the selected category. ///////////
+
+/// #[derive(Clone)]
+struct KindOption {
+    label: String,
+    value: ExploreKind,
+    italic: bool,
+}
+
+fn build_kind_options(ctx: &CogsApp) -> Vec<KindOption> {
+    let mut out = vec![KindOption {
+        label: "all".to_string(),
+        value: ExploreKind::All,
+        italic: true,
+    }];
+
+    match ctx.state.explore.category {
+        ExploreCategory::Templates => {
+            out.push(KindOption {
+                label: "Item Template".to_string(),
+                value: ExploreKind::TemplateType(TemplateTypeFilter::ItemTemplate),
+                italic: false,
+            });
+            out.push(KindOption {
+                label: "Attribute Template".to_string(),
+                value: ExploreKind::TemplateType(TemplateTypeFilter::AttributeTemplate),
+                italic: false,
+            });
+        }
+        ExploreCategory::Items => {
+            for t in ctx.state.data.get_item_templates() {
+                out.push(KindOption {
+                    label: t.name.clone(), // or title/display_name
+                    value: ExploreKind::ItemTemplateId(t.id.clone()),
+                    italic: false,
+                });
+            }
+        }
+    }
+
+    out
+}
+
+
 fn show_kind(ctx: &mut CogsApp, ui: &mut Ui) {
     ui.label("Kind:");
 
-    let mut items = vec![DropdownItem::new("all", ExploreKind::All).italic(true)];
-    if ctx.state.explore.category == ExploreCategory::Templates {
-        items.push(DropdownItem::new("Item Template", ExploreKind::ItemTemplate));
-        items.push(DropdownItem::new("Attribute Template", ExploreKind::AttributeTemplate));
+    let kind_opts = build_kind_options(ctx);
+    let dd_items: Vec<DropdownItem<ExploreKind>> = kind_opts
+        .iter()
+        .map(|k| DropdownItem {
+            label: k.label.clone(),
+            value: k.value.clone(),
+            italic: k.italic,
+        })
+        .collect();
+
+    // Keep current kind valid for current category/options
+    if !dd_items.iter().any(|i| i.value == ctx.state.explore.kind) {
+        ctx.state.explore.kind = ExploreKind::All;
     }
 
     if let Some(v) = Dropdown::show(
         ui,
         ui.id().with("explore_kind_popup"),
         &ctx.state.explore.kind,
-        &items,
+        &dd_items,
         DropdownStyle::default(),
     ) {
         ctx.state.explore.kind = v;
@@ -173,10 +271,11 @@ fn show_kind(ctx: &mut CogsApp, ui: &mut Ui) {
 
     ui.label(RichText::new(ICON_HELP).color(Color32::GRAY).size(10.0))
         .on_hover_text(
-            "If category is:\n- 'Items', you may filter by their templates.\n- 'Templates', you may filter by their types.",
+            "If category is:\n- 'Items', you may filter by item template.\n- 'Templates', you may filter by template type.",
         )
         .on_hover_cursor(CursorIcon::Help);
 }
+
 
 fn show_add_menu(ctx: &mut CogsApp, ui: &mut Ui) {
     //
@@ -301,4 +400,39 @@ fn show_add_menu(ctx: &mut CogsApp, ui: &mut Ui) {
                 ui.ctx().request_repaint();
             }
         });
+}
+
+fn show_preview_cell(ctx: &mut CogsApp, ectx: &egui::Context,  strip: &mut Strip<'_, '_>) {
+    strip.cell(|ui| {
+        ui.vertical(|ui| {
+            ui.add_space(45.0);
+            if let Some((kind, id)) = &ctx.state.explore.curr_sel_elem {
+                match kind {
+                    Kind::AttributeTemplate => {
+                        for elem in ctx.state.data.get_attr_templates().iter() {
+                            if elem.id == *id {
+                                ectx.data_mut(|d| {
+                                    d.insert_temp(egui::Id::from(EXPLORE_ELEMENT), elem.clone())
+                                });
+                                break;
+                            }
+                        }
+                        AttrTemplatePreview::show(ctx, ui);
+                    }
+                    Kind::ItemTemplate => {
+                        for elem in ctx.state.data.get_item_templates().iter() {
+                            if elem.id == *id {
+                                ectx.data_mut(|d| {
+                                    d.insert_temp(egui::Id::from(EXPLORE_ELEMENT), elem.clone())
+                                });
+                                break;
+                            }
+                        }
+                        ItemTemplatePreview::show(ctx, ui);
+                    }
+                    _ => {}
+                }
+            }
+        });
+    });
 }
