@@ -10,7 +10,8 @@ pub const ICON_HOME: &str = "\u{2771}"; //
 pub const ICON_EXPLORE: &str = "\u{E619}";
 pub const ICON_ITEM: &str = "\u{E0CF}";
 pub const ICON_RARROW: &str = "\u{F44A}";
-pub const ICON_FOLDER: &str = "\u{E613}";
+// TODO: To be used.
+// pub const ICON_FOLDER: &str = "\u{E613}";
 pub const ICON_ATTR_TMPL: &str = "\u{EB04}";
 pub const ICON_ITEM_TMPL: &str = "\u{E873}";
 pub const ICON_SETTINGS: &str = "\u{E615}";

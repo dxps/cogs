@@ -3,7 +3,7 @@ use crate::{
     comps::{
         AppComponent, AttrTemplatePreview, AttrTemplateWindow, Dropdown, DropdownItem, DropdownStyle, ExploreTable, ItemTemplatePreview, ItemTemplateWindow, menu_row
     },
-    constants::{EXPLORE_ELEMENT, ICON_ATTR_TMPL, ICON_HELP, ICON_ITEM, ICON_ITEM_TMPL, ICON_RARROW, ICON_SETTINGS, ICON_TMPL, POPUP_ROW_WIDTH},
+    constants::{EXPLORE_ELEMENT, ICON_ATTR_TMPL, ICON_HELP, ICON_ITEM, ICON_ITEM_TMPL, ICON_RARROW, ICON_TMPL, POPUP_ROW_WIDTH},
     views::AppView,
 };
 use cogs_shared::domain::model::{
@@ -110,7 +110,7 @@ fn show_table_cell(ctx: &mut CogsApp, ectx: &egui::Context, strip: &mut Strip<'_
                 ExploreKind::TemplateType(TemplateTypeFilter::AttributeTemplate) => {
                     *sel_kind == Kind::AttributeTemplate
                 }
-                ExploreKind::ItemTemplateId(_) => true, // normalized away above
+                ExploreKind::ItemTemplateId(_) => true,
             },
 
             ExploreCategory::Items => match &ctx.state.explore.kind {

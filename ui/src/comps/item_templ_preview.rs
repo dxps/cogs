@@ -1,6 +1,11 @@
-use crate::{CogsApp, comps::AppComponent, constants::EXPLORE_ELEMENT};
+use crate::{
+    CogsApp,
+    comps::AppComponent,
+    constants::{EXPLORE_ELEMENT, ICON_ITEM_TMPL},
+    utils::strong_separator,
+};
 use cogs_shared::domain::model::meta::ItemTemplate;
-use egui::{Align, FontId, Grid, Label, Layout, TextStyle};
+use egui::{Align, CursorIcon, FontId, Grid, Label, Layout, TextStyle};
 
 pub struct ItemTemplatePreview {}
 
@@ -16,16 +21,20 @@ impl AppComponent for ItemTemplatePreview {
             .clone()
             .unwrap_or_default();
 
+        ui.label(format!("{} {}", ICON_ITEM_TMPL, element.name.as_str()))
+            .on_hover_cursor(CursorIcon::Help)
+            .on_hover_text("This is an item template.");
+
+        ui.add_space(4.0);
+        strong_separator(ui, ui.available_width());
+        ui.add_space(2.0);
+
         ui.scope(|ui| {
             // Apply once for everything inside this scope.
             let font = FontId::proportional(12.0);
             ui.style_mut().text_styles.insert(TextStyle::Body, font.clone());
 
             Grid::new("explore_curr_elem_preview").num_columns(2).show(ui, |ui| {
-                ui.add_enabled(false, Label::new("name"));
-                ui.add(Label::new(element.name.as_str()));
-                ui.end_row();
-
                 ui.add_enabled(false, Label::new("description"));
                 ui.add(Label::new(element.description.as_str()));
                 ui.end_row();
@@ -73,5 +82,8 @@ impl AppComponent for ItemTemplatePreview {
                 ui.end_row();
             });
         });
+
+        ui.add_space(3.0);
+        strong_separator(ui, ui.available_width());
     }
 }
