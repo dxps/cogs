@@ -5,7 +5,7 @@ pub fn paint_combo_chevron(ui: &egui::Ui, rect: egui::Rect) {
     // Position near right side of the trigger rect
     let cx = rect.right() - 16.0;
     let cy = rect.center().y;
-    let w = 5.0;
+    let w = 4.4;
     let h = 3.0;
 
     let points = vec![egui::pos2(cx - w, cy - h), egui::pos2(cx + w, cy - h), egui::pos2(cx, cy + h)];

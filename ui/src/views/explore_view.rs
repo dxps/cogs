@@ -3,7 +3,7 @@ use crate::{
     comps::{
         AppComponent, AttrTemplatePreview, AttrTemplateWindow, Dropdown, DropdownItem, DropdownStyle, ExploreTable, ItemTemplatePreview, ItemTemplateWindow, menu_row
     },
-    constants::{EXPLORE_ELEMENT, ICON_HELP, ICON_SETTINGS, POPUP_ROW_WIDTH},
+    constants::{EXPLORE_ELEMENT, ICON_ATTR_TMPL, ICON_HELP, ICON_ITEM, ICON_ITEM_TMPL, ICON_RARROW, ICON_SETTINGS, ICON_TMPL, POPUP_ROW_WIDTH},
     views::AppView,
 };
 use cogs_shared::domain::model::{
@@ -309,14 +309,14 @@ fn show_add_menu(ctx: &mut CogsApp, ui: &mut Ui) {
         .style(popup_style)
         .gap(5.0)
         .show(|ui| {
-            if menu_row(ui, concatcp!(ICON_SETTINGS, "  Item"), false, None).clicked() {
+            if menu_row(ui, concatcp!(ICON_ITEM, "   Item"), false, Some(115.0)).clicked() {
                 // TODO: open item form.
                 ui.close();
             }
 
             ui.separator();
 
-            let templates_resp = menu_row(ui, "  Templates  >", false, None);
+            let templates_resp = menu_row(ui, concatcp!(ICON_TMPL, "   Templates  ", ICON_RARROW), false, Some(115.0));
 
             let submenu_open_id = ui.id().with("templates_submenu_open");
             let submenu_rect_id = ui.id().with("templates_submenu_rect");
@@ -347,7 +347,7 @@ fn show_add_menu(ctx: &mut CogsApp, ui: &mut Ui) {
                         egui::Frame::popup(&style).show(ui, |ui| {
                             ui.set_min_width(POPUP_ROW_WIDTH);
 
-                            if menu_row(ui, "  Item Template", false, Some(POPUP_ROW_WIDTH)).clicked() {
+                            if menu_row(ui, concatcp!(ICON_ITEM_TMPL, "   Item Template"), false, Some(150.0)).clicked() {
                                 ctx.state
                                     .explore
                                     .open_windows_item_template
@@ -355,7 +355,7 @@ fn show_add_menu(ctx: &mut CogsApp, ui: &mut Ui) {
                                 ui.close();
                             }
 
-                            if menu_row(ui, "  Attribute Template", false, Some(POPUP_ROW_WIDTH)).clicked() {
+                            if menu_row(ui, concatcp!(ICON_ATTR_TMPL, "   Attribute Template"), false, Some(150.0)).clicked() {
                                 ctx.state
                                     .explore
                                     .open_windows_attr_template

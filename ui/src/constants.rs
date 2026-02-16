@@ -1,17 +1,24 @@
-///////////
-// Icons //
-///////////
+/////////////////////////////////////////////////
+// Icons                                       //
+// These are taken from font's glyphs unicode. //
+/////////////////////////////////////////////////
 
 // pub const ICON_HOME: &str = "\u{2302}"; //
 pub const ICON_HOME: &str = "\u{2771}"; //
 // pub const ICON_EXPLORE: &str = "\u{26EF}"; // a symbol for lighthouse (⛯)
 // pub const ICON_EXPLORE: &str = "\u{221E}"; // infinity symbol
 pub const ICON_EXPLORE: &str = "\u{E619}";
+pub const ICON_ITEM: &str = "\u{E0CF}";
+pub const ICON_RARROW: &str = "\u{F44A}";
+pub const ICON_FOLDER: &str = "\u{E613}";
+pub const ICON_ATTR_TMPL: &str = "\u{EB04}";
+pub const ICON_ITEM_TMPL: &str = "\u{E873}";
 pub const ICON_SETTINGS: &str = "\u{E615}";
 pub const ICON_USER: &str = "\u{F4CA}";
 pub const ICON_LOGIN: &str = "\u{E81E}";
 pub const ICON_LOGOUT: &str = "\u{E824}";
 pub const ICON_HELP: &str = "\u{E66A}";
+pub const ICON_TMPL: &str = "\u{E64E}";
 
 ///////////////////////////
 // General app constants //
