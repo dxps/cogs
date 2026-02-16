@@ -28,8 +28,9 @@ pub enum ExploreKind {
     #[default]
     All,
     Attribute,
-    Link,
+    AttributeTemplate,
     Item,
+    ItemTemplate,
 }
 
 pub struct Explore {}
@@ -141,10 +142,9 @@ fn show_category(ctx: &mut CogsApp, ui: &mut egui::Ui) {
             &ctx.state.explore.category,
             &items,
             DropdownStyle {
-                width: 120.0,
-                height: 20.0,
-                gap: 4.0,
-                row_width: Some(100.0),
+                // min_width: 120.0,
+                // max_width: Some(260.0), // optional guard, if layout is tight.
+                ..Default::default()
             },
         ) {
             ctx.state.explore.category = v;
@@ -157,8 +157,8 @@ fn show_kind(ctx: &mut CogsApp, ui: &mut Ui) {
 
     let mut items = vec![DropdownItem::new("all", ExploreKind::All).italic(true)];
     if ctx.state.explore.category == ExploreCategory::Templates {
-        items.push(DropdownItem::new("Item", ExploreKind::Item));
-        items.push(DropdownItem::new("Attribute", ExploreKind::Attribute));
+        items.push(DropdownItem::new("Item Template", ExploreKind::ItemTemplate));
+        items.push(DropdownItem::new("Attribute Template", ExploreKind::AttributeTemplate));
     }
 
     if let Some(v) = Dropdown::show(
