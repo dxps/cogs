@@ -1,8 +1,8 @@
 use crate::domain::model::{Id, meta::AttrTemplate};
 use serde::{Deserialize, Serialize};
 
+/// A template for an item.
 #[derive(Debug, Default, PartialEq, Eq, Clone, Serialize, Deserialize)]
-/// A template for an item .
 pub struct ItemTemplate {
     pub id: Id,
     pub name: String,

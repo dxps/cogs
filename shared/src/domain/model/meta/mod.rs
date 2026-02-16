@@ -1,8 +1,8 @@
 mod attr;
 pub use attr::*;
 
-mod item_template;
-pub use item_template::*;
+mod item_tmpl;
+pub use item_tmpl::*;
 
 mod kind;
 pub use kind::*;

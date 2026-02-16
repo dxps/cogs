@@ -174,7 +174,7 @@ fn show_table_cell(ctx: &mut CogsApp, ectx: &egui::Context, strip: &mut Strip<'_
 
 fn show_category(ctx: &mut CogsApp, ui: &mut egui::Ui) {
     ui.horizontal(|ui| {
-        ui.label("Category:");
+        ui.label("Category");
 
         let items = vec![
             DropdownItem::new("Items", ExploreCategory::Items),
@@ -242,7 +242,7 @@ fn build_kind_options(ctx: &CogsApp) -> Vec<KindOption> {
 
 
 fn show_kind(ctx: &mut CogsApp, ui: &mut Ui) {
-    ui.label("Kind:");
+    ui.label("Kind");
 
     let kind_opts = build_kind_options(ctx);
     let dd_items: Vec<DropdownItem<ExploreKind>> = kind_opts

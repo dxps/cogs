@@ -1,7 +1,7 @@
 use crate::{
     CogsApp,
     comps::AppComponent,
-    constants::{CORNER_RADIUS, EXPLORE_ELEMENT},
+    constants::{CORNER_RADIUS, EXPLORE_ELEMENT, FORM_FIELD_W},
 };
 use cogs_shared::domain::model::{
     Action, Id,
@@ -16,8 +16,6 @@ use std::{
     collections::HashMap,
     sync::{Arc, Mutex},
 };
-
-const FORM_FIELD_W: f32 = 240.0;
 
 pub struct ItemTemplateWindow;
 

@@ -23,7 +23,7 @@ pub enum AttributeValueType {
     Date,
 
     /// This is mapped to PostgreSQL's `TIMESTAMP` (without time zone) data type.
-    #[strum(to_string = "timestamp")]
+    #[strum(to_string = "datetime")]
     DateTime,
 }
 
@@ -35,7 +35,7 @@ impl From<&str> for AttributeValueType {
             "numeric" => Self::Numeric,
             "boolean" => Self::Boolean,
             "date" => Self::Date,
-            "timestamp" => Self::DateTime,
+            "datetime" => Self::DateTime,
             _ => Self::Text,
         }
     }
