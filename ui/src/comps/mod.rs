@@ -6,6 +6,9 @@ pub use attr_templ_preview::*;
 mod attr_tmpl_win;
 pub use attr_tmpl_win::*;
 
+mod dropdown;
+pub use dropdown::*;
+
 mod explore_table;
 pub use explore_table::*;
 
@@ -20,9 +23,6 @@ pub use item_templ_preview::*;
 
 mod item_tmpl_win;
 pub use item_tmpl_win::*;
-
-mod link_tmpl_win;
-pub use link_tmpl_win::*;
 
 mod modal;
 pub use modal::*;

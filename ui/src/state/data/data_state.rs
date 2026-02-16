@@ -3,7 +3,7 @@ use cogs_shared::{
     app::{AppError, AppResult},
     domain::model::{
         Id,
-        meta::{AttrTemplate, ItemTemplate, Kind, LinkTemplate},
+        meta::{AttrTemplate, ItemTemplate, Kind},
     },
     dtos::IdDto,
 };
@@ -204,31 +204,6 @@ impl DataState {
                 log::info!("[DataState::delete_item_template] Failed to send UiMessage. Error: {e}");
             }
             ectx.request_repaint();
-        });
-    }
-
-    // -----------------
-    // LinkTemplate mgmt
-    // -----------------
-
-    pub fn save_link_template(&self, element: LinkTemplate, ectx: &egui::Context, sender: Sender<UiMessage>) {
-        //
-        let mut req = ehttp::Request::post(
-            "http://localhost:9010/api/link_templates",
-            serde_json::json!(element).to_string().into_bytes(),
-        );
-        req.headers.insert("content-type", "application/json");
-        let ectx = ectx.clone();
-        ehttp::fetch(req, move |rsp| {
-            log::info!("[DataState::save_link_template] Response: {:?}", rsp);
-            if let Ok(rsp) = rsp {
-                let dto: IdDto = serde_json::from_str(rsp.text().unwrap_or_default()).unwrap();
-                log::debug!("[DataState::save_link_template] Got saved id: {}", dto.id);
-                if let Err(e) = sender.send(UiMessage::ElementUpdated(Kind::LinkTemplate, Ok(dto.id))) {
-                    log::info!("[DataState::save_link_template] Failed to send UiMessage. Error: {e}");
-                }
-                ectx.request_repaint();
-            }
         });
     }
 }

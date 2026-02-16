@@ -1,18 +1,17 @@
 use crate::{
     CogsApp,
     comps::{
-        AppComponent, AttrTemplateWindow, AttrTemplatePreview, ExploreTable, ItemTemplateWindow, ItemTemplatePreview, LinkTemplateForm,
-        menu_row, paint_combo_chevron,
+        AppComponent, AttrTemplatePreview, AttrTemplateWindow, Dropdown, DropdownItem, DropdownStyle, ExploreTable, ItemTemplatePreview, ItemTemplateWindow, menu_row
     },
-    constants::{CORNER_RADIUS, EXPLORE_ELEMENT, ICON_HELP, ICON_SETTINGS, POPUP_ROW_WIDTH},
+    constants::{EXPLORE_ELEMENT, ICON_HELP, ICON_SETTINGS, POPUP_ROW_WIDTH},
     views::AppView,
 };
 use cogs_shared::domain::model::{
     Id,
-    meta::{AttrTemplate, ItemTemplate, Kind, LinkTemplate},
+    meta::{AttrTemplate, ItemTemplate, Kind},
 };
 use const_format::concatcp;
-use egui::{Color32, CursorIcon, Popup, RichText, Sense, TextStyle, TextWrapMode, Ui, WidgetText, pos2};
+use egui::{Color32, CursorIcon, Popup, RichText, Sense, Ui};
 use egui_extras::{Size, Strip, StripBuilder};
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
@@ -89,10 +88,6 @@ fn show_table_cell(ctx: &mut CogsApp, ectx: &egui::Context, strip: &mut Strip<'_
             ectx.data_mut(|d| d.insert_temp(egui::Id::from(EXPLORE_ELEMENT), element.clone()));
             AttrTemplateWindow::show(ctx, ui);
         }
-        for (_, element) in ctx.state.explore.open_windows_link_template.clone().iter() {
-            ectx.data_mut(|d| d.insert_temp(egui::Id::from(EXPLORE_ELEMENT), element.clone()));
-            LinkTemplateForm::show(ctx, ui);
-        }
     });
 }
 
@@ -132,166 +127,53 @@ fn show_preview_cell(ctx: &mut CogsApp, ectx: &egui::Context,  strip: &mut Strip
 }
 
 fn show_category(ctx: &mut CogsApp, ui: &mut egui::Ui) {
-    //
     ui.horizontal(|ui| {
         ui.label("Category:");
 
-        let selected = match ctx.state.explore.category {
-            ExploreCategory::Items => "Items",
-            ExploreCategory::Templates => "Templates",
-        };
+        let items = vec![
+            DropdownItem::new("Items", ExploreCategory::Items),
+            DropdownItem::new("Templates", ExploreCategory::Templates),
+        ];
 
-        // Exact-size trigger rect.
-        let h = 20.0;
-        let w = 120.0;
-        let (rect, resp) = ui.allocate_exact_size(egui::vec2(w, h), egui::Sense::click());
-
-        let bg = if resp.is_pointer_button_down_on() {
-            ui.visuals().widgets.active.bg_fill
-        } else if resp.hovered() {
-            ui.visuals().widgets.hovered.bg_fill
-        } else {
-            // This matches ComboBox-like resting background best in most themes.
-            ui.visuals().widgets.inactive.bg_fill
-            // For an even closer to popup/button body in your theme.
-            // ui.visuals().widgets.open.bg_fill
-        };
-
-        ui.painter().rect_filled(rect, CORNER_RADIUS, bg);
-
-        // Show the text w/ the selected category.
-        ui.painter().text(
-            egui::pos2(rect.left() + 10.0, rect.center().y),
-            egui::Align2::LEFT_CENTER,
-            selected,
-            egui::TextStyle::Button.resolve(ui.style()),
-            ui.visuals().text_color(),
-        );
-
-        // Show the chevron (down arrow) symbol.
-        paint_combo_chevron(ui, rect);
-
-        let resp = resp.on_hover_cursor(egui::CursorIcon::PointingHand);
-
-        // Popup style that follows current theme (FRAPPE/LATTE).
-        let mut popup_style: egui::Style = ui.style().as_ref().clone();
-        let v = ui.visuals();
-
-        // Match popup background to the same family as the trigger (resp) background.
-        popup_style.visuals.window_fill = v.widgets.inactive.bg_fill;
-        popup_style.visuals.panel_fill = v.widgets.inactive.bg_fill;
-        popup_style.visuals.extreme_bg_color = v.widgets.inactive.bg_fill;
-
-        // Optional: keep row hover/active consistent with current theme.
-        popup_style.visuals.widgets.inactive.bg_fill = v.widgets.inactive.bg_fill;
-        popup_style.visuals.widgets.hovered.bg_fill = v.widgets.hovered.bg_fill;
-        popup_style.visuals.widgets.active.bg_fill = v.widgets.active.bg_fill;
-        popup_style.visuals.selection.bg_fill = v.selection.bg_fill;
-
-        Popup::menu(&resp)
-            .id(ui.id().with("explore_categ_popup"))
-            .style(popup_style)
-            .gap(4.0)
-            .show(|ui| {
-                if menu_row(ui, "Items", false, Some(100.0)).clicked() {
-                    ctx.state.explore.category = ExploreCategory::Items;
-                    ui.close();
-                }
-                if menu_row(ui, "Templates", false, Some(100.0)).clicked() {
-                    ctx.state.explore.category = ExploreCategory::Templates;
-                    ui.close();
-                }
-            });
+        if let Some(v) = Dropdown::show(
+            ui,
+            ui.id().with("explore_categ_popup"),
+            &ctx.state.explore.category,
+            &items,
+            DropdownStyle {
+                width: 120.0,
+                height: 20.0,
+                gap: 4.0,
+                row_width: Some(100.0),
+            },
+        ) {
+            ctx.state.explore.category = v;
+        }
     });
 }
 
 fn show_kind(ctx: &mut CogsApp, ui: &mut Ui) {
-    //
     ui.label("Kind:");
 
-    let selected_text = match ctx.state.explore.kind {
-        ExploreKind::All => "all",
-        ExploreKind::Item => "Item",
-        ExploreKind::Attribute => "Attribute",
-        ExploreKind::Link => "Link",
-    };
-    let is_all = ctx.state.explore.kind == ExploreKind::All;
-
-    let h = 20.0;
-    let w = 120.0;
-    let (rect, resp) = ui.allocate_exact_size(egui::vec2(w, h), Sense::click());
-
-    let (bg_inactive, bg_hovered, bg_active, sel_bg, text_inactive) = {
-        let v = ui.visuals();
-        (
-            v.widgets.inactive.bg_fill,
-            v.widgets.hovered.bg_fill,
-            v.widgets.active.bg_fill,
-            v.selection.bg_fill,
-            v.widgets.inactive.fg_stroke.color,
-        )
-    };
-
-    let bg = if resp.is_pointer_button_down_on() {
-        bg_active
-    } else if resp.hovered() {
-        bg_hovered
-    } else {
-        bg_inactive
-    };
-    ui.painter().rect_filled(rect, CORNER_RADIUS, bg);
-
-    // Paint selected text inside rect (no inner widget / no extra layout effects)
-    let mut rt = RichText::new(selected_text).color(text_inactive);
-    if is_all {
-        rt = rt.italics();
+    let mut items = vec![DropdownItem::new("all", ExploreKind::All).italic(true)];
+    if ctx.state.explore.category == ExploreCategory::Templates {
+        items.push(DropdownItem::new("Item", ExploreKind::Item));
+        items.push(DropdownItem::new("Attribute", ExploreKind::Attribute));
     }
-    let galley = WidgetText::from(rt).into_galley(ui, Some(TextWrapMode::Extend), f32::INFINITY, TextStyle::Button);
-    let text_pos = pos2(rect.left() + 10.0, rect.center().y - galley.size().y * 0.5);
-    ui.painter().galley(text_pos, galley, text_inactive);
 
-    paint_combo_chevron(ui, rect);
-
-    let resp = resp.on_hover_cursor(CursorIcon::PointingHand);
-
-    let mut popup_style: egui::Style = ui.style().as_ref().clone();
-    popup_style.visuals.window_fill = bg_inactive;
-    popup_style.visuals.panel_fill = bg_inactive;
-    popup_style.visuals.extreme_bg_color = bg_inactive;
-    popup_style.visuals.widgets.inactive.bg_fill = bg_inactive;
-    popup_style.visuals.widgets.hovered.bg_fill = bg_hovered;
-    popup_style.visuals.widgets.active.bg_fill = bg_active;
-    popup_style.visuals.selection.bg_fill = sel_bg;
-
-    Popup::menu(&resp)
-        .id(ui.id().with("explore_kind_popup"))
-        .style(popup_style)
-        .gap(4.0)
-        .show(|ui| {
-            if menu_row(ui, "all", true, Some(120.0)).clicked() {
-                ctx.state.explore.kind = ExploreKind::All;
-                ui.close();
-            }
-
-            if ctx.state.explore.category == ExploreCategory::Templates {
-                if menu_row(ui, "Item", false, Some(120.0)).clicked() {
-                    ctx.state.explore.kind = ExploreKind::Item;
-                    ui.close();
-                }
-                if menu_row(ui, "Attribute", false, Some(120.0)).clicked() {
-                    ctx.state.explore.kind = ExploreKind::Attribute;
-                    ui.close();
-                }
-                if menu_row(ui, "Link", false, Some(120.0)).clicked() {
-                    ctx.state.explore.kind = ExploreKind::Link;
-                    ui.close();
-                }
-            }
-        });
+    if let Some(v) = Dropdown::show(
+        ui,
+        ui.id().with("explore_kind_popup"),
+        &ctx.state.explore.kind,
+        &items,
+        DropdownStyle::default(),
+    ) {
+        ctx.state.explore.kind = v;
+    }
 
     ui.label(RichText::new(ICON_HELP).color(Color32::GRAY).size(10.0))
         .on_hover_text(
-            "If category is 'Items', you may filter by their templates.\nIf category is 'Templates', you may filter by their types.",
+            "If category is:\n- 'Items', you may filter by their templates.\n- 'Templates', you may filter by their types.",
         )
         .on_hover_cursor(CursorIcon::Help);
 }
@@ -382,13 +264,6 @@ fn show_add_menu(ctx: &mut CogsApp, ui: &mut Ui) {
                                 ui.close();
                             }
 
-                            if menu_row(ui, "  Link Template", false, Some(POPUP_ROW_WIDTH)).clicked() {
-                                ctx.state
-                                    .explore
-                                    .open_windows_link_template
-                                    .insert(Id::default(), Arc::new(Mutex::new(LinkTemplate::default())));
-                                ui.close();
-                            }
                         });
                     });
 
