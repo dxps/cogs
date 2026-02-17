@@ -1,14 +1,14 @@
 use crate::{
     CogsApp,
     comps::{
-        AppComponent, AttrTemplatePreview, AttrTemplateWindow, Dropdown, DropdownItem, DropdownStyle, ExploreTable, ItemTemplatePreview, ItemTemplateWindow, menu_row
+        AppComponent, AttrTemplatePreview, AttrTemplateWindow, Dropdown, DropdownItem, DropdownStyle, ExploreTable, ItemTemplatePreview, ItemTemplateWindow, ItemWindow, menu_row
     },
     constants::{EXPLORE_ELEMENT, ICON_ATTR_TMPL, ICON_HELP, ICON_ITEM, ICON_ITEM_TMPL, ICON_RARROW, ICON_TMPL, POPUP_ROW_WIDTH},
     views::AppView,
 };
 use cogs_shared::domain::model::{
     Id,
-    meta::{AttrTemplate, ItemTemplate, Kind},
+    meta::{AttrTemplate, Item, ItemTemplate, Kind},
 };
 use const_format::concatcp;
 use egui::{Color32, CursorIcon, Popup, RichText, Sense, Ui};
@@ -159,7 +159,8 @@ fn show_table_cell(ctx: &mut CogsApp, ectx: &egui::Context, strip: &mut Strip<'_
         // and apply filtering internally.
         ExploreTable::show(ctx, ui);
 
-        // Open windows (unchanged).
+        // ----------------------------------------------------------------------------------
+        // TODO: Move the followings to a specific function, as these are not table specific.
         for (_, element) in ctx.state.explore.open_windows_item_template.clone().iter() {
             ectx.data_mut(|d| d.insert_temp(egui::Id::from(EXPLORE_ELEMENT), element.clone()));
             ItemTemplateWindow::show(ctx, ui);
@@ -167,6 +168,10 @@ fn show_table_cell(ctx: &mut CogsApp, ectx: &egui::Context, strip: &mut Strip<'_
         for (_, element) in ctx.state.explore.open_windows_attr_template.clone().iter() {
             ectx.data_mut(|d| d.insert_temp(egui::Id::from(EXPLORE_ELEMENT), element.clone()));
             AttrTemplateWindow::show(ctx, ui);
+        }
+        for (_, element) in ctx.state.explore.open_windows_item.clone().iter() {
+            ectx.data_mut(|d| d.insert_temp(egui::Id::from(EXPLORE_ELEMENT), element.clone()));
+            ItemWindow::show(ctx, ui);
         }
     });
 
@@ -276,6 +281,7 @@ fn show_kind(ctx: &mut CogsApp, ui: &mut Ui) {
         .on_hover_cursor(CursorIcon::Help);
 }
 
+// ///////// "+" button menu ///////////
 
 fn show_add_menu(ctx: &mut CogsApp, ui: &mut Ui) {
     //
@@ -310,7 +316,10 @@ fn show_add_menu(ctx: &mut CogsApp, ui: &mut Ui) {
         .gap(5.0)
         .show(|ui| {
             if menu_row(ui, concatcp!(ICON_ITEM, "   Item"), false, Some(115.0)).clicked() {
-                // TODO: open item form.
+                 ctx.state
+                        .explore
+                        .open_windows_item
+                        .insert(Id::default(), Arc::new(Mutex::new(Item::default())));
                 ui.close();
             }
 

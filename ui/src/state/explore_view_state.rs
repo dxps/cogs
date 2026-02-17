@@ -1,7 +1,7 @@
 use crate::views::{ExploreCategory, ExploreKind};
 use cogs_shared::domain::model::{
     Id,
-    meta::{AttrTemplate, ItemTemplate, Kind},
+    meta::{AttrTemplate, Item, ItemTemplate, Kind},
 };
 use std::{
     collections::HashMap,
@@ -15,11 +15,15 @@ pub struct ExploreViewState {
 
     pub kind: ExploreKind,
 
-    /// The open windows for creating (one) or editing attribute templates.
+    /// The open windows for creating (one) or editing (one or more) items.
+    // #[serde(skip)]  todo: temporary used during form dev.
+    pub open_windows_item: HashMap<Id, Arc<Mutex<Item>>>,
+
+    /// The open windows for creating (one) or editing (one or more) attribute templates.
     // #[serde(skip)]  todo: temporary used during form dev.
     pub open_windows_attr_template: HashMap<Id, Arc<Mutex<AttrTemplate>>>,
 
-    /// The open windows for creating (one) or editing item templates.
+    /// The open windows for creating (one) or editing (one or more) item templates.
     // #[serde(skip)]  todo: temporary used during form dev.
     pub open_windows_item_template: HashMap<Id, Arc<Mutex<ItemTemplate>>>,
 
