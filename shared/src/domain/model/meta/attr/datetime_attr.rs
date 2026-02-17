@@ -2,7 +2,7 @@ use crate::domain::model::{Id, meta::AttrTemplate};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct DateTimeAttribute {
     /// Its identifier.
     pub id: Id,
@@ -13,15 +13,21 @@ pub struct DateTimeAttribute {
     /// Its value.
     pub value: DateTime<chrono::Utc>,
 
-    /// Its template id.
-    pub tmpl_id: Id,
+    /// Its (optional) template id.
+    pub tmpl_id: Option<Id>,
 
     /// Its owner (item) id.
     pub owner_id: Id,
 }
 
 impl DateTimeAttribute {
-    pub fn new(id: Id, name: String, value: DateTime<Utc>, tmpl_id: Id, owner_id: Id) -> Self {
+    pub fn new(
+        id: Id,
+        name: String,
+        value: DateTime<Utc>,
+        tmpl_id: Option<Id>,
+        owner_id: Id,
+    ) -> Self {
         Self {
             id,
             name,
@@ -33,16 +39,16 @@ impl DateTimeAttribute {
 }
 
 impl From<AttrTemplate> for DateTimeAttribute {
-    fn from(attr_def: AttrTemplate) -> Self {
-        let value: DateTime<Utc> = DateTime::parse_from_rfc3339(&attr_def.default_value)
+    fn from(at: AttrTemplate) -> Self {
+        let value: DateTime<Utc> = DateTime::parse_from_rfc3339(&at.default_value)
             .map(|dt| dt.with_timezone(&Utc))
             .unwrap_or_else(|_| Utc::now());
 
         Self::new(
             Id::default(), // its id
-            attr_def.name, // its name
+            at.name,       // its name
             value,         // its value
-            attr_def.id,   // its template id
+            Some(at.id),   // its template id
             Id::default(), // its owner id
         )
     }

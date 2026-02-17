@@ -1,7 +1,7 @@
 use crate::domain::model::{Id, meta::AttrTemplate};
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct BooleanAttribute {
     /// Its identifier.
     pub id: Id,
@@ -12,15 +12,15 @@ pub struct BooleanAttribute {
     /// Its value.
     pub value: bool,
 
-    /// Its template identifier.
-    pub tmpl_id: Id,
+    /// Its (optional) template id.
+    pub tmpl_id: Option<Id>,
 
-    /// Its owner identifier.
+    /// Its owner (item) id.
     pub owner_id: Id,
 }
 
 impl BooleanAttribute {
-    pub fn new(id: Id, name: String, value: bool, tmpl_id: Id, owner_id: Id) -> Self {
+    pub fn new(id: Id, name: String, value: bool, tmpl_id: Option<Id>, owner_id: Id) -> Self {
         Self {
             id,
             name,
@@ -32,13 +32,13 @@ impl BooleanAttribute {
 }
 
 impl From<AttrTemplate> for BooleanAttribute {
-    fn from(attr_def: AttrTemplate) -> Self {
-        let value = attr_def.default_value == "true";
+    fn from(at: AttrTemplate) -> Self {
+        let value = at.default_value == "true";
         Self::new(
             Id::default(), // its id
-            attr_def.name, // its name
+            at.name,       // its name
             value,         // its default value
-            attr_def.id,   // its template id
+            Some(at.id),   // its template id
             Id::default(), // owner id
         )
     }

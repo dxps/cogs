@@ -26,12 +26,12 @@ impl ItemTemplateRepo {
 
         sqlx::query!(
             r#"
-            INSERT INTO item_templates (id, name, description, listing_attr_templ_id)
+            INSERT INTO item_templates (id, name, description, listing_attr_tmpl_id)
             VALUES ($1, $2, $3, $4)
             ON CONFLICT (id) DO UPDATE
                 SET name = EXCLUDED.name,
                     description = EXCLUDED.description,
-                    listing_attr_templ_id = EXCLUDED.listing_attr_templ_id
+                    listing_attr_tmpl_id = EXCLUDED.listing_attr_tmpl_id
             "#,
             uuid_from(&item_tmpl.id),
             item_tmpl.name,
@@ -43,7 +43,7 @@ impl ItemTemplateRepo {
         .map_err(|e| AppError::from(e.to_string()))?;
 
         sqlx::query!(
-            r#"DELETE FROM item_templates_attr_templates_xref WHERE item_templ_id = $1"#,
+            r#"DELETE FROM item_templates_attr_templates_xref WHERE item_tmpl_id = $1"#,
             uuid_from(&item_tmpl.id),
         )
         .execute(&mut *txn)
@@ -54,7 +54,7 @@ impl ItemTemplateRepo {
             sqlx::query!(
                 r#"
                 INSERT INTO item_templates_attr_templates_xref
-                    (item_templ_id, attr_templ_id, show_index)
+                    (item_tmpl_id, attr_tmpl_id, show_index)
                 VALUES
                     ($1, $2, $3)
                 "#,
@@ -68,7 +68,7 @@ impl ItemTemplateRepo {
         }
 
         sqlx::query!(
-            r#"DELETE FROM item_template_links WHERE item_templ_id = $1"#,
+            r#"DELETE FROM item_template_links WHERE source_item_tmpl_id = $1"#,
             uuid_from(&item_tmpl.id),
         )
         .execute(&mut *txn)
@@ -79,12 +79,12 @@ impl ItemTemplateRepo {
             sqlx::query!(
                 r#"
                 INSERT INTO item_template_links
-                    (item_templ_id, link_name, target_item_templ_id, show_index)
+                    (name, source_item_tmpl_id, target_item_tmpl_id, show_index)
                 VALUES
                     ($1, $2, $3, $4)
                 "#,
-                uuid_from(&item_tmpl.id),
                 link.name,
+                uuid_from(&item_tmpl.id),
                 uuid_from(&link.item_template_id),
                 (index as i16) + 1,
             )
@@ -122,11 +122,11 @@ impl ItemTemplateRepo {
                 at.required                     AS at_required
             FROM item_templates it
             INNER JOIN attr_templates lat
-                ON lat.id = it.listing_attr_templ_id
+                ON lat.id = it.listing_attr_tmpl_id
             LEFT JOIN item_templates_attr_templates_xref x
-                ON x.item_templ_id = it.id
+                ON x.item_tmpl_id = it.id
             LEFT JOIN attr_templates at
-                ON at.id = x.attr_templ_id
+                ON at.id = x.attr_tmpl_id
             ORDER BY it.name ASC, x.show_index ASC
             "#
         )
@@ -169,11 +169,11 @@ impl ItemTemplateRepo {
             ItemTemplateLinkRow,
             r#"
             SELECT
-                l.item_templ_id         AS item_templ_id,
-                l.link_name             AS link_name,
-                l.target_item_templ_id  AS target_item_templ_id
+                l.name,
+                l.source_item_tmpl_id,
+                l.target_item_tmpl_id
             FROM item_template_links l
-            ORDER BY l.item_templ_id, l.show_index
+            ORDER BY l.source_item_tmpl_id, l.show_index
             "#
         )
         .fetch_all(self.dbcp.as_ref())
@@ -181,10 +181,10 @@ impl ItemTemplateRepo {
         .map_err(|e| AppError::from(e.to_string()))?;
 
         for row in link_rows {
-            if let Some(entry) = grouped.get_mut(&row.item_templ_id) {
+            if let Some(entry) = grouped.get_mut(&row.source_item_tmpl_id) {
                 entry.links.push(ItemTemplateLink {
-                    name: row.link_name,
-                    item_template_id: Id::from(row.target_item_templ_id.to_string()),
+                    name: row.name,
+                    item_template_id: Id::from(row.target_item_tmpl_id.to_string()),
                 });
             }
         }
@@ -226,7 +226,7 @@ struct ItemTemplateAttrRow {
 
 #[derive(Debug)]
 struct ItemTemplateLinkRow {
-    item_templ_id: Uuid,
-    link_name: String,
-    target_item_templ_id: Uuid,
+    name: String,
+    source_item_tmpl_id: Uuid,
+    target_item_tmpl_id: Uuid,
 }

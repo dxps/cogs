@@ -2,7 +2,7 @@ use crate::domain::model::{Id, meta::AttrTemplate};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct NumericAttribute {
     /// Its identifier.
     pub id: Id,
@@ -13,15 +13,15 @@ pub struct NumericAttribute {
     /// Its value.
     pub value: Decimal,
 
-    /// Its template id.
-    pub tmpl_id: Id,
+    /// Its (optional) template id.
+    pub tmpl_id: Option<Id>,
 
     /// Its owner (item) id.
     pub owner_id: Id,
 }
 
 impl NumericAttribute {
-    pub fn new(id: Id, name: String, value: Decimal, tmpl_id: Id, owner_id: Id) -> Self {
+    pub fn new(id: Id, name: String, value: Decimal, tmpl_id: Option<Id>, owner_id: Id) -> Self {
         Self {
             id,
             name,
@@ -33,25 +33,25 @@ impl NumericAttribute {
 }
 
 impl From<AttrTemplate> for NumericAttribute {
-    fn from(attr_tmpl: AttrTemplate) -> Self {
-        let value = match Decimal::from_str_exact(&attr_tmpl.default_value) {
+    fn from(at: AttrTemplate) -> Self {
+        let value = match Decimal::from_str_exact(&at.default_value) {
             Ok(v) => v,
             Err(e) => {
                 log::error!(
-                    "Failed to parse default value '{}' for numeric attribute '{}': {}. Defaulting to 0.",
-                    attr_tmpl.default_value,
-                    attr_tmpl.name,
+                    "Failed to parse default value '{}' for numeric attribute '{}': {}.",
+                    at.default_value,
+                    at.name,
                     e
                 );
                 Decimal::new(0, 0) // default to 0 if parsing fails
             }
         };
         Self::new(
-            Id::default(),  // its id
-            attr_tmpl.name, // its name
-            value,          // its default value
-            attr_tmpl.id,   // its template id
-            Id::default(),  // owner id
+            Id::default(), // its id
+            at.name,       // its name
+            value,         // its default value
+            Some(at.id),   // its template id
+            Id::default(), // owner id
         )
     }
 }
