@@ -1,5 +1,5 @@
 use crate::{
-    CogsApp,
+    CogsApp, ExploreViewState,
     comps::AppComponent,
     views::{ExploreCategory, ExploreKind, TemplateTypeFilter},
 };
@@ -33,13 +33,16 @@ impl AppComponent for ExploreTable {
             ui.add_space(10.0);
 
             let available_height = ui.available_height();
+            let w = ctx.state.explore.table_col_widths.unwrap_or([40.0, 120.0, 150.0]);
+
             let table = TableBuilder::new(ui)
+                .id_salt("explore_table")
                 .striped(true)
-                .resizable(false)
+                .resizable(true)
                 .cell_layout(egui::Layout::left_to_right(egui::Align::Center))
-                .column(Column::auto().at_least(50.0)) // type
-                .column(Column::auto().at_least(200.0)) // name
-                .column(Column::remainder()) // description
+                .column(Column::auto().at_least(40.0)) // type
+                .column(Column::initial(w[1]).at_least(100.0).at_most(250.0)) // name
+                .column(Column::initial(w[2]).at_least(100.0).at_most(400.0)) // description
                 .max_scroll_height(available_height)
                 .sense(Sense::click());
 
@@ -55,13 +58,19 @@ impl AppComponent for ExploreTable {
                 });
             });
 
+            let remember_widths = |body: &TableBody<'_>, explore: &mut ExploreViewState| {
+                let widths = body.widths();
+                if widths.len() >= 3 {
+                    explore.table_col_widths = Some([widths[0], widths[1], widths[2]]);
+                }
+            };
+
             match ctx.state.explore.category {
                 ExploreCategory::Items => {
-                    // TODO: render items table.
-                    // Important for future:
-                    // - ExploreKind::All => all items
-                    // - ExploreKind::ItemTemplateId(tid) => only items with template_id == tid
-                    table.body(|_body| {});
+                    table.body(|body| {
+                        // todo: render items rows here.
+                        remember_widths(&body, &mut ctx.state.explore);
+                    });
                 }
                 ExploreCategory::Templates => {
                     let (item_templates, attr_templates) = template_rows_filtered(ctx);
@@ -69,6 +78,8 @@ impl AppComponent for ExploreTable {
                     table.body(|mut body| {
                         show_attr_templates(ctx, &mut body, &attr_templates);
                         show_item_templates(ctx, &mut body, &item_templates);
+
+                        remember_widths(&body, &mut ctx.state.explore);
                     });
                 }
             }
