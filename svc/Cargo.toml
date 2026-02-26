@@ -32,15 +32,15 @@ axum_session_sqlx = { version = "=0.7",    features = [ "postgres", "tls-rustls"
 async-trait       = { version = "=0.1.89"  }
 
 thiserror         = { version = "=2.0.18"  }
-anyhow            = { version = "=1.0.101" }
+anyhow            = { version = "=1.0.102" }
 log               = { version = "=0.4.29"  }
-simple_logger     = { version = "=5.1.0"   }
+simple_logger     = { version = "=5.2.0"   }
 
 dotenvy           = { version = "=0.15.7"  }
 randoid           = { version = "=0.3.0"   }
 md5               = { version = "=0.8.0"   }
 config            = { version = "=0.15.19" }
-chrono            = { version = "=0.4.43"  }
+chrono            = { version = "=0.4.44"  }
 uuid              = { version = "=1.21.0", features = ["v7", "std"] }
 
 #######

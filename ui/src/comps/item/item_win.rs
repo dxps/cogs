@@ -1,7 +1,7 @@
 use crate::{CogsApp, comps::AppComponent, constants::EXPLORE_ELEMENT};
 use cogs_shared::domain::model::{
     Action, Id,
-    meta::{AttrTemplate, AttributeValueType, Item},
+    meta::{AttrTemplate, AttributeValueType, Item, ItemTemplate},
 };
 use egui::{Align, Button, Checkbox, ComboBox, CursorIcon, Direction, Grid, Label, Layout, Margin, Window, vec2};
 use std::sync::{Arc, Mutex};
@@ -9,16 +9,17 @@ use strum::IntoEnumIterator;
 
 pub struct ItemWindow;
 
-struct FormUiState {
+struct ItemWindowState {
     id: Id,
     act_id: egui::Id,
     focus_id: egui::Id,
     action: Action,
     title: &'static str,
     focus_name_once: bool,
+    from: Option<ItemTemplate>,
 }
 
-impl FormUiState {
+impl ItemWindowState {
     fn from_ctx(ectx: &egui::Context, element: &Item) -> Self {
         let id = element.id.clone();
         let act_id = egui::Id::from(format!("item_id_{}_action", id));
@@ -44,12 +45,13 @@ impl FormUiState {
             action,
             title,
             focus_name_once,
+            from: None,
         }
     }
 }
 
 impl ItemWindow {
-    fn render_header(ui: &mut egui::Ui, s: &FormUiState) {
+    fn render_header(ui: &mut egui::Ui, s: &ItemWindowState) {
         ui.horizontal(|ui| {
             ui.add_space(40.0);
             let w = ui.available_width() - 8.0; // right pad used in grid
@@ -73,7 +75,7 @@ impl ItemWindow {
         });
     }
 
-    fn render_form_grid(ui: &mut egui::Ui, ectx: &egui::Context, element: &mut Item, s: &mut FormUiState) {
+    fn render_form_grid(ui: &mut egui::Ui, ectx: &egui::Context, element: &mut Item, s: &mut ItemWindowState) {
         ui.horizontal(|ui| {
             ui.add_space(14.0);
             Grid::new(format!("item_win_{}_grid", s.id))
@@ -86,7 +88,13 @@ impl ItemWindow {
         });
     }
 
-    fn render_footer_buttons(app: &mut CogsApp, ui: &mut egui::Ui, ectx: &egui::Context, element: &mut Item, s: &FormUiState) {
+    fn render_footer_buttons(
+        app: &mut CogsApp,
+        ui: &mut egui::Ui,
+        ectx: &egui::Context,
+        element: &mut Item,
+        s: &ItemWindowState,
+    ) {
         ui.with_layout(Layout::right_to_left(Align::Min), |ui| {
             ui.add_space(18.0);
 
@@ -128,7 +136,7 @@ impl ItemWindow {
         });
     }
 
-    fn row_name(ui: &mut egui::Ui, ectx: &egui::Context, element: &mut AttrTemplate, s: &mut FormUiState) {
+    fn row_name(ui: &mut egui::Ui, ectx: &egui::Context, element: &mut AttrTemplate, s: &mut ItemWindowState) {
         ui.add_enabled(false, Label::new("            Name"));
         let resp = ui.add(egui::TextEdit::singleline(&mut element.name).interactive(!s.action.is_view()));
 
@@ -141,13 +149,13 @@ impl ItemWindow {
         ui.end_row();
     }
 
-    fn row_description(ui: &mut egui::Ui, element: &mut AttrTemplate, s: &FormUiState) {
+    fn row_description(ui: &mut egui::Ui, element: &mut AttrTemplate, s: &ItemWindowState) {
         ui.add_enabled(false, Label::new("   Description"));
         ui.add(egui::TextEdit::singleline(&mut element.description).interactive(!s.action.is_view()));
         ui.end_row();
     }
 
-    fn row_value_type(ui: &mut egui::Ui, element: &mut AttrTemplate, s: &FormUiState) {
+    fn row_value_type(ui: &mut egui::Ui, element: &mut AttrTemplate, s: &ItemWindowState) {
         ui.add_enabled(false, Label::new("    Value Type"));
         if s.action.is_view() {
             ui.add(egui::TextEdit::singleline(&mut element.value_type.to_string()).interactive(false));
@@ -164,7 +172,7 @@ impl ItemWindow {
         ui.end_row();
     }
 
-    fn row_default_value(ui: &mut egui::Ui, element: &mut AttrTemplate, s: &FormUiState) {
+    fn row_default_value(ui: &mut egui::Ui, element: &mut AttrTemplate, s: &ItemWindowState) {
         ui.add_enabled(false, Label::new("Default value"));
         if element.value_type == AttributeValueType::Boolean {
             if s.action.is_view() {
@@ -189,7 +197,7 @@ impl ItemWindow {
         ui.end_row();
     }
 
-    fn row_mandatory(ui: &mut egui::Ui, element: &mut AttrTemplate, s: &FormUiState) {
+    fn row_mandatory(ui: &mut egui::Ui, element: &mut AttrTemplate, s: &ItemWindowState) {
         ui.add_enabled(false, Label::new("    Mandatory"));
         if s.action.is_view() {
             ui.add_enabled(false, egui::Checkbox::new(&mut element.is_required, ""));
@@ -204,7 +212,7 @@ impl AppComponent for ItemWindow {
     type Context = CogsApp;
 
     /// It shows the form for creating or editing an item template.
-    /// In `ui.ctx().data` it expects an `Arc<Mutex<ItemTemplate>>` under `EXPLORE_ELEMENT`.
+    /// In `ui.ctx().data` it expects an `Arc<Mutex<Item>>` under `EXPLORE_ELEMENT`.
     fn show(ctx: &mut Self::Context, ui: &mut eframe::egui::Ui) {
         let ectx = ui.ctx();
 
@@ -214,7 +222,7 @@ impl AppComponent for ItemWindow {
             .unwrap_or_default();
 
         let mut element = binding.lock().unwrap();
-        let mut s = FormUiState::from_ctx(ectx, &element);
+        let mut s = ItemWindowState::from_ctx(ectx, &element);
 
         Window::new(format!("item_{}_win", element.id))
             .title_bar(false)

@@ -21,8 +21,8 @@ pub use footer::*;
 mod item_templ_preview;
 pub use item_templ_preview::*;
 
-mod item_win;
-pub use item_win::*;
+mod item;
+pub use item::*;
 
 mod item_tmpl_win;
 pub use item_tmpl_win::*;

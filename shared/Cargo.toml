@@ -5,14 +5,14 @@ version = "0.3.0"
 edition = "2024"
 
 [dependencies]
-serde         = { version = "=1.0.228", features = [ "derive" ] }
+serde         = { version = "=1.0.228", features = [ "derive" ]  }
 serde_json    = { version = "=1.0.149"  }
 thiserror     = { version = "=2.0.18"   }
-anyhow        = { version = "=1.0.101"  }
-chrono        = { version = "=0.4.43",  features = [ "serde" ] }
-strum         = { version = "=0.27.2",  features = [ "derive" ] }
-log           = { version = "=0.4.29",  features = [ "serde" ] }   # serde support for Level and LevelFilter.
-serde_with    = { version = "=3.16.1"   }
+anyhow        = { version = "=1.0.102"  }
+chrono        = { version = "=0.4.44",  features = [ "serde" ]   }
+strum         = { version = "=0.28.0",  features = [ "derive" ]  }
+log           = { version = "=0.4.29",  features = [ "serde" ]   }   # serde support for Level and LevelFilter.
+serde_with    = { version = "=3.17.0"   }
 rust_decimal  = { version = "=1.40.0"   , features = [ "serde" ] }
 
 [lints]
