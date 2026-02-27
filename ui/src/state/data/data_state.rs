@@ -7,9 +7,10 @@ use cogs_shared::{
     },
     dtos::IdDto,
 };
+use serde::{Deserialize, Serialize};
 use std::sync::mpsc::Sender;
 
-#[derive(Clone, Default, Debug, serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Default, Debug, Deserialize, Serialize)]
 #[serde(default)]
 pub struct DataState {
     #[serde(skip)]
@@ -23,6 +24,16 @@ pub struct DataState {
 
     #[serde(skip)]
     fetched_item_templates: bool,
+
+    /// An item can be created from a template or from scratch.
+    pub new_item_src_tmpl: Option<ItemTemplate>,
+    pub new_item_src_type: Option<SourceType>,
+}
+
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+pub enum SourceType {
+    Scratch,
+    Template,
 }
 
 impl DataState {

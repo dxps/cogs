@@ -6,6 +6,8 @@ use cogs_shared::{
     },
 };
 
+use crate::SourceType;
+
 #[derive(Clone, Debug, PartialEq)]
 pub enum UiMessage {
     Login(Result<Option<(UserAccount, String)>, AppError>),
@@ -24,4 +26,6 @@ pub enum UiMessage {
 
     AttrTemplatesFetched(Result<Vec<AttrTemplate>, AppError>),
     ItemTemplatesFetched(Result<Vec<ItemTemplate>, AppError>),
+
+    NewItemFrom(SourceType),
 }

@@ -1,7 +1,11 @@
-use crate::{CogsApp, comps::AppComponent, constants::EXPLORE_ELEMENT};
+use crate::{
+    CogsApp,
+    comps::{AppComponent, item::render_ask_window},
+    constants::EXPLORE_ELEMENT,
+};
 use cogs_shared::domain::model::{
     Action, Id,
-    meta::{AttrTemplate, AttributeValueType, Item, ItemTemplate},
+    meta::{AttrTemplate, AttributeValueType, Item},
 };
 use egui::{Align, Button, Checkbox, ComboBox, CursorIcon, Direction, Grid, Label, Layout, Margin, Window, vec2};
 use std::sync::{Arc, Mutex};
@@ -9,14 +13,13 @@ use strum::IntoEnumIterator;
 
 pub struct ItemWindow;
 
-struct ItemWindowState {
+pub(super) struct ItemWindowState {
     id: Id,
     act_id: egui::Id,
     focus_id: egui::Id,
     action: Action,
     title: &'static str,
     focus_name_once: bool,
-    from: Option<ItemTemplate>,
 }
 
 impl ItemWindowState {
@@ -45,7 +48,6 @@ impl ItemWindowState {
             action,
             title,
             focus_name_once,
-            from: None,
         }
     }
 }
@@ -222,7 +224,12 @@ impl AppComponent for ItemWindow {
             .unwrap_or_default();
 
         let mut element = binding.lock().unwrap();
-        let mut s = ItemWindowState::from_ctx(ectx, &element);
+        let mut state = ItemWindowState::from_ctx(ectx, &element);
+
+        if element.id.is_zero() {
+            render_ask_window(ctx, ui, &mut state);
+            return;
+        }
 
         Window::new(format!("item_{}_win", element.id))
             .title_bar(false)
@@ -231,11 +238,11 @@ impl AppComponent for ItemWindow {
             .frame(egui::Frame::window(&ectx.style()).inner_margin(Margin::ZERO))
             .show(ectx, |ui| {
                 ui.vertical(|ui| {
-                    Self::render_header(ui, &s);
+                    Self::render_header(ui, &state);
                     ui.add_space(20.0); // only the space you explicitly want
-                    Self::render_form_grid(ui, ectx, &mut element, &mut s);
+                    Self::render_form_grid(ui, ectx, &mut element, &mut state);
                     ui.add_space(20.0);
-                    Self::render_footer_buttons(ctx, ui, ectx, &mut element, &s);
+                    Self::render_footer_buttons(ctx, ui, ectx, &mut element, &state);
                     ui.add_space(10.0);
                 })
                 .response

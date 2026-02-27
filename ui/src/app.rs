@@ -125,7 +125,7 @@ impl eframe::App for CogsApp {
         Header::show(self, ectx);
 
         if let Ok(res) = self.recvr.try_recv() {
-            log::info!("Received {:?}", res);
+            log::trace!("Received {:?}", res);
             match res {
                 UiMessage::Login(data) => match data {
                     Ok(acc_sess) => match acc_sess {
@@ -232,6 +232,10 @@ impl eframe::App for CogsApp {
                         log::error!("[app.update] Error fetching item templates: {}", err);
                     }
                 },
+
+                UiMessage::NewItemFrom(source_type) => {
+                    self.state.data.new_item_src_type = Some(source_type);
+                }
             }
         }
 

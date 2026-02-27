@@ -1,7 +1,7 @@
 use crate::{
     CogsApp,
     comps::{
-        AppComponent, AttrTemplatePreview, AttrTemplateWindow, Dropdown, DropdownItem, DropdownStyle, ExploreTable, ItemTemplatePreview, ItemTemplateWindow, ItemWindow, NewItemWindowAsk, menu_row
+        AppComponent, AttrTemplatePreview, AttrTemplateWindow, Dropdown, DropdownItem, DropdownStyle, ExploreTable, ItemTemplatePreview, ItemTemplateWindow, ItemWindow, menu_row
     },
     constants::{EXPLORE_ELEMENT, ICON_ATTR_TMPL, ICON_HELP, ICON_ITEM, ICON_ITEM_TMPL, ICON_RARROW, ICON_TMPL, POPUP_ROW_WIDTH},
     views::AppView,
@@ -94,7 +94,7 @@ fn show_table_cell(ctx: &mut CogsApp, ectx: &egui::Context, strip: &mut Strip<'_
 
     // Optional: clear current selection if it no longer passes active filter.
     fn selection_passes_filter(ctx: &CogsApp) -> bool {
-        let Some((sel_kind, sel_id)) = &ctx.state.explore.curr_sel_elem else {
+        let Some((sel_kind, _sel_id)) = &ctx.state.explore.curr_sel_elem else {
             return true;
         };
 
@@ -119,7 +119,7 @@ fn show_table_cell(ctx: &mut CogsApp, ectx: &egui::Context, strip: &mut Strip<'_
                     // Assuming you store selected item as Kind::ItemTemplate? adjust if you have Kind::Item.
                     true
                 }
-                ExploreKind::ItemTemplateId(tmpl_id) => {
+                ExploreKind::ItemTemplateId(_tmpl_id) => {
                     // If selection points to an item, keep only if item's template matches tmpl_id.
                     // TODO
                     // ctx.state
@@ -170,12 +170,8 @@ fn show_table_cell(ctx: &mut CogsApp, ectx: &egui::Context, strip: &mut Strip<'_
             AttrTemplateWindow::show(ctx, ui);
         }
         for (_, element) in ctx.state.explore.open_windows_item.clone().iter() {
-            if element.lock().unwrap().id.is_zero() {
-                NewItemWindowAsk::show(ctx, ui);
-            } else {
-                ectx.data_mut(|d| d.insert_temp(egui::Id::from(EXPLORE_ELEMENT), element.clone()));
-                ItemWindow::show(ctx, ui);
-            }
+            ectx.data_mut(|d| d.insert_temp(egui::Id::from(EXPLORE_ELEMENT), element.clone()));
+            ItemWindow::show(ctx, ui);
         }
     });
 
