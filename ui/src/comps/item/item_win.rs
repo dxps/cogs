@@ -1,29 +1,33 @@
 use crate::{
-    CogsApp,
+    CogsApp, SourceType,
     comps::{AppComponent, item::render_ask_window},
     constants::EXPLORE_ELEMENT,
 };
 use cogs_shared::domain::model::{
     Action, Id,
-    meta::{AttrTemplate, AttributeValueType, Item},
+    meta::{Item, ItemTemplate},
 };
-use egui::{Align, Button, Checkbox, ComboBox, CursorIcon, Direction, Grid, Label, Layout, Margin, Window, vec2};
+use egui::{Align, Button, CursorIcon, Direction, Grid, Layout, Margin, Window, vec2};
 use std::sync::{Arc, Mutex};
-use strum::IntoEnumIterator;
 
 pub struct ItemWindow;
 
-pub(super) struct ItemWindowState {
+pub(super) struct ItemWindowState<'a> {
+    ectx: &'a egui::Context,
     id: Id,
     act_id: egui::Id,
-    focus_id: egui::Id,
     action: Action,
     title: &'static str,
-    focus_name_once: bool,
+
+    /// An item can be created from scratch or from a template.
+    /// The tuple is (src_type, item template (if src_type is Template), continue)
+    new_item_src_type_tmpl_cont: Option<(Option<SourceType>, Option<ItemTemplate>, bool)>,
+    // new_item_src_type_id: egui::Id,
+    // new_item_src_tmpl_id: egui::Id,
 }
 
-impl ItemWindowState {
-    fn from_ctx(ectx: &egui::Context, element: &Item) -> Self {
+impl<'a> ItemWindowState<'a> {
+    fn from_ctx(ectx: &'a egui::Context, element: &Item) -> Self {
         let id = element.id.clone();
         let act_id = egui::Id::from(format!("item_id_{}_action", id));
         let action = if id.is_zero() {
@@ -38,22 +42,54 @@ impl ItemWindowState {
             _ => "Item",
         };
 
-        let focus_id = egui::Id::new("new_item_form_focus_name_once");
-        let focus_name_once = ectx.data_mut(|d| d.get_temp::<bool>(focus_id).unwrap_or(true));
+        let (src_type, src_tmpl, cont) = ectx.data(|d| {
+            (
+                d.get_temp::<Option<SourceType>>(egui::Id::from("new_item_src_type"))
+                    .unwrap_or(None),
+                d.get_temp::<Option<ItemTemplate>>(egui::Id::from("new_item_src_tmpl"))
+                    .unwrap_or(None),
+                d.get_temp(egui::Id::from("new_item_src_cont")).unwrap_or(false),
+            )
+        });
+
+        let val = match (src_type, src_tmpl, cont) {
+            (Some(st), None, c) => Some((Some(st), None, c)),
+            (Some(st), Some(ste), c) => Some((Some(st), Some(ste), c)),
+            _ => None,
+        };
+
+        log::debug!("[ItemWindowState::from_ctx] new_item_src_type_tmpl_cont={:#?}", val);
 
         Self {
+            ectx,
             id,
             act_id,
-            focus_id,
             action,
             title,
-            focus_name_once,
+            new_item_src_type_tmpl_cont: val,
         }
+    }
+
+    pub(super) fn new_item_src_type_tmpl_cont(&self) -> Option<(Option<SourceType>, Option<ItemTemplate>, bool)> {
+        self.new_item_src_type_tmpl_cont.clone()
+    }
+
+    pub(super) fn set_new_item_src_type_tmpl_cont(&mut self, value: Option<(Option<SourceType>, Option<ItemTemplate>, bool)>) {
+        self.new_item_src_type_tmpl_cont = value.clone();
+        let (src_type, src_tmpl, cont) = match value {
+            Some(v) => (v.0, v.1, v.2),
+            None => (None, None, false),
+        };
+        self.ectx.data_mut(|d| {
+            d.insert_temp::<Option<SourceType>>(egui::Id::from("new_item_src_type"), src_type);
+            d.insert_temp::<Option<ItemTemplate>>(egui::Id::from("new_item_src_tmpl"), src_tmpl);
+            d.insert_temp::<bool>(egui::Id::from("new_item_src_cont"), cont);
+        });
     }
 }
 
 impl ItemWindow {
-    fn render_header(ui: &mut egui::Ui, s: &ItemWindowState) {
+    fn render_header(ui: &mut egui::Ui, s: &ItemWindowState<'_>) {
         ui.horizontal(|ui| {
             ui.add_space(40.0);
             let w = ui.available_width() - 8.0; // right pad used in grid
@@ -77,13 +113,13 @@ impl ItemWindow {
         });
     }
 
-    fn render_form_grid(ui: &mut egui::Ui, ectx: &egui::Context, element: &mut Item, s: &mut ItemWindowState) {
+    fn render_form_grid(ui: &mut egui::Ui, _ectx: &egui::Context, _element: &mut Item, s: &mut ItemWindowState<'_>) {
         ui.horizontal(|ui| {
             ui.add_space(14.0);
             Grid::new(format!("item_win_{}_grid", s.id))
                 .spacing([10.0, 10.0])
                 .num_columns(2)
-                .show(ui, |ui| {
+                .show(ui, |_ui| {
                     // TODO: implement the item form fields.
                 });
             ui.add_space(8.0);
@@ -95,32 +131,31 @@ impl ItemWindow {
         ui: &mut egui::Ui,
         ectx: &egui::Context,
         element: &mut Item,
-        s: &ItemWindowState,
+        state: &mut ItemWindowState<'_>,
     ) {
         ui.with_layout(Layout::right_to_left(Align::Min), |ui| {
             ui.add_space(18.0);
 
-            if s.action.is_view() {
+            if state.action.is_view() {
                 if ui.button("    Edit    ").on_hover_cursor(CursorIcon::PointingHand).clicked() {
-                    ectx.data_mut(|d| d.insert_temp(s.act_id, Action::Edit));
+                    ectx.data_mut(|d| d.insert_temp(state.act_id, Action::Edit));
                 }
             } else {
-                // let enabled = !element.name.is_empty();
                 let enabled = false;
                 let resp = ui
                     .add_enabled(enabled, Button::new("    Save    "))
-                    .on_disabled_hover_text("Provide at least ...");
+                    .on_disabled_hover_text("Provide TBD ...");
 
                 if resp.clicked() {
-                    // app.state.data.save_attr_template(element.clone(), ui.ctx(), app.sendr.clone());
-                    cleanup(app, ectx, &s.id, s.act_id, s.focus_id);
+                    // TODO: save the item
+                    cleanup(app, ectx, state);
                 }
             }
 
             ui.add_space(8.0);
 
             if ui.button("  Cancel  ").on_hover_cursor(CursorIcon::PointingHand).clicked() {
-                cleanup(app, ectx, &s.id, s.act_id, s.focus_id);
+                cleanup(app, ectx, state);
             }
 
             if !element.id.is_zero() {
@@ -129,84 +164,13 @@ impl ItemWindow {
                     |ui| {
                         ui.add_space(18.0);
                         if ui.button("  Delete   ").on_hover_cursor(CursorIcon::PointingHand).clicked() {
-                            // app.state.data.delete_attr_template(s.id.clone(), ectx, app.sendr.clone());
-                            cleanup(app, ectx, &s.id, s.act_id, s.focus_id);
+                            // TODO: delete the item
+                            cleanup(app, ectx, state);
                         }
                     },
                 );
             }
         });
-    }
-
-    fn row_name(ui: &mut egui::Ui, ectx: &egui::Context, element: &mut AttrTemplate, s: &mut ItemWindowState) {
-        ui.add_enabled(false, Label::new("            Name"));
-        let resp = ui.add(egui::TextEdit::singleline(&mut element.name).interactive(!s.action.is_view()));
-
-        if s.action.is_create() && s.focus_name_once {
-            resp.request_focus();
-            ectx.data_mut(|d| d.insert_temp(s.focus_id, false));
-            s.focus_name_once = false;
-        }
-
-        ui.end_row();
-    }
-
-    fn row_description(ui: &mut egui::Ui, element: &mut AttrTemplate, s: &ItemWindowState) {
-        ui.add_enabled(false, Label::new("   Description"));
-        ui.add(egui::TextEdit::singleline(&mut element.description).interactive(!s.action.is_view()));
-        ui.end_row();
-    }
-
-    fn row_value_type(ui: &mut egui::Ui, element: &mut AttrTemplate, s: &ItemWindowState) {
-        ui.add_enabled(false, Label::new("    Value Type"));
-        if s.action.is_view() {
-            ui.add(egui::TextEdit::singleline(&mut element.value_type.to_string()).interactive(false));
-        } else {
-            ComboBox::from_id_salt(format!("at_val_type_{}", s.id))
-                .width(220.0)
-                .selected_text(element.value_type.to_string())
-                .show_ui(ui, |ui| {
-                    for vb in AttributeValueType::iter() {
-                        ui.selectable_value(&mut element.value_type, vb.clone(), vb.to_string());
-                    }
-                });
-        }
-        ui.end_row();
-    }
-
-    fn row_default_value(ui: &mut egui::Ui, element: &mut AttrTemplate, s: &ItemWindowState) {
-        ui.add_enabled(false, Label::new("Default value"));
-        if element.value_type == AttributeValueType::Boolean {
-            if s.action.is_view() {
-                ui.add_enabled(
-                    false,
-                    Checkbox::new(&mut element.default_value.parse::<bool>().unwrap_or(false), ""),
-                );
-            } else {
-                let mut checked = element.default_value.parse::<bool>().unwrap_or_else(|_| {
-                    // chore: If switching from another type to boolean, default to false.
-                    //        Just to persist a valid value in the database.
-                    element.default_value = "false".to_string();
-                    false
-                });
-                if ui.add(Checkbox::new(&mut checked, "")).changed() {
-                    element.default_value = checked.to_string(); // "true" or "false"
-                }
-            }
-        } else {
-            ui.add(egui::TextEdit::singleline(&mut element.default_value).interactive(!s.action.is_view()));
-        }
-        ui.end_row();
-    }
-
-    fn row_mandatory(ui: &mut egui::Ui, element: &mut AttrTemplate, s: &ItemWindowState) {
-        ui.add_enabled(false, Label::new("    Mandatory"));
-        if s.action.is_view() {
-            ui.add_enabled(false, egui::Checkbox::new(&mut element.is_required, ""));
-        } else {
-            ui.checkbox(&mut element.is_required, "");
-        }
-        ui.end_row();
     }
 }
 
@@ -214,7 +178,7 @@ impl AppComponent for ItemWindow {
     type Context = CogsApp;
 
     /// It shows the form for creating or editing an item template.
-    /// In `ui.ctx().data` it expects an `Arc<Mutex<Item>>` under `EXPLORE_ELEMENT`.
+    /// In `ui.ctx().data` it expects an `Arc<Mutex<Item>>` under `EXPLORE_ELEMENT` id.
     fn show(ctx: &mut Self::Context, ui: &mut eframe::egui::Ui) {
         let ectx = ui.ctx();
 
@@ -226,33 +190,37 @@ impl AppComponent for ItemWindow {
         let mut element = binding.lock().unwrap();
         let mut state = ItemWindowState::from_ctx(ectx, &element);
 
-        if element.id.is_zero() {
-            render_ask_window(ctx, ui, &mut state);
-            return;
-        }
+        let (_, _, cont) = match &state.new_item_src_type_tmpl_cont {
+            Some((sty, ste, cont)) => (sty, ste, *cont),
+            None => (&None, &None, false),
+        };
 
-        Window::new(format!("item_{}_win", element.id))
-            .title_bar(false)
-            .resizable(false)
-            .fixed_size(vec2(320.0, 300.0))
-            .frame(egui::Frame::window(&ectx.style()).inner_margin(Margin::ZERO))
-            .show(ectx, |ui| {
-                ui.vertical(|ui| {
-                    Self::render_header(ui, &state);
-                    ui.add_space(20.0); // only the space you explicitly want
-                    Self::render_form_grid(ui, ectx, &mut element, &mut state);
-                    ui.add_space(20.0);
-                    Self::render_footer_buttons(ctx, ui, ectx, &mut element, &state);
-                    ui.add_space(10.0);
-                })
-                .response
-                .on_hover_cursor(CursorIcon::Grab);
-            });
+        if element.id.is_zero() && !cont {
+            render_ask_window(ctx, ectx, &mut state);
+        } else {
+            Window::new(format!("item_{}_win", element.id))
+                .title_bar(false)
+                .resizable(false)
+                .fixed_size(vec2(320.0, 300.0))
+                .frame(egui::Frame::window(&ectx.style()).inner_margin(Margin::ZERO))
+                .show(ectx, |ui| {
+                    ui.vertical(|ui| {
+                        Self::render_header(ui, &state);
+                        ui.add_space(20.0); // only the space you explicitly want
+                        Self::render_form_grid(ui, ectx, &mut element, &mut state);
+                        ui.add_space(20.0);
+                        Self::render_footer_buttons(ctx, ui, ectx, &mut element, &mut state);
+                        ui.add_space(10.0);
+                    })
+                    .response
+                    .on_hover_cursor(CursorIcon::Grab);
+                });
+        }
     }
 }
 
-fn cleanup(ctx: &mut CogsApp, ectx: &egui::Context, id: &Id, act_id: egui::Id, focus_id: egui::Id) {
-    ctx.state.explore.open_windows_item.remove(id);
-    ectx.data_mut(|d| d.remove::<Action>(act_id));
-    ectx.data_mut(|d| d.remove::<bool>(focus_id));
+pub(super) fn cleanup<'a>(ctx: &mut CogsApp, ectx: &egui::Context, state: &mut ItemWindowState<'_>) {
+    ctx.state.explore.open_windows_item.remove(&state.id);
+    ectx.data_mut(|d| d.remove::<Action>(state.act_id));
+    state.set_new_item_src_type_tmpl_cont(None);
 }

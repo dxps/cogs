@@ -232,10 +232,6 @@ impl eframe::App for CogsApp {
                         log::error!("[app.update] Error fetching item templates: {}", err);
                     }
                 },
-
-                UiMessage::NewItemFrom(source_type) => {
-                    self.state.data.new_item_src_type = Some(source_type);
-                }
             }
         }
 

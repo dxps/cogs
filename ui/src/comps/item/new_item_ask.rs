@@ -1,10 +1,14 @@
-use crate::{CogsApp, SourceType, comps::item::ItemWindowState, messages::UiMessage};
-use cogs_shared::domain::model::Id;
-use egui::{Align, Button, CursorIcon, Layout, Margin, Window, vec2};
+use crate::{
+    CogsApp, SourceType,
+    comps::{
+        Dropdown, DropdownItem, DropdownStyle,
+        item::{ItemWindowState, cleanup},
+    },
+};
+use cogs_shared::domain::model::meta::ItemTemplate;
+use egui::{Align, Button, Context, CursorIcon, Layout, Margin, Window, vec2};
 
-pub(super) fn render_ask_window(ctx: &mut CogsApp, ui: &mut egui::Ui, state: &mut ItemWindowState) {
-    let ectx = ui.ctx();
-
+pub(super) fn render_ask_window(ctx: &mut CogsApp, ectx: &Context, state: &mut ItemWindowState<'_>) {
     Window::new("new_item_win")
         .title_bar(false)
         .resizable(false)
@@ -14,7 +18,7 @@ pub(super) fn render_ask_window(ctx: &mut CogsApp, ui: &mut egui::Ui, state: &mu
             ui.vertical(|ui| {
                 render_header(ui);
                 render_content(ctx, ui, state);
-                render_footer(ctx, ui, ectx, &state);
+                render_footer(ctx, ui, state);
                 ui.add_space(10.0);
             })
             .response
@@ -36,11 +40,13 @@ fn render_header(ui: &mut egui::Ui) {
     ui.add_space(8.0);
 }
 
-fn render_content(ctx: &mut CogsApp, ui: &mut egui::Ui, state: &mut ItemWindowState) {
-    let mut src_type = match ctx.state.data.new_item_src_type.as_ref() {
-        Some(st) => Some(st),
-        None => None,
+fn render_content(ctx: &mut CogsApp, ui: &mut egui::Ui, state: &mut ItemWindowState<'_>) {
+    let (mut src_type, src_tmpl) = match state.new_item_src_type_tmpl_cont() {
+        Some((sty, ste, _)) => (sty, ste),
+        None => (None, None),
     };
+    log::debug!("src_type={:#?}, src_tmpl={:#?}", src_type, src_tmpl);
+
     ui.horizontal(|ui| {
         ui.add_space(14.0);
         ui.label("Create an item from:");
@@ -48,47 +54,72 @@ fn render_content(ctx: &mut CogsApp, ui: &mut egui::Ui, state: &mut ItemWindowSt
     ui.horizontal(|ui| {
         ui.add_space(18.0);
         ui.vertical(|ui| {
+            ui.set_min_height(60.0);
             if ui
-                .radio_value(&mut src_type, Some(&SourceType::Scratch), "Scratch")
+                .radio_value(&mut src_type, Some(SourceType::Scratch), "scratch")
                 .on_hover_cursor(CursorIcon::PointingHand)
                 .clicked()
             {
-                log::debug!("Selected from scratch");
-                _ = ctx.sendr.send(UiMessage::NewItemFrom(SourceType::Scratch));
+                state.set_new_item_src_type_tmpl_cont(Some((Some(SourceType::Scratch), None, false)));
             };
-            if ui
-                .radio_value(&mut src_type, Some(&SourceType::Template), "An item template")
-                .on_hover_cursor(CursorIcon::PointingHand)
-                .clicked()
-            {
-                log::debug!("Selected from template");
-                _ = ctx.sendr.send(UiMessage::NewItemFrom(SourceType::Template));
-            };
+            ui.horizontal(|ui| {
+                if ui
+                    .radio_value(&mut src_type, Some(SourceType::Template), "item template")
+                    .on_hover_cursor(CursorIcon::PointingHand)
+                    .clicked()
+                {
+                    state.set_new_item_src_type_tmpl_cont(Some((Some(SourceType::Template), None, false)));
+                };
+
+                if src_type == Some(SourceType::Template) {
+                    let templates: Vec<DropdownItem<Option<ItemTemplate>>> = ctx
+                        .state
+                        .data
+                        .get_item_templates()
+                        .iter()
+                        .map(|it| DropdownItem::new(it.name.clone(), Some(it.clone())))
+                        .collect();
+                    ui.add_space(4.0);
+                    if let Some(v) = Dropdown::show(
+                        ui,
+                        ui.id().with("new_item_src_tmpl"),
+                        &src_tmpl,
+                        templates.as_slice(),
+                        DropdownStyle {
+                            min_width: 174.0,
+                            ..Default::default()
+                        },
+                    ) {
+                        state.set_new_item_src_type_tmpl_cont(Some((src_type, v, false)));
+                    }
+                }
+            });
         });
     });
 }
 
-fn render_footer(ctx: &mut CogsApp, ui: &mut egui::Ui, ectx: &egui::Context, state: &ItemWindowState) {
+fn render_footer(ctx: &mut CogsApp, ui: &mut egui::Ui, state: &mut ItemWindowState<'_>) {
     ui.add_space(8.0);
     ui.with_layout(Layout::right_to_left(Align::Min), |ui| {
         ui.add_space(18.0);
 
-        let enabled = ctx.state.data.new_item_src_type.is_some();
+        let (src_type, src_tmpl) = match state.new_item_src_type_tmpl_cont() {
+            Some((src_type, src_tmpl, _)) => (src_type, src_tmpl),
+            None => (None, None),
+        };
+        let enabled = src_type == Some(SourceType::Scratch) || src_tmpl.is_some();
         let resp = ui
             .add_enabled(enabled, Button::new("  Continue  "))
-            .on_disabled_hover_text("Provide at least ...");
+            .on_hover_cursor(CursorIcon::PointingHand)
+            .on_disabled_hover_text("To continue, select either from scratch\nor choose an existing item template.");
         if resp.clicked() {
-            cleanup(ctx);
+            state.set_new_item_src_type_tmpl_cont(Some((src_type, src_tmpl, true))); // set to continue
         }
 
         ui.add_space(8.0);
 
         if ui.button("  Cancel  ").on_hover_cursor(CursorIcon::PointingHand).clicked() {
-            cleanup(ctx);
+            cleanup(ctx, ui.ctx(), state);
         }
     });
-}
-
-fn cleanup(ctx: &mut CogsApp) {
-    ctx.state.explore.open_windows_item.remove(&Id::default());
 }

@@ -24,10 +24,6 @@ pub struct DataState {
 
     #[serde(skip)]
     fetched_item_templates: bool,
-
-    /// An item can be created from a template or from scratch.
-    pub new_item_src_tmpl: Option<ItemTemplate>,
-    pub new_item_src_type: Option<SourceType>,
 }
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
