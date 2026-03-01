@@ -40,7 +40,15 @@ pub(super) fn row_add_attr(app: &mut CogsApp, ui: &mut Ui, element: &mut Item, s
             })
             .show_ui(ui, |ui| {
                 for vb in AttributeValueType::iter() {
-                    ui.selectable_value(&mut value_type, Some(vb.clone()), vb.to_string());
+                    if ui
+                        .selectable_value(&mut value_type, Some(vb.clone()), vb.to_string())
+                        .changed()
+                    {
+                        log::debug!("On new item, selected value_type: {value_type:?}");
+                        if let Some(vt) = value_type.clone() {
+                            app.state.explore.item_cu_add_attr.get_mut(&state.id).unwrap().value_type = vt;
+                        }
+                    };
                 }
             });
     });
