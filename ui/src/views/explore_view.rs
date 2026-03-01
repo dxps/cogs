@@ -60,7 +60,7 @@ impl AppView for Explore {
             ui.add_space(20.0);
 
             StripBuilder::new(ui)
-                .size(Size::relative(0.6).at_least(500.0)) // Table cell.
+                .size(Size::relative(0.5).at_least(350.0)) // Table cell.
                 .size(Size::exact(20.0)) // middle (space) cell.
                 .size(Size::remainder().at_least(80.0)) // Preview cell.
                 .horizontal(|mut strip| {

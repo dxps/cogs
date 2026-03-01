@@ -29,7 +29,6 @@ pub enum AttributeValueType {
 
 impl From<&str> for AttributeValueType {
     fn from(value: &str) -> Self {
-        // FYI: As before, these string values represent PostgreSQL's types.
         match value {
             "text" => Self::Text,
             "numeric" => Self::Numeric,

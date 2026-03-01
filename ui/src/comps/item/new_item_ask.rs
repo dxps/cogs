@@ -11,7 +11,7 @@ use egui::{Align, Button, CursorIcon, Layout, Ui};
 pub(super) fn render_ask_window(ctx: &mut CogsApp, ui: &mut Ui, state: &mut ItemWindowState<'_>) {
     ui.vertical(|ui| {
         render_header(ui);
-        render_ask_body(ctx, ui, state);
+        render_ask_body(ctx, ui);
         render_ask_footer(ctx, ui, state);
         ui.add_space(10.0);
     })
@@ -33,9 +33,9 @@ fn render_header(ui: &mut egui::Ui) {
     ui.add_space(8.0);
 }
 
-pub(super) fn render_ask_body(ctx: &mut CogsApp, ui: &mut egui::Ui, state: &mut ItemWindowState<'_>) {
-    let (mut src_type, src_tmpl) = match state.new_item_src_type_tmpl_cont() {
-        Some((sty, ste, _)) => (sty, ste),
+pub(super) fn render_ask_body(ctx: &mut CogsApp, ui: &mut egui::Ui) {
+    let (mut src_type, src_tmpl) = match &ctx.state.explore.add_item_src_type_tmpl_cont {
+        Some((sty, ste, _)) => (sty.clone(), ste.clone()),
         None => (None, None),
     };
 
@@ -52,7 +52,7 @@ pub(super) fn render_ask_body(ctx: &mut CogsApp, ui: &mut egui::Ui, state: &mut 
                 .on_hover_cursor(CursorIcon::PointingHand)
                 .clicked()
             {
-                state.set_new_item_src_type_tmpl_cont(Some((Some(SourceType::Scratch), None, false)));
+                ctx.state.explore.add_item_src_type_tmpl_cont = Some((Some(SourceType::Scratch), None, false));
             };
             ui.horizontal(|ui| {
                 if ui
@@ -60,7 +60,7 @@ pub(super) fn render_ask_body(ctx: &mut CogsApp, ui: &mut egui::Ui, state: &mut 
                     .on_hover_cursor(CursorIcon::PointingHand)
                     .clicked()
                 {
-                    state.set_new_item_src_type_tmpl_cont(Some((Some(SourceType::Template), None, false)));
+                    ctx.state.explore.add_item_src_type_tmpl_cont = Some((Some(SourceType::Template), None, false));
                 };
 
                 if src_type == Some(SourceType::Template) {
@@ -82,7 +82,7 @@ pub(super) fn render_ask_body(ctx: &mut CogsApp, ui: &mut egui::Ui, state: &mut 
                             ..Default::default()
                         },
                     ) {
-                        state.set_new_item_src_type_tmpl_cont(Some((src_type, v, false)));
+                        ctx.state.explore.add_item_src_type_tmpl_cont = Some((src_type, v, false));
                     }
                 }
             });
@@ -95,8 +95,8 @@ pub(super) fn render_ask_footer(ctx: &mut CogsApp, ui: &mut egui::Ui, state: &mu
     ui.with_layout(Layout::right_to_left(Align::Min), |ui| {
         ui.add_space(18.0);
 
-        let (src_type, src_tmpl) = match state.new_item_src_type_tmpl_cont() {
-            Some((src_type, src_tmpl, _)) => (src_type, src_tmpl),
+        let (src_type, src_tmpl) = match &ctx.state.explore.add_item_src_type_tmpl_cont {
+            Some((src_type, src_tmpl, _)) => (src_type.clone(), src_tmpl.clone()),
             None => (None, None),
         };
         let enabled = src_type == Some(SourceType::Scratch) || src_tmpl.is_some();
@@ -105,7 +105,7 @@ pub(super) fn render_ask_footer(ctx: &mut CogsApp, ui: &mut egui::Ui, state: &mu
             .on_hover_cursor(CursorIcon::PointingHand)
             .on_disabled_hover_text("To continue, select either from scratch\nor choose an existing item template.");
         if resp.clicked() {
-            state.set_new_item_src_type_tmpl_cont(Some((src_type, src_tmpl, true))); // set to continue
+            ctx.state.explore.add_item_src_type_tmpl_cont = Some((src_type, src_tmpl, true)); // set to continue
         }
 
         ui.add_space(8.0);

@@ -1,12 +1,12 @@
 use crate::{
-    CogsApp, SourceType,
-    comps::{AppComponent, AttrsLinksTab, horiz_tab, item::render_ask_window},
+    CogsApp,
+    comps::{
+        AppComponent, AttrsLinksTab, horiz_tab,
+        item::{render_ask_window, row_add_attr},
+    },
     constants::EXPLORE_ELEMENT,
 };
-use cogs_shared::domain::model::{
-    Action, Id,
-    meta::{Item, ItemTemplate},
-};
+use cogs_shared::domain::model::{Action, Id, meta::Item};
 use egui::{Align, Button, CursorIcon, Direction, Grid, Label, Layout, Margin, Window};
 use std::sync::{Arc, Mutex};
 
@@ -15,17 +15,13 @@ pub struct ItemWindow;
 pub(super) struct ItemWindowState<'a> {
     ectx: &'a egui::Context,
 
-    id: Id,
+    pub(super) id: Id,
     act_id: egui::Id,
     action: Action,
     title: &'static str,
 
     tab_id: egui::Id,
     tab: AttrsLinksTab,
-
-    /// An item can be created from scratch or from a template.
-    /// This tuple contains `source type`, `item template` (if source type is `Template` and user selected one) and `continue`.
-    new_item_src_type_tmpl_cont: Option<(Option<SourceType>, Option<ItemTemplate>, bool)>,
 }
 
 impl<'a> ItemWindowState<'a> {
@@ -37,33 +33,15 @@ impl<'a> ItemWindowState<'a> {
         } else {
             ectx.data(|d| d.get_temp::<Action>(act_id)).unwrap_or(Action::View)
         };
-
         let title = match action {
             Action::Create => "New Item",
             Action::Edit => "Edit Item",
             _ => "Item",
         };
-
-        let tab_id = egui::Id::from(format!("item_tmpl_form_{}_tab", id));
+        let tab_id = egui::Id::from(format!("item_form_{}_tab", id));
         let tab = ectx
             .data(|d| d.get_temp::<AttrsLinksTab>(tab_id))
             .unwrap_or(AttrsLinksTab::Attributes);
-
-        let (src_type, src_tmpl, cont) = ectx.data(|d| {
-            (
-                d.get_temp::<Option<SourceType>>(egui::Id::from("new_item_src_type"))
-                    .unwrap_or(None),
-                d.get_temp::<Option<ItemTemplate>>(egui::Id::from("new_item_src_tmpl"))
-                    .unwrap_or(None),
-                d.get_temp(egui::Id::from("new_item_src_cont")).unwrap_or(false),
-            )
-        });
-
-        let val = match (src_type, src_tmpl, cont) {
-            (Some(st), None, c) => Some((Some(st), None, c)),
-            (Some(st), Some(ste), c) => Some((Some(st), Some(ste), c)),
-            _ => None,
-        };
 
         Self {
             ectx,
@@ -73,25 +51,7 @@ impl<'a> ItemWindowState<'a> {
             title,
             tab_id,
             tab,
-            new_item_src_type_tmpl_cont: val,
         }
-    }
-
-    pub(super) fn new_item_src_type_tmpl_cont(&self) -> Option<(Option<SourceType>, Option<ItemTemplate>, bool)> {
-        self.new_item_src_type_tmpl_cont.clone()
-    }
-
-    pub(super) fn set_new_item_src_type_tmpl_cont(&mut self, value: Option<(Option<SourceType>, Option<ItemTemplate>, bool)>) {
-        self.new_item_src_type_tmpl_cont = value.clone();
-        let (src_type, src_tmpl, cont) = match value {
-            Some(v) => (v.0, v.1, v.2),
-            None => (None, None, false),
-        };
-        self.ectx.data_mut(|d| {
-            d.insert_temp::<Option<SourceType>>(egui::Id::from("new_item_src_type"), src_type);
-            d.insert_temp::<Option<ItemTemplate>>(egui::Id::from("new_item_src_tmpl"), src_tmpl);
-            d.insert_temp::<bool>(egui::Id::from("new_item_src_cont"), cont);
-        });
     }
 }
 
@@ -119,21 +79,32 @@ impl ItemWindow {
         });
     }
 
-    fn render_form_grid(ui: &mut egui::Ui, ectx: &egui::Context, _element: &mut Item, s: &mut ItemWindowState<'_>) {
+    fn render_content(ctx: &mut CogsApp, ui: &mut egui::Ui, element: &mut Item, state: &mut ItemWindowState<'_>) {
         ui.horizontal(|ui| {
             ui.add_space(14.0);
-            Grid::new(format!("item_win_{}_grid", s.id))
+            Grid::new(format!("item_win_{}_grid", state.id))
                 .spacing([10.0, 10.0])
                 .num_columns(2)
                 .show(ui, |ui| {
-                    Self::row_tabs(ui, ectx, s);
+                    Self::row_tabs(ui, state);
                     // TODO: implement the item form fields.
+
+                    match state.tab {
+                        AttrsLinksTab::Attributes => {
+                            // listing_attrs
+
+                            if state.action != Action::View {
+                                row_add_attr(ctx, ui, element, state);
+                            }
+                        }
+                        AttrsLinksTab::Links => {}
+                    }
                 });
             ui.add_space(8.0);
         });
     }
 
-    fn row_tabs(ui: &mut egui::Ui, ectx: &egui::Context, s: &mut ItemWindowState<'_>) {
+    fn row_tabs(ui: &mut egui::Ui, s: &mut ItemWindowState<'_>) {
         ui.add_enabled(false, Label::new(""));
 
         ui.scope(|ui| {
@@ -145,13 +116,13 @@ impl ItemWindow {
                 let attrs_selected = s.tab == AttrsLinksTab::Attributes;
                 if horiz_tab(ui, "Attributes", attrs_selected).clicked() {
                     s.tab = AttrsLinksTab::Attributes;
-                    ectx.data_mut(|d| d.insert_temp(s.tab_id, s.tab));
+                    ui.ctx().data_mut(|d| d.insert_temp(s.tab_id, s.tab));
                 }
 
                 let links_selected = s.tab == AttrsLinksTab::Links;
                 if horiz_tab(ui, "Links", links_selected).clicked() {
                     s.tab = AttrsLinksTab::Links;
-                    ectx.data_mut(|d| d.insert_temp(s.tab_id, s.tab));
+                    ui.ctx().data_mut(|d| d.insert_temp(s.tab_id, s.tab));
                 }
             });
         });
@@ -223,7 +194,7 @@ impl AppComponent for ItemWindow {
         let mut element = binding.lock().unwrap();
         let mut state = ItemWindowState::from_ctx(ectx, &element);
 
-        let (_, _, cont) = match &state.new_item_src_type_tmpl_cont {
+        let (_, _, cont) = match &ctx.state.explore.add_item_src_type_tmpl_cont {
             Some((sty, ste, cont)) => (sty, ste, *cont),
             None => (&None, &None, false),
         };
@@ -231,10 +202,9 @@ impl AppComponent for ItemWindow {
         Window::new(format!("item_{}_win", element.id))
             .title_bar(false)
             .resizable(false)
-            .min_width(300.0)
-            .max_width(300.0)
+            .min_width(350.0)
+            .max_width(400.0)
             .min_height(200.0)
-            .max_height(400.0)
             .frame(egui::Frame::window(&ectx.style()).inner_margin(Margin::ZERO))
             .show(ectx, |ui| {
                 ui.vertical(|ui| {
@@ -243,7 +213,7 @@ impl AppComponent for ItemWindow {
                     } else {
                         Self::render_header(ui, &state);
                         ui.add_space(20.0); // only the space you explicitly want
-                        Self::render_form_grid(ui, ectx, &mut element, &mut state);
+                        Self::render_content(ctx, ui, &mut element, &mut state);
                         ui.add_space(20.0);
                         Self::render_footer_buttons(ctx, ui, ectx, &mut element, &mut state);
                         ui.add_space(10.0);
@@ -258,5 +228,6 @@ impl AppComponent for ItemWindow {
 pub(super) fn cleanup<'a>(ctx: &mut CogsApp, ectx: &egui::Context, state: &mut ItemWindowState<'_>) {
     ctx.state.explore.open_windows_item.remove(&state.id);
     ectx.data_mut(|d| d.remove::<Action>(state.act_id));
-    state.set_new_item_src_type_tmpl_cont(None);
+    // state.set_new_item_src_type_tmpl_cont(None);
+    ctx.state.explore.add_item_src_type_tmpl_cont = None;
 }

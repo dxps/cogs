@@ -709,7 +709,6 @@ fn selected_attr_name(map: &HashMap<Id, Option<AttrTemplate>>, id: &Id) -> Strin
 fn selected_link_target_name(app: &CogsApp, map: &HashMap<Id, Option<Id>>, id: &Id) -> String {
     map.get(id)
         .and_then(|o| o.as_ref())
-        // .map(ToString::to_string)
         .map(|id| link_target_name(app, id))
         .unwrap_or_default()
 }

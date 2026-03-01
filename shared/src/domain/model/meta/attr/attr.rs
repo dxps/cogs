@@ -1,5 +1,6 @@
 use crate::domain::model::meta::AttributeValueType;
 use chrono::{DateTime, NaiveDate};
+use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 
 pub trait Attribute {
@@ -23,4 +24,11 @@ impl Debug for dyn Attribute {
             // TODO: add value, based on value type
             .finish()
     }
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct AddAttribute {
+    pub name: String,
+    pub value_type: AttributeValueType,
+    pub value: String,
 }
