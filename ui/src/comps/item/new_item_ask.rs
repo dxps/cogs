@@ -6,24 +6,17 @@ use crate::{
     },
 };
 use cogs_shared::domain::model::meta::ItemTemplate;
-use egui::{Align, Button, Context, CursorIcon, Layout, Margin, Window, vec2};
+use egui::{Align, Button, CursorIcon, Layout, Ui};
 
-pub(super) fn render_ask_window(ctx: &mut CogsApp, ectx: &Context, state: &mut ItemWindowState<'_>) {
-    Window::new("new_item_win")
-        .title_bar(false)
-        .resizable(false)
-        .fixed_size(vec2(320.0, 300.0))
-        .frame(egui::Frame::window(&ectx.style()).inner_margin(Margin::ZERO))
-        .show(ectx, |ui| {
-            ui.vertical(|ui| {
-                render_header(ui);
-                render_content(ctx, ui, state);
-                render_footer(ctx, ui, state);
-                ui.add_space(10.0);
-            })
-            .response
-            .on_hover_cursor(CursorIcon::Grab);
-        });
+pub(super) fn render_ask_window(ctx: &mut CogsApp, ui: &mut Ui, state: &mut ItemWindowState<'_>) {
+    ui.vertical(|ui| {
+        render_header(ui);
+        render_ask_body(ctx, ui, state);
+        render_ask_footer(ctx, ui, state);
+        ui.add_space(10.0);
+    })
+    .response
+    .on_hover_cursor(CursorIcon::Grab);
 }
 
 fn render_header(ui: &mut egui::Ui) {
@@ -40,12 +33,11 @@ fn render_header(ui: &mut egui::Ui) {
     ui.add_space(8.0);
 }
 
-fn render_content(ctx: &mut CogsApp, ui: &mut egui::Ui, state: &mut ItemWindowState<'_>) {
+pub(super) fn render_ask_body(ctx: &mut CogsApp, ui: &mut egui::Ui, state: &mut ItemWindowState<'_>) {
     let (mut src_type, src_tmpl) = match state.new_item_src_type_tmpl_cont() {
         Some((sty, ste, _)) => (sty, ste),
         None => (None, None),
     };
-    log::debug!("src_type={:#?}, src_tmpl={:#?}", src_type, src_tmpl);
 
     ui.horizontal(|ui| {
         ui.add_space(14.0);
@@ -98,7 +90,7 @@ fn render_content(ctx: &mut CogsApp, ui: &mut egui::Ui, state: &mut ItemWindowSt
     });
 }
 
-fn render_footer(ctx: &mut CogsApp, ui: &mut egui::Ui, state: &mut ItemWindowState<'_>) {
+pub(super) fn render_ask_footer(ctx: &mut CogsApp, ui: &mut egui::Ui, state: &mut ItemWindowState<'_>) {
     ui.add_space(8.0);
     ui.with_layout(Layout::right_to_left(Align::Min), |ui| {
         ui.add_space(18.0);

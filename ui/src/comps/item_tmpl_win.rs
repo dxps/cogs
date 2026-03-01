@@ -1,6 +1,6 @@
 use crate::{
     CogsApp,
-    comps::AppComponent,
+    comps::{AppComponent, AttrsLinksTab, horiz_tab},
     constants::{CORNER_RADIUS, EXPLORE_ELEMENT, FORM_FIELD_W},
 };
 use cogs_shared::domain::model::{
@@ -11,19 +11,12 @@ use egui::{
     Align, Button, Color32, ComboBox, CursorIcon, Direction, Frame, Grid, Label, Layout, Margin, RichText, Stroke, TextEdit,
     Window,
 };
-use serde::{Deserialize, Serialize};
 use std::{
     collections::HashMap,
     sync::{Arc, Mutex},
 };
 
 pub struct ItemTemplateWindow;
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-enum ItemTemplateTab {
-    Attributes,
-    Links,
-}
 
 struct FormUiState {
     id: Id,
@@ -33,7 +26,7 @@ struct FormUiState {
     title: &'static str,
     focus_name_once: bool,
     tab_id: egui::Id,
-    tab: ItemTemplateTab,
+    tab: AttrsLinksTab,
 }
 
 impl FormUiState {
@@ -57,8 +50,8 @@ impl FormUiState {
 
         let tab_id = egui::Id::from(format!("item_tmpl_form_{}_tab", id));
         let tab = ectx
-            .data(|d| d.get_temp::<ItemTemplateTab>(tab_id))
-            .unwrap_or(ItemTemplateTab::Attributes);
+            .data(|d| d.get_temp::<AttrsLinksTab>(tab_id))
+            .unwrap_or(AttrsLinksTab::Attributes);
 
         Self {
             id,
@@ -122,7 +115,7 @@ impl ItemTemplateWindow {
                     Self::row_tabs(ui, ectx, s);
 
                     match s.tab {
-                        ItemTemplateTab::Attributes => {
+                        AttrsLinksTab::Attributes => {
                             Self::row_listing_attr(ui, element, s);
                             Self::row_attributes(ui, element, s);
                             ui.label("");
@@ -133,7 +126,7 @@ impl ItemTemplateWindow {
                                 ui.end_row();
                             }
                         }
-                        ItemTemplateTab::Links => {
+                        AttrsLinksTab::Links => {
                             Self::row_links(app, ui, element, s);
                             ui.label("");
                             ui.end_row();
@@ -159,53 +152,21 @@ impl ItemTemplateWindow {
             ui.spacing_mut().button_padding.y = 2.0;
 
             ui.horizontal(|ui| {
-                let attrs_selected = s.tab == ItemTemplateTab::Attributes;
-                if Self::tab_button(ui, "Attributes", attrs_selected).clicked() {
-                    s.tab = ItemTemplateTab::Attributes;
+                let attrs_selected = s.tab == AttrsLinksTab::Attributes;
+                if horiz_tab(ui, "Attributes", attrs_selected).clicked() {
+                    s.tab = AttrsLinksTab::Attributes;
                     ectx.data_mut(|d| d.insert_temp(s.tab_id, s.tab));
                 }
 
-                let links_selected = s.tab == ItemTemplateTab::Links;
-                if Self::tab_button(ui, "Links", links_selected).clicked() {
-                    s.tab = ItemTemplateTab::Links;
+                let links_selected = s.tab == AttrsLinksTab::Links;
+                if horiz_tab(ui, "Links", links_selected).clicked() {
+                    s.tab = AttrsLinksTab::Links;
                     ectx.data_mut(|d| d.insert_temp(s.tab_id, s.tab));
                 }
             });
         });
 
         ui.end_row();
-    }
-
-    fn tab_button(ui: &mut egui::Ui, text: &str, selected: bool) -> egui::Response {
-        // Copy needed colors first (no long-lived borrow of `ui`)
-        let text_color = ui.visuals().text_color();
-        let hover_bg = ui.visuals().widgets.hovered.weak_bg_fill;
-
-        let selected_fg = text_color;
-        let unselected_fg = text_color.gamma_multiply(0.60);
-        let fg = if selected { selected_fg } else { unselected_fg };
-
-        let resp = ui
-            .add(
-                Button::new(RichText::new(text).color(fg))
-                    .fill(Color32::TRANSPARENT)
-                    .stroke(egui::Stroke::NONE)
-                    .corner_radius(CORNER_RADIUS),
-            )
-            .on_hover_cursor(CursorIcon::PointingHand);
-
-        if resp.hovered() {
-            ui.painter().rect_filled(resp.rect, CORNER_RADIUS, hover_bg);
-            ui.painter().text(
-                resp.rect.center(),
-                egui::Align2::CENTER_CENTER,
-                text,
-                egui::TextStyle::Button.resolve(ui.style()),
-                fg,
-            );
-        }
-
-        resp
     }
 
     fn row_links(app: &CogsApp, ui: &mut egui::Ui, element: &mut ItemTemplate, s: &FormUiState) {
@@ -769,7 +730,7 @@ fn shutdown(ctx: &mut CogsApp, ectx: &egui::Context, id: &Id, act_id: egui::Id, 
     ectx.data_mut(|d| d.remove::<bool>(focus_id));
 
     let tab_id = egui::Id::from(format!("item_tmpl_form_{}_tab", id));
-    ectx.data_mut(|d| d.remove::<ItemTemplateTab>(tab_id));
+    ectx.data_mut(|d| d.remove::<AttrsLinksTab>(tab_id));
 
     let link_name_id = egui::Id::from(format!("item_templ_form_{}_new_link_name", id));
     ectx.data_mut(|d| d.remove::<String>(link_name_id));

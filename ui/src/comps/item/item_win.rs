@@ -1,29 +1,31 @@
 use crate::{
     CogsApp, SourceType,
-    comps::{AppComponent, item::render_ask_window},
+    comps::{AppComponent, AttrsLinksTab, horiz_tab, item::render_ask_window},
     constants::EXPLORE_ELEMENT,
 };
 use cogs_shared::domain::model::{
     Action, Id,
     meta::{Item, ItemTemplate},
 };
-use egui::{Align, Button, CursorIcon, Direction, Grid, Layout, Margin, Window, vec2};
+use egui::{Align, Button, CursorIcon, Direction, Grid, Label, Layout, Margin, Window};
 use std::sync::{Arc, Mutex};
 
 pub struct ItemWindow;
 
 pub(super) struct ItemWindowState<'a> {
     ectx: &'a egui::Context,
+
     id: Id,
     act_id: egui::Id,
     action: Action,
     title: &'static str,
 
+    tab_id: egui::Id,
+    tab: AttrsLinksTab,
+
     /// An item can be created from scratch or from a template.
-    /// The tuple is (src_type, item template (if src_type is Template), continue)
+    /// This tuple contains `source type`, `item template` (if source type is `Template` and user selected one) and `continue`.
     new_item_src_type_tmpl_cont: Option<(Option<SourceType>, Option<ItemTemplate>, bool)>,
-    // new_item_src_type_id: egui::Id,
-    // new_item_src_tmpl_id: egui::Id,
 }
 
 impl<'a> ItemWindowState<'a> {
@@ -42,6 +44,11 @@ impl<'a> ItemWindowState<'a> {
             _ => "Item",
         };
 
+        let tab_id = egui::Id::from(format!("item_tmpl_form_{}_tab", id));
+        let tab = ectx
+            .data(|d| d.get_temp::<AttrsLinksTab>(tab_id))
+            .unwrap_or(AttrsLinksTab::Attributes);
+
         let (src_type, src_tmpl, cont) = ectx.data(|d| {
             (
                 d.get_temp::<Option<SourceType>>(egui::Id::from("new_item_src_type"))
@@ -58,14 +65,14 @@ impl<'a> ItemWindowState<'a> {
             _ => None,
         };
 
-        log::debug!("[ItemWindowState::from_ctx] new_item_src_type_tmpl_cont={:#?}", val);
-
         Self {
             ectx,
             id,
             act_id,
             action,
             title,
+            tab_id,
+            tab,
             new_item_src_type_tmpl_cont: val,
         }
     }
@@ -91,8 +98,7 @@ impl<'a> ItemWindowState<'a> {
 impl ItemWindow {
     fn render_header(ui: &mut egui::Ui, s: &ItemWindowState<'_>) {
         ui.horizontal(|ui| {
-            ui.add_space(40.0);
-            let w = ui.available_width() - 8.0; // right pad used in grid
+            let w = ui.available_width();
             ui.allocate_ui_with_layout(
                 egui::vec2(w.max(0.0), 0.0),
                 egui::Layout::top_down(egui::Align::Center),
@@ -113,17 +119,44 @@ impl ItemWindow {
         });
     }
 
-    fn render_form_grid(ui: &mut egui::Ui, _ectx: &egui::Context, _element: &mut Item, s: &mut ItemWindowState<'_>) {
+    fn render_form_grid(ui: &mut egui::Ui, ectx: &egui::Context, _element: &mut Item, s: &mut ItemWindowState<'_>) {
         ui.horizontal(|ui| {
             ui.add_space(14.0);
             Grid::new(format!("item_win_{}_grid", s.id))
                 .spacing([10.0, 10.0])
                 .num_columns(2)
-                .show(ui, |_ui| {
+                .show(ui, |ui| {
+                    Self::row_tabs(ui, ectx, s);
                     // TODO: implement the item form fields.
                 });
             ui.add_space(8.0);
         });
+    }
+
+    fn row_tabs(ui: &mut egui::Ui, ectx: &egui::Context, s: &mut ItemWindowState<'_>) {
+        ui.add_enabled(false, Label::new(""));
+
+        ui.scope(|ui| {
+            // Reduce only tab button padding (local scope).
+            ui.spacing_mut().button_padding.x = 4.0; // try 2.0..6.0
+            ui.spacing_mut().button_padding.y = 2.0;
+
+            ui.horizontal(|ui| {
+                let attrs_selected = s.tab == AttrsLinksTab::Attributes;
+                if horiz_tab(ui, "Attributes", attrs_selected).clicked() {
+                    s.tab = AttrsLinksTab::Attributes;
+                    ectx.data_mut(|d| d.insert_temp(s.tab_id, s.tab));
+                }
+
+                let links_selected = s.tab == AttrsLinksTab::Links;
+                if horiz_tab(ui, "Links", links_selected).clicked() {
+                    s.tab = AttrsLinksTab::Links;
+                    ectx.data_mut(|d| d.insert_temp(s.tab_id, s.tab));
+                }
+            });
+        });
+
+        ui.end_row();
     }
 
     fn render_footer_buttons(
@@ -195,27 +228,30 @@ impl AppComponent for ItemWindow {
             None => (&None, &None, false),
         };
 
-        if element.id.is_zero() && !cont {
-            render_ask_window(ctx, ectx, &mut state);
-        } else {
-            Window::new(format!("item_{}_win", element.id))
-                .title_bar(false)
-                .resizable(false)
-                .fixed_size(vec2(320.0, 300.0))
-                .frame(egui::Frame::window(&ectx.style()).inner_margin(Margin::ZERO))
-                .show(ectx, |ui| {
-                    ui.vertical(|ui| {
+        Window::new(format!("item_{}_win", element.id))
+            .title_bar(false)
+            .resizable(false)
+            .min_width(300.0)
+            .max_width(300.0)
+            .min_height(200.0)
+            .max_height(400.0)
+            .frame(egui::Frame::window(&ectx.style()).inner_margin(Margin::ZERO))
+            .show(ectx, |ui| {
+                ui.vertical(|ui| {
+                    if element.id.is_zero() && !cont {
+                        render_ask_window(ctx, ui, &mut state);
+                    } else {
                         Self::render_header(ui, &state);
                         ui.add_space(20.0); // only the space you explicitly want
                         Self::render_form_grid(ui, ectx, &mut element, &mut state);
                         ui.add_space(20.0);
                         Self::render_footer_buttons(ctx, ui, ectx, &mut element, &mut state);
                         ui.add_space(10.0);
-                    })
-                    .response
-                    .on_hover_cursor(CursorIcon::Grab);
-                });
-        }
+                    }
+                })
+                .response
+                .on_hover_cursor(CursorIcon::Grab);
+            });
     }
 }
 

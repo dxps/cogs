@@ -104,9 +104,9 @@ impl DataState {
         ehttp::fetch(req, move |rsp| {
             if let Ok(rsp) = rsp {
                 let data: Vec<AttrTemplate> = serde_json::from_str(rsp.text().unwrap_or_default()).unwrap();
-                log::info!("[DataState::fetch_all_attr_templates] Got {} elements.", data.len());
+                log::trace!("[DataState::fetch_all_attr_templates] Got {} elements.", data.len());
                 if let Err(e) = sender.send(UiMessage::AttrTemplatesFetched(Ok(data))) {
-                    log::info!("[DataState::fetch_all_attr_templates] Failed to send UiMessage. Error: {e}");
+                    log::error!("[DataState::fetch_all_attr_templates] Failed to send UiMessage. Error: {e}");
                 }
                 ectx.request_repaint();
             }
@@ -119,7 +119,7 @@ impl DataState {
         req.headers.insert("content-type", "application/json");
         let ectx = ectx.clone();
         ehttp::fetch(req, move |rsp| {
-            log::info!("[DataState::delete_attr_template] Got response: {:?}", rsp);
+            log::trace!("[DataState::delete_attr_template] Got response: {:?}", rsp);
             if let Err(e) = sender.send(UiMessage::ElementDeleted(Kind::AttributeTemplate, Ok(id))) {
                 log::info!("[DataState::delete_attr_template] Failed to send UiMessage. Error: {e}");
             }
@@ -152,18 +152,18 @@ impl DataState {
                         ));
                     } else {
                         let dto: IdDto = serde_json::from_str(rsp.text().unwrap_or_default()).unwrap();
-                        log::debug!("[DataState::save_item_template] Got saved id: {}", dto.id);
+                        log::trace!("[DataState::save_item_template] Got saved id: {}", dto.id);
                         ars = Ok(dto.id);
                     }
 
                     if let Err(e) = sender.send(UiMessage::ElementCreated(Kind::ItemTemplate, ars)) {
-                        log::info!("[DataState::save_item_template] Failed to send UiMessage. Error: {e}");
+                        log::error!("[DataState::save_item_template] Failed to send UiMessage. Error: {e}");
                     }
                 }
                 Err(err) => {
                     let ars = Err(AppError::from(err));
                     if let Err(e) = sender.send(UiMessage::ElementUpdated(Kind::ItemTemplate, ars)) {
-                        log::info!("[DataState::save_item_template] Failed to send UiMessage. Error: {e}");
+                        log::error!("[DataState::save_item_template] Failed to send UiMessage. Error: {e}");
                     }
                 }
             }
@@ -179,7 +179,7 @@ impl DataState {
         ehttp::fetch(req, move |rsp| {
             if let Ok(rsp) = rsp {
                 let data: Vec<ItemTemplate> = serde_json::from_str(rsp.text().unwrap_or_default()).unwrap();
-                log::info!("[DataState::fetch_all_item_templates] Got {} elements.", data.len());
+                log::trace!("[DataState::fetch_all_item_templates] Got {} elements.", data.len());
                 if let Err(e) = sender.send(UiMessage::ItemTemplatesFetched(Ok(data))) {
                     log::info!("[DataState::fetch_all_item_templates] Failed to send UiMessage. Error: {e}");
                 }
@@ -206,9 +206,9 @@ impl DataState {
         req.headers.insert("content-type", "application/json");
         let ectx = ectx.clone();
         ehttp::fetch(req, move |rsp| {
-            log::info!("[DataState::delete_item_template] Got response: {:?}", rsp);
+            log::trace!("[DataState::delete_item_template] Got response: {:?}", rsp);
             if let Err(e) = sender.send(UiMessage::ElementDeleted(Kind::ItemTemplate, Ok(id))) {
-                log::info!("[DataState::delete_item_template] Failed to send UiMessage. Error: {e}");
+                log::error!("[DataState::delete_item_template] Failed to send UiMessage. Error: {e}");
             }
             ectx.request_repaint();
         });
