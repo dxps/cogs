@@ -167,8 +167,8 @@ impl AttrTemplateWindow {
                 .width(220.0)
                 .selected_text(element.value_type.to_string())
                 .show_ui(ui, |ui| {
-                    for vb in AttributeValueType::iter() {
-                        ui.selectable_value(&mut element.value_type, vb.clone(), vb.to_string());
+                    for vt in AttributeValueType::iter() {
+                        ui.selectable_value(&mut element.value_type, vt.clone(), vt.to_string());
                     }
                 });
         }

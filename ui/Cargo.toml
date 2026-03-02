@@ -38,6 +38,7 @@ eframe             = { version = "=0.33.3", default-features = false, features =
     "x11",           # To support older Linux distributions (restores one of the default features).
 ] }
 catppuccin-egui    = { version = "=5.7.0", default-features = false, features = [ "egui33" ] }
+egui_dnd           = { version = "0.14"      }
 
 log                = { version = "=0.4.29"   }
 tracing            = { version = "=0.1.44"   }

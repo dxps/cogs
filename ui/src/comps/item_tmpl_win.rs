@@ -293,7 +293,7 @@ impl ItemTemplateWindow {
                                                     .stroke(Stroke::NONE)
                                                     .corner_radius(999.0), // pill/rounded look
                                             )
-                                            .on_hover_text("Remove")
+                                            .on_hover_text("Remove the link.")
                                             .on_hover_cursor(CursorIcon::PointingHand)
                                             .clicked()
                                         {

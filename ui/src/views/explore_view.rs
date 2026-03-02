@@ -319,7 +319,7 @@ fn show_add_menu(ctx: &mut CogsApp, ui: &mut Ui) {
                  ctx.state
                         .explore
                         .open_windows_item
-                        .insert(Id::default(), Arc::new(Mutex::new(Item::default())));
+                        .insert(Id::default(), Item::default());
                 ui.close();
             }
 

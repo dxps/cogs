@@ -4,7 +4,7 @@ use crate::{
 };
 use cogs_shared::domain::model::{
     Id,
-    meta::{AddAttribute, AttrTemplate, Item, ItemTemplate, Kind},
+    meta::{Attr, AttrTemplate, Item, ItemTemplate, Kind},
 };
 use serde::{Deserialize, Serialize};
 use std::{
@@ -24,7 +24,7 @@ pub struct ExploreViewState {
 
     /// The open windows for creating (one) or editing (one or more) items.
     // #[serde(skip)]  todo: temporary used during form dev.
-    pub open_windows_item: HashMap<Id, Arc<Mutex<Item>>>,
+    pub open_windows_item: HashMap<Id, Item>,
 
     /// The open windows for creating (one) or editing (one or more) attribute templates.
     // #[serde(skip)]  todo: temporary used during form dev.
@@ -62,10 +62,11 @@ pub struct ExploreViewState {
     //
     /// An item can be created from scratch or from a template.
     /// This tuple contains `source type`, `item template` (if source type is `Template` and user selected one) and `continue`.
+    #[serde(skip)]
     pub add_item_src_type_tmpl_cont: Option<(Option<SourceType>, Option<ItemTemplate>, bool)>,
 
     /// The attribute that is selected to be added when creating or editing an item template.
     /// This is mapped by item `Id`.
     // #[serde(skip)] // TODO: used during dev.
-    pub item_cu_add_attr: HashMap<Id, AddAttribute>,
+    pub item_cu_add_attr: HashMap<Id, Attr>,
 }

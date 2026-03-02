@@ -8,7 +8,7 @@ use crate::{
 use cogs_shared::domain::model::meta::ItemTemplate;
 use egui::{Align, Button, CursorIcon, Layout, Ui};
 
-pub(super) fn render_ask_window(ctx: &mut CogsApp, ui: &mut Ui, state: &mut ItemWindowState<'_>) {
+pub(super) fn render_ask_window(ctx: &mut CogsApp, ui: &mut Ui, state: &mut ItemWindowState) {
     ui.vertical(|ui| {
         render_header(ui);
         render_ask_body(ctx, ui);
@@ -90,7 +90,7 @@ pub(super) fn render_ask_body(ctx: &mut CogsApp, ui: &mut egui::Ui) {
     });
 }
 
-pub(super) fn render_ask_footer(ctx: &mut CogsApp, ui: &mut egui::Ui, state: &mut ItemWindowState<'_>) {
+pub(super) fn render_ask_footer(ctx: &mut CogsApp, ui: &mut egui::Ui, state: &mut ItemWindowState) {
     ui.add_space(8.0);
     ui.with_layout(Layout::right_to_left(Align::Min), |ui| {
         ui.add_space(18.0);

@@ -5,4 +5,4 @@ mod new_item_ask;
 pub(self) use new_item_ask::*;
 
 mod item_win_attrs;
-pub use item_win_attrs::*;
+pub(self) use item_win_attrs::*;
