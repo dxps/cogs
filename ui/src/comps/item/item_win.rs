@@ -202,7 +202,7 @@ impl AppComponent for ItemWindow {
         Window::new(format!("item_{}_win", element.id))
             .title_bar(false)
             .resizable(true)
-            .min_width(350.0)
+            .min_width(400.0)
             .max_width(500.0)
             .min_height(200.0)
             .frame(egui::Frame::window(&ectx.style()).inner_margin(Margin::ZERO))
