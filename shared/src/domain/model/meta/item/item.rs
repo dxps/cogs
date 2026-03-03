@@ -182,7 +182,27 @@ impl Item {
                 tmpl_id: None,
                 owner_id: self.id.clone(),
             }),
-            _ => {}
+            AttributeValueType::Boolean => self.boolean_attributes.push(BooleanAttribute {
+                id: attr.id.clone(),
+                name: attr.name.clone(),
+                value: attr.value == "true",
+                tmpl_id: None,
+                owner_id: self.id.clone(),
+            }),
+            AttributeValueType::Date => self.date_attributes.push(DateAttribute {
+                id: attr.id.clone(),
+                name: attr.name.clone(),
+                value: attr.value.parse().unwrap_or_default(),
+                tmpl_id: None,
+                owner_id: self.id.clone(),
+            }),
+            AttributeValueType::DateTime => self.datetime_attributes.push(DateTimeAttribute {
+                id: attr.id.clone(),
+                name: attr.name.clone(),
+                value: attr.value.parse().unwrap_or_default(),
+                tmpl_id: None,
+                owner_id: self.id.clone(),
+            }),
         }
 
         // 3) Reflect it in the attributes_order as well.

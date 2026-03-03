@@ -121,6 +121,21 @@ pub(super) fn render_attrs(app: &mut CogsApp, ui: &mut egui::Ui, item: &mut Item
         egui::vec2(ui.available_width(), list_h),
         egui::Layout::top_down(egui::Align::Min),
         |ui| {
+            ui.horizontal(|ui| {
+                ui.add_space(20.0);
+                ui.add_sized(
+                    [26.0, row_h],
+                    Label::new(egui::RichText::new("type").size(11.0).color(faded_color())),
+                );
+                ui.add_sized(
+                    [136.0, row_h],
+                    Label::new(egui::RichText::new("name").size(11.0).color(faded_color())),
+                );
+                ui.add_sized(
+                    [144.0, row_h],
+                    Label::new(egui::RichText::new("value").size(11.0).color(faded_color())),
+                );
+            });
             egui::ScrollArea::vertical().auto_shrink([true; 2]).show(ui, |ui| {
                 egui_dnd::dnd(ui, "rows_dnd").show_vec(
                     &mut order,
@@ -133,22 +148,18 @@ pub(super) fn render_attrs(app: &mut CogsApp, ui: &mut egui::Ui, item: &mut Item
                                     egui::vec2(row_w, row_h),
                                     egui::Layout::left_to_right(egui::Align::Center),
                                     |ui| {
-                                        ui.add_space(20.0);
+                                        ui.add_space(18.0);
                                         match ao.0 {
+                                            ////////// Text //////////
                                             AttributeValueType::Text => {
                                                 if let Some(attr) = item.text_attributes.clone().iter_mut().find(|a| a.id == ao.1)
                                                 {
-                                                    if ui
-                                                        .add_sized([120.0, row_h], egui::TextEdit::singleline(&mut attr.name))
-                                                        .changed()
-                                                    {
-                                                        update(item, app, attr.into(), None, None);
-                                                    };
-
                                                     let mut value_type = AttributeValueType::Text;
                                                     egui::ComboBox::from_id_salt("choice")
-                                                        .width(80.0)
-                                                        .selected_text(value_type.to_string())
+                                                        .width(74.0)
+                                                        .selected_text(
+                                                            RichText::new(value_type.to_string()).color(faded_color()).size(12.0),
+                                                        )
                                                         .show_ui(ui, |ui| {
                                                             for vt in AttributeValueType::iter() {
                                                                 if ui
@@ -168,31 +179,33 @@ pub(super) fn render_attrs(app: &mut CogsApp, ui: &mut egui::Ui, item: &mut Item
                                                         });
 
                                                     if ui
-                                                        .add_sized([140.0, row_h], egui::TextEdit::singleline(&mut attr.value))
+                                                        .add_sized([140.0, row_h], TextEdit::singleline(&mut attr.name))
+                                                        .changed()
+                                                    {
+                                                        update(item, app, attr.into(), None, None);
+                                                    };
+                                                    if ui
+                                                        .add_sized([160.0, row_h], TextEdit::singleline(&mut attr.value))
                                                         .changed()
                                                     {
                                                         update(item, app, attr.into(), None, None);
                                                     };
                                                 } else {
-                                                    ui.label(format!("(missing text) for ao.id={}", ao.1));
+                                                    ui.label(format!("(missing text attr w/ id={})", ao.1));
                                                 }
                                             }
 
+                                            ////////// Numeric //////////
                                             AttributeValueType::Numeric => {
                                                 if let Some(attr) =
                                                     item.numeric_attributes.clone().iter_mut().find(|a| a.id == ao.1)
                                                 {
-                                                    if ui
-                                                        .add_sized([120.0, row_h], egui::TextEdit::singleline(&mut attr.name))
-                                                        .changed()
-                                                    {
-                                                        update(item, app, attr.into(), None, None);
-                                                    };
-
                                                     let mut value_type = AttributeValueType::Numeric;
                                                     egui::ComboBox::from_id_salt("choice")
-                                                        .width(80.0)
-                                                        .selected_text(value_type.to_string())
+                                                        .width(74.0)
+                                                        .selected_text(
+                                                            RichText::new(value_type.to_string()).color(faded_color()).size(12.0),
+                                                        )
                                                         .show_ui(ui, |ui| {
                                                             for vt in AttributeValueType::iter() {
                                                                 if ui
@@ -211,19 +224,168 @@ pub(super) fn render_attrs(app: &mut CogsApp, ui: &mut egui::Ui, item: &mut Item
                                                             }
                                                         });
 
-                                                    let mut tmp = attr.value.to_string();
                                                     if ui
-                                                        .add_sized([140.0, row_h], egui::TextEdit::singleline(&mut tmp))
+                                                        .add_sized([140.0, row_h], TextEdit::singleline(&mut attr.name))
                                                         .changed()
                                                     {
+                                                        update(item, app, attr.into(), None, None);
+                                                    };
+                                                    let mut tmp = attr.value.to_string();
+                                                    if ui.add_sized([160.0, row_h], TextEdit::singleline(&mut tmp)).changed() {
                                                         update(item, app, attr.into(), None, Some(tmp.clone()));
                                                     }
                                                 } else {
-                                                    ui.label(format!("(missing numeric) for a.id={}", ao.1));
+                                                    ui.label(format!("(missing numeric attr w/ id={})", ao.1));
                                                 }
                                             }
-                                            _ => {
-                                                ui.label("(not implemented)");
+
+                                            ////////// Boolean //////////
+                                            AttributeValueType::Boolean => {
+                                                if let Some(attr) =
+                                                    item.boolean_attributes.clone().iter_mut().find(|a| a.id == ao.1)
+                                                {
+                                                    let mut value_type = AttributeValueType::Boolean;
+                                                    egui::ComboBox::from_id_salt("choice")
+                                                        .width(74.0)
+                                                        .selected_text(
+                                                            RichText::new(value_type.to_string()).color(faded_color()).size(12.0),
+                                                        )
+                                                        .show_ui(ui, |ui| {
+                                                            for vt in AttributeValueType::iter() {
+                                                                if ui
+                                                                    .selectable_value(&mut value_type, vt.clone(), vt.to_string())
+                                                                    .changed()
+                                                                {
+                                                                    update(
+                                                                        item,
+                                                                        app,
+                                                                        attr.into(),
+                                                                        Some(value_type.clone()),
+                                                                        None,
+                                                                    );
+                                                                    changed_value_type = true;
+                                                                }
+                                                            }
+                                                        });
+
+                                                    if ui
+                                                        .add_sized([140.0, row_h], TextEdit::singleline(&mut attr.name))
+                                                        .changed()
+                                                    {
+                                                        update(item, app, attr.into(), None, None);
+                                                    };
+                                                    if ui.checkbox(&mut attr.value, "").changed() {
+                                                        update(item, app, attr.into(), None, Some(attr.value.to_string()));
+                                                    }
+                                                    let (rect, _) =
+                                                        ui.allocate_exact_size(egui::vec2(180.0, row_h), egui::Sense::hover());
+                                                    ui.scope_builder(
+                                                        egui::UiBuilder::new()
+                                                            .max_rect(rect)
+                                                            .layout(egui::Layout::left_to_right(egui::Align::Center)),
+                                                        |ui| {
+                                                            ui.with_layout(
+                                                                egui::Layout::left_to_right(egui::Align::Center),
+                                                                |ui| {
+                                                                    ui.label(
+                                                                        egui::RichText::new(format!("({})", attr.value))
+                                                                            .color(faded_color())
+                                                                            .size(12.0),
+                                                                    );
+                                                                },
+                                                            );
+                                                        },
+                                                    );
+                                                } else {
+                                                    ui.label(format!("(missing boolean attr w/id={})", ao.1));
+                                                }
+                                            }
+
+                                            ////////// Date //////////
+                                            AttributeValueType::Date => {
+                                                if let Some(attr) = item.date_attributes.clone().iter_mut().find(|a| a.id == ao.1)
+                                                {
+                                                    let mut value_type = AttributeValueType::Date;
+                                                    egui::ComboBox::from_id_salt("choice")
+                                                        .width(74.0)
+                                                        .selected_text(
+                                                            RichText::new(value_type.to_string()).color(faded_color()).size(12.0),
+                                                        )
+                                                        .show_ui(ui, |ui| {
+                                                            for vt in AttributeValueType::iter() {
+                                                                if ui
+                                                                    .selectable_value(&mut value_type, vt.clone(), vt.to_string())
+                                                                    .changed()
+                                                                {
+                                                                    update(
+                                                                        item,
+                                                                        app,
+                                                                        attr.into(),
+                                                                        Some(value_type.clone()),
+                                                                        None,
+                                                                    );
+                                                                    changed_value_type = true;
+                                                                }
+                                                            }
+                                                        });
+
+                                                    if ui
+                                                        .add_sized([140.0, row_h], TextEdit::singleline(&mut attr.name))
+                                                        .changed()
+                                                    {
+                                                        update(item, app, attr.into(), None, None);
+                                                    };
+                                                    let mut tmp = attr.value.to_string();
+                                                    if ui.add_sized([160.0, row_h], TextEdit::singleline(&mut tmp)).changed() {
+                                                        update(item, app, attr.into(), None, Some(tmp.clone()));
+                                                    }
+                                                } else {
+                                                    ui.label(format!("(missing date attr w/id={})", ao.1));
+                                                }
+                                            }
+
+                                            ////////// DateTime //////////
+                                            AttributeValueType::DateTime => {
+                                                if let Some(attr) =
+                                                    item.datetime_attributes.clone().iter_mut().find(|a| a.id == ao.1)
+                                                {
+                                                    let mut value_type = AttributeValueType::DateTime;
+                                                    egui::ComboBox::from_id_salt("choice")
+                                                        .width(74.0)
+                                                        .selected_text(
+                                                            RichText::new(value_type.to_string()).color(faded_color()).size(12.0),
+                                                        )
+                                                        .show_ui(ui, |ui| {
+                                                            for vt in AttributeValueType::iter() {
+                                                                if ui
+                                                                    .selectable_value(&mut value_type, vt.clone(), vt.to_string())
+                                                                    .changed()
+                                                                {
+                                                                    update(
+                                                                        item,
+                                                                        app,
+                                                                        attr.into(),
+                                                                        Some(value_type.clone()),
+                                                                        None,
+                                                                    );
+                                                                    changed_value_type = true;
+                                                                }
+                                                            }
+                                                        });
+
+                                                    if ui
+                                                        .add_sized([140.0, row_h], TextEdit::singleline(&mut attr.name))
+                                                        .changed()
+                                                    {
+                                                        update(item, app, attr.into(), None, None);
+                                                    };
+                                                    let mut tmp = attr.value.to_string();
+                                                    if ui.add_sized([160.0, row_h], TextEdit::singleline(&mut tmp)).changed() {
+                                                        update(item, app, attr.into(), None, Some(tmp.clone()));
+                                                    }
+                                                } else {
+                                                    ui.label(format!("(missing datetime attr w/id={})", ao.1));
+                                                }
                                             }
                                         }
 
@@ -236,9 +398,9 @@ pub(super) fn render_attrs(app: &mut CogsApp, ui: &mut egui::Ui, item: &mut Item
                                 let hovered_row = ui.rect_contains_pointer(row_rect);
 
                                 if hovered_row {
-                                    let lbl_size = egui::vec2(row_h - 4.0, row_h - 4.0);
+                                    let lbl_size = egui::vec2(row_h - 3.0, row_h - 4.0);
                                     let lbl_rect = egui::Rect::from_min_size(
-                                        egui::pos2(row_rect.right() - lbl_size.x * 2.2, row_rect.center().y - lbl_size.y * 0.5),
+                                        egui::pos2(row_rect.right() - lbl_size.x * 2.2, row_rect.center().y - lbl_size.y * 0.6),
                                         lbl_size,
                                     );
                                     // Place the label at a fixed rect within the row (overlay).
@@ -253,9 +415,9 @@ pub(super) fn render_attrs(app: &mut CogsApp, ui: &mut egui::Ui, item: &mut Item
                                         });
                                     });
 
-                                    let btn_size = egui::vec2(row_h - 4.0, row_h - 4.0);
+                                    let btn_size = egui::vec2(row_h - 3.0, row_h - 4.0);
                                     let btn_rect = egui::Rect::from_min_size(
-                                        egui::pos2(row_rect.right() - btn_size.x, row_rect.center().y - btn_size.y * 0.5),
+                                        egui::pos2(row_rect.right() - btn_size.x, row_rect.center().y - btn_size.y * 0.6),
                                         btn_size,
                                     );
                                     // Place the button at a fixed rect within the row (overlay).
@@ -264,7 +426,7 @@ pub(super) fn render_attrs(app: &mut CogsApp, ui: &mut egui::Ui, item: &mut Item
 
                                         if ui
                                             .add(
-                                                Button::new(RichText::new(ICON_X_DEL).size(11.0).color(faded_color()))
+                                                Button::new(RichText::new(ICON_X_DEL).size(9.0).color(faded_color()))
                                                     .corner_radius(999.0)
                                                     .fill(egui::Color32::TRANSPARENT)
                                                     .stroke(Stroke::NONE),

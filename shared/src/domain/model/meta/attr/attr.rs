@@ -1,6 +1,9 @@
 use crate::domain::model::{
     Id,
-    meta::{AttributeValueType, NumericAttribute, TextAttribute},
+    meta::{
+        AttributeValueType, BooleanAttribute, DateAttribute, DateTimeAttribute, NumericAttribute,
+        TextAttribute,
+    },
 };
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
@@ -32,6 +35,39 @@ impl From<&mut NumericAttribute> for Attr {
             id: attr.id.clone(),
             name: attr.name.clone(),
             value_type: Some(AttributeValueType::Numeric),
+            value: attr.value.to_string(),
+        }
+    }
+}
+
+impl From<&mut BooleanAttribute> for Attr {
+    fn from(attr: &mut BooleanAttribute) -> Self {
+        Self {
+            id: attr.id.clone(),
+            name: attr.name.clone(),
+            value_type: Some(AttributeValueType::Boolean),
+            value: attr.value.to_string(),
+        }
+    }
+}
+
+impl From<&mut DateAttribute> for Attr {
+    fn from(attr: &mut DateAttribute) -> Self {
+        Self {
+            id: attr.id.clone(),
+            name: attr.name.clone(),
+            value_type: Some(AttributeValueType::Date),
+            value: attr.value.to_string(),
+        }
+    }
+}
+
+impl From<&mut DateTimeAttribute> for Attr {
+    fn from(attr: &mut DateTimeAttribute) -> Self {
+        Self {
+            id: attr.id.clone(),
+            name: attr.name.clone(),
+            value_type: Some(AttributeValueType::DateTime),
             value: attr.value.to_string(),
         }
     }
