@@ -55,6 +55,14 @@ impl Item {
             || self.datetime_attributes.len() > 0
     }
 
+    pub fn has_attribute(&self, attr_name: &str) -> bool {
+        self.text_attributes.iter().any(|a| a.name == attr_name)
+            || self.numeric_attributes.iter().any(|a| a.name == attr_name)
+            || self.boolean_attributes.iter().any(|a| a.name == attr_name)
+            || self.date_attributes.iter().any(|a| a.name == attr_name)
+            || self.datetime_attributes.iter().any(|a| a.name == attr_name)
+    }
+
     pub fn add_attribute(&mut self, attr: Attr) {
         let attr_id = Id::from(attr.name.clone());
         let id = attr_id.clone();

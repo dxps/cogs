@@ -11,7 +11,7 @@ pub struct DateTimeAttribute {
     pub name: String,
 
     /// Its value.
-    pub value: DateTime<chrono::Utc>,
+    pub value: DateTime<Utc>,
 
     /// Its (optional) template id.
     pub tmpl_id: Option<Id>,

@@ -5,6 +5,7 @@ use crate::domain::model::{
         TextAttribute,
     },
 };
+use chrono::{DateTime, NaiveDate, Utc};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
@@ -85,11 +86,25 @@ impl Attr {
                 if value == "true" || value == "false" {
                     Ok(())
                 } else {
-                    Err(format!("Invalid boolean value (of '{value}')").to_string())
+                    Err(
+                        format!("Invalid boolean value (of '{value}').\nIt must be true or false.")
+                            .to_string(),
+                    )
                 }
             }
-            AttributeValueType::Date => todo!(),
-            AttributeValueType::DateTime => todo!(),
+            AttributeValueType::Date => match value.parse::<NaiveDate>() {
+                Ok(_) => Ok(()),
+                Err(_) => Err(
+                    "The value is not a valid date.\nIt must be in YYYY-MM-DD format".to_string(),
+                ),
+            },
+            AttributeValueType::DateTime => match value.parse::<DateTime<Utc>>() {
+                Ok(_) => Ok(()),
+                Err(_) => Err(
+                    "The value is not a valid datetime.\nIt must be in YYYY-MM-DD hh::mm::ss format."
+                        .to_string(),
+                ),
+            },
         }
     }
 }

@@ -1,6 +1,6 @@
 use crate::{
     CogsApp,
-    colors::faded_color,
+    colors::{faded_color, faded_red_color},
     comps::item::ItemWindowState,
     constants::{ICON_REORDER, ICON_X_DEL},
 };
@@ -8,7 +8,7 @@ use cogs_shared::domain::model::{
     Id,
     meta::{Attr, AttributeValueType, Item},
 };
-use egui::{Button, CollapsingHeader, ComboBox, CursorIcon, Grid, Label, RichText, Stroke, TextEdit, Ui};
+use egui::{Button, CollapsingHeader, Color32, ComboBox, CursorIcon, Grid, Label, RichText, Stroke, TextEdit, Ui};
 use strum::IntoEnumIterator;
 
 pub(super) fn render_add_attr(app: &mut CogsApp, ui: &mut Ui, item: &mut Item, state: &mut ItemWindowState) {
@@ -26,6 +26,7 @@ pub(super) fn render_add_attr(app: &mut CogsApp, ui: &mut Ui, item: &mut Item, s
             .item_cu_add_attr
             .insert(state.id.clone(), Default::default());
     };
+    let mut attr_name_already_included = item.has_attribute(&name);
 
     ui.horizontal(|ui| {
         ui.add_space(10.0);
@@ -38,12 +39,22 @@ pub(super) fn render_add_attr(app: &mut CogsApp, ui: &mut Ui, item: &mut Item, s
                     ui.horizontal(|ui| {
                         ui.add_enabled(false, Label::new(" Name"));
                     });
-                    if ui
-                        .add_sized([FORM_FIELD_W, ui.spacing().interact_size.y], TextEdit::singleline(&mut name))
-                        .changed()
-                    {
-                        app.state.explore.item_cu_add_attr.get_mut(&state.id).unwrap().name = name.clone();
-                    }
+                    ui.horizontal(|ui| {
+                        if ui
+                            .add_sized([FORM_FIELD_W, ui.spacing().interact_size.y], TextEdit::singleline(&mut name))
+                            .changed()
+                        {
+                            app.state.explore.item_cu_add_attr.get_mut(&state.id).unwrap().name = name.clone();
+                            attr_name_already_included = item.has_attribute(&name);
+                        };
+                        if attr_name_already_included {
+                            ui.label(RichText::new("(!)").color(Color32::RED))
+                                .on_hover_text_at_pointer(RichText::new(
+                                    "You cannot add an attribute with\nthe same name as an existing one.",
+                                ));
+                        }
+                    });
+
                     ui.end_row();
                     ui.horizontal(|ui| {
                         ui.add_enabled(false, Label::new("   Type"));
@@ -79,14 +90,19 @@ pub(super) fn render_add_attr(app: &mut CogsApp, ui: &mut Ui, item: &mut Item, s
                             app.state.explore.item_cu_add_attr.get_mut(&state.id).unwrap().value = value;
                         }
                         let btn_enabled = if let Some(aa) = app.state.explore.item_cu_add_attr.get(&state.id) {
-                            !aa.name.is_empty() && aa.value_type.is_some() && !aa.value.is_empty()
+                            !aa.name.is_empty() && aa.value_type.is_some() && !aa.value.is_empty() && !attr_name_already_included
                         } else {
                             false
+                        };
+                        let hover_label = if attr_name_already_included {
+                            "Cannot add an attribute with\nthe same name as an existing one."
+                        } else {
+                            "Specify name, type, and value\nbefore adding the attribute."
                         };
                         if ui
                             .add_enabled(btn_enabled, Button::new(" + "))
                             .on_hover_cursor(CursorIcon::PointingHand)
-                            .on_disabled_hover_text("Specify name, type, and value\nbefore adding the attribute.")
+                            .on_disabled_hover_text(hover_label)
                             .clicked()
                         {
                             let new_attr = app.state.explore.item_cu_add_attr.get_mut(&state.id).unwrap().clone();
@@ -390,7 +406,31 @@ pub(super) fn render_attrs(app: &mut CogsApp, ui: &mut egui::Ui, item: &mut Item
                                                         update(item, app, attr.into(), None, None);
                                                     };
                                                     let mut tmp = attr.value.to_string();
-                                                    if ui.add_sized([160.0, row_h], TextEdit::singleline(&mut tmp)).changed() {
+                                                    let mut cval = tmp.clone();
+                                                    let id = egui::Id::new(format!(
+                                                        "item_{}_attr_{}_datetime_value",
+                                                        item.id, attr.name
+                                                    ));
+                                                    if let Some(v) = ui.ctx().data(|d| d.get_temp::<String>(id)) {
+                                                        tmp = v.clone();
+                                                        cval = v;
+                                                        log::debug!("cval={}", cval);
+                                                    }
+                                                    let mut value_input = TextEdit::singleline(&mut tmp);
+                                                    let mut value_invalid = None;
+
+                                                    if let Err(e) = Attr::validate_value(&AttributeValueType::DateTime, &cval) {
+                                                        value_input = value_input.background_color(faded_red_color());
+                                                        value_invalid = Some(e);
+                                                    }
+                                                    let mut resp = ui.add_sized([160.0, row_h], value_input);
+                                                    if let Some(e) = value_invalid {
+                                                        resp = resp.on_hover_text_at_pointer(e);
+                                                    }
+                                                    if resp.changed() {
+                                                        ui.ctx().data_mut(|d| d.insert_temp(id, tmp.clone()));
+                                                    }
+                                                    if resp.lost_focus() {
                                                         update(item, app, attr.into(), None, Some(tmp.clone()));
                                                     }
                                                 } else {
