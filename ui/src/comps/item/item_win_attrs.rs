@@ -336,7 +336,17 @@ pub(super) fn render_attrs(app: &mut CogsApp, ui: &mut egui::Ui, item: &mut Item
                                                         update(item, app, attr.into(), None, None);
                                                     };
                                                     let mut tmp = attr.value.to_string();
-                                                    if ui.add_sized([160.0, row_h], TextEdit::singleline(&mut tmp)).changed() {
+                                                    let id =
+                                                        egui::Id::new(format!("item_{}_attr_{}_date_value", item.id, attr.name));
+                                                    if let Some(v) = ui.ctx().data(|d| d.get_temp(id)) {
+                                                        tmp = v;
+                                                    }
+                                                    let resp = ui.add_sized([160.0, row_h], TextEdit::singleline(&mut tmp));
+                                                    if resp.changed() {
+                                                        ui.ctx().data_mut(|d| d.insert_temp(id, tmp.clone()));
+                                                    }
+                                                    if resp.lost_focus() {
+                                                        log::debug!("Updating date attr w/ value='{}'", &tmp);
                                                         update(item, app, attr.into(), None, Some(tmp.clone()));
                                                     }
                                                 } else {
