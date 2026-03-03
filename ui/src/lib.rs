@@ -9,6 +9,7 @@ pub(self) use app_msg_handlers::*;
 mod state;
 pub use state::*;
 
+mod colors;
 mod constants;
 
 mod comps;

@@ -7,7 +7,7 @@ use crate::{
     constants::EXPLORE_ELEMENT,
 };
 use cogs_shared::domain::model::{Action, Id, meta::Item};
-use egui::{Align, Button, CursorIcon, Direction, Grid, Layout, Margin, Window};
+use egui::{Align, Button, CursorIcon, Direction, Grid, Layout, Margin, Rect, Window};
 
 pub struct ItemWindow;
 
@@ -79,6 +79,7 @@ impl ItemWindow {
         ui.vertical(|ui| {
             ui.add_space(14.0);
             Self::render_tabs(ui, state);
+            ui.add_space(16.0);
             Grid::new(format!("item_win_{}_grid", state.id))
                 .spacing([10.0, 10.0])
                 .num_columns(2)
@@ -92,6 +93,7 @@ impl ItemWindow {
                     }
                 });
             if state.action != Action::View {
+                ui.add_space(16.0);
                 render_add_attr(ctx, ui, element, state);
             }
             ui.add_space(8.0);
@@ -106,7 +108,7 @@ impl ItemWindow {
             let full = ui.max_rect();
             let x = full.center().x - desired.x * 0.5;
             let y = ui.cursor().min.y;
-            let rect = egui::Rect::from_min_size(egui::pos2(x, y), desired);
+            let rect = Rect::from_min_size(egui::pos2(x, y), desired);
 
             ui.scope_builder(
                 egui::UiBuilder::new()
@@ -212,7 +214,7 @@ impl AppComponent for ItemWindow {
                         render_ask_window(ctx, ui, &mut state);
                     } else {
                         Self::render_header(ui, &state);
-                        ui.add_space(20.0); // only the space you explicitly want
+                        ui.add_space(10.0);
                         Self::render_content(ctx, ui, &mut element, &mut state);
                         ui.add_space(20.0);
                         Self::render_footer_buttons(ctx, ui, ectx, &mut element, &mut state);

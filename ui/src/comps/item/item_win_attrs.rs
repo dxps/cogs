@@ -1,9 +1,14 @@
-use crate::{CogsApp, comps::item::ItemWindowState, constants::CORNER_RADIUS};
+use crate::{
+    CogsApp,
+    colors::faded_color,
+    comps::item::ItemWindowState,
+    constants::{ICON_REORDER, ICON_X_DEL},
+};
 use cogs_shared::domain::model::{
     Id,
-    meta::{AttributeValueType, Item},
+    meta::{Attr, AttributeValueType, Item},
 };
-use egui::{Button, CollapsingHeader, Color32, ComboBox, CursorIcon, Grid, Label, Stroke, TextEdit, Ui};
+use egui::{Button, CollapsingHeader, ComboBox, CursorIcon, Grid, Label, RichText, Stroke, TextEdit, Ui};
 use strum::IntoEnumIterator;
 
 pub(super) fn render_add_attr(app: &mut CogsApp, ui: &mut Ui, item: &mut Item, state: &mut ItemWindowState) {
@@ -21,9 +26,10 @@ pub(super) fn render_add_attr(app: &mut CogsApp, ui: &mut Ui, item: &mut Item, s
             .item_cu_add_attr
             .insert(state.id.clone(), Default::default());
     };
+
     ui.horizontal(|ui| {
         ui.add_space(10.0);
-        CollapsingHeader::new("Add an attribute").show(ui, |ui| {
+        CollapsingHeader::new(RichText::new("Add an attribute").color(faded_color())).show(ui, |ui| {
             ui.add_space(10.0);
             Grid::new(format!("item_win_{}_add_attr_grid", state.id))
                 .spacing([10.0, 10.0])
@@ -105,9 +111,8 @@ pub(super) fn render_attrs(app: &mut CogsApp, ui: &mut egui::Ui, item: &mut Item
     let row_h = 20.0;
     let list_h = 260.0;
 
-    // Work on a temporary order that we can reorder via DnD:
+    // Work on a temporary order that we can reorder via DnD.
     let mut order = item.attributes_order.clone();
-    log::debug!("order: {order:?} as per item.attributes_order: {:?}", item.attributes_order);
 
     let mut changed_value_type = false;
     let mut to_remove: Option<(AttributeValueType, Id)> = None;
@@ -123,125 +128,155 @@ pub(super) fn render_attrs(app: &mut CogsApp, ui: &mut egui::Ui, item: &mut Item
                         ui.push_id(&ao.1, |ui| {
                             let row_w = ui.available_width();
 
-                            let row = ui.allocate_ui_with_layout(
-                                egui::vec2(row_w, row_h),
-                                egui::Layout::left_to_right(egui::Align::Center),
-                                |ui| {
-                                    handle.ui(ui, |ui| {
-                                        ui.add_sized([20.0, row_h], egui::Label::new("⠿"));
-                                    });
+                            ui.horizontal(|ui| {
+                                let row = ui.allocate_ui_with_layout(
+                                    egui::vec2(row_w, row_h),
+                                    egui::Layout::left_to_right(egui::Align::Center),
+                                    |ui| {
+                                        ui.add_space(20.0);
+                                        match ao.0 {
+                                            AttributeValueType::Text => {
+                                                if let Some(attr) = item.text_attributes.clone().iter_mut().find(|a| a.id == ao.1)
+                                                {
+                                                    if ui
+                                                        .add_sized([120.0, row_h], egui::TextEdit::singleline(&mut attr.name))
+                                                        .changed()
+                                                    {
+                                                        update(item, app, attr.into(), None, None);
+                                                    };
 
-                                    match ao.0 {
-                                        AttributeValueType::Text => {
-                                            if let Some(attr) = item.text_attributes.clone().iter_mut().find(|a| a.id == ao.1) {
-                                                ui.add_sized([120.0, row_h], egui::TextEdit::singleline(&mut attr.name));
-
-                                                let mut value_type = AttributeValueType::Text;
-                                                egui::ComboBox::from_id_salt("choice")
-                                                    .width(80.0)
-                                                    .selected_text(value_type.to_string())
-                                                    .show_ui(ui, |ui| {
-                                                        for vt in AttributeValueType::iter() {
-                                                            if ui
-                                                                .selectable_value(&mut value_type, vt.clone(), vt.to_string())
-                                                                .changed()
-                                                            {
-                                                                item.change_attr_value_type(attr.into(), value_type.clone());
-                                                                changed_value_type = true;
-
-                                                                app.state
-                                                                    .explore
-                                                                    .open_windows_item
-                                                                    .insert(item.id.clone(), item.clone());
-
-                                                                log::debug!(
-                                                                    "[changed text attr] Updated open_windows_item: {:?}",
-                                                                    app.state.explore.open_windows_item
-                                                                );
+                                                    let mut value_type = AttributeValueType::Text;
+                                                    egui::ComboBox::from_id_salt("choice")
+                                                        .width(80.0)
+                                                        .selected_text(value_type.to_string())
+                                                        .show_ui(ui, |ui| {
+                                                            for vt in AttributeValueType::iter() {
+                                                                if ui
+                                                                    .selectable_value(&mut value_type, vt.clone(), vt.to_string())
+                                                                    .changed()
+                                                                {
+                                                                    update(
+                                                                        item,
+                                                                        app,
+                                                                        attr.into(),
+                                                                        Some(value_type.clone()),
+                                                                        None,
+                                                                    );
+                                                                    changed_value_type = true;
+                                                                }
                                                             }
-                                                        }
-                                                    });
+                                                        });
 
-                                                ui.add_sized([140.0, row_h], egui::TextEdit::singleline(&mut attr.value));
-                                            } else {
-                                                ui.label(format!("(missing text) for ao.id={}", ao.1));
-                                            }
-                                        }
-                                        AttributeValueType::Numeric => {
-                                            if let Some(attr) = item.numeric_attributes.clone().iter_mut().find(|a| a.id == ao.1)
-                                            {
-                                                ui.add_sized([120.0, row_h], egui::TextEdit::singleline(&mut attr.name));
-
-                                                let mut value_type = AttributeValueType::Numeric;
-                                                egui::ComboBox::from_id_salt("choice")
-                                                    .width(80.0)
-                                                    .selected_text(value_type.to_string())
-                                                    .show_ui(ui, |ui| {
-                                                        for vt in AttributeValueType::iter() {
-                                                            if ui
-                                                                .selectable_value(&mut value_type, vt.clone(), vt.to_string())
-                                                                .changed()
-                                                            {
-                                                                item.change_attr_value_type(attr.into(), value_type.clone());
-                                                                changed_value_type = true;
-
-                                                                app.state
-                                                                    .explore
-                                                                    .open_windows_item
-                                                                    .insert(item.id.clone(), item.clone());
-
-                                                                log::debug!(
-                                                                    "[changed numeric attr] Updated open_windows_item: {:?}",
-                                                                    app.state.explore.open_windows_item
-                                                                );
-                                                            }
-                                                        }
-                                                    });
-
-                                                // NOTE: this edits a temporary string; it will not persist.
-                                                // Use a temp buffer or egui::DragValue for real numeric editing.
-                                                let mut tmp = attr.value.to_string();
-                                                if ui.add_sized([140.0, row_h], egui::TextEdit::singleline(&mut tmp)).changed() {
-                                                    // parse back if desired:
-                                                    // if let Ok(v) = tmp.parse::<f64>() { attr.value = v; }
+                                                    if ui
+                                                        .add_sized([140.0, row_h], egui::TextEdit::singleline(&mut attr.value))
+                                                        .changed()
+                                                    {
+                                                        update(item, app, attr.into(), None, None);
+                                                    };
+                                                } else {
+                                                    ui.label(format!("(missing text) for ao.id={}", ao.1));
                                                 }
-                                            } else {
-                                                ui.label(format!("(missing numeric) for a.id={}", ao.1));
+                                            }
+
+                                            AttributeValueType::Numeric => {
+                                                if let Some(attr) =
+                                                    item.numeric_attributes.clone().iter_mut().find(|a| a.id == ao.1)
+                                                {
+                                                    if ui
+                                                        .add_sized([120.0, row_h], egui::TextEdit::singleline(&mut attr.name))
+                                                        .changed()
+                                                    {
+                                                        update(item, app, attr.into(), None, None);
+                                                    };
+
+                                                    let mut value_type = AttributeValueType::Numeric;
+                                                    egui::ComboBox::from_id_salt("choice")
+                                                        .width(80.0)
+                                                        .selected_text(value_type.to_string())
+                                                        .show_ui(ui, |ui| {
+                                                            for vt in AttributeValueType::iter() {
+                                                                if ui
+                                                                    .selectable_value(&mut value_type, vt.clone(), vt.to_string())
+                                                                    .changed()
+                                                                {
+                                                                    update(
+                                                                        item,
+                                                                        app,
+                                                                        attr.into(),
+                                                                        Some(value_type.clone()),
+                                                                        None,
+                                                                    );
+                                                                    changed_value_type = true;
+                                                                }
+                                                            }
+                                                        });
+
+                                                    let mut tmp = attr.value.to_string();
+                                                    if ui
+                                                        .add_sized([140.0, row_h], egui::TextEdit::singleline(&mut tmp))
+                                                        .changed()
+                                                    {
+                                                        update(item, app, attr.into(), None, Some(tmp.clone()));
+                                                    }
+                                                } else {
+                                                    ui.label(format!("(missing numeric) for a.id={}", ao.1));
+                                                }
+                                            }
+                                            _ => {
+                                                ui.label("(not implemented)");
                                             }
                                         }
-                                        _ => {
-                                            ui.label("(not implemented)");
-                                        }
-                                    }
 
-                                    // Reserve space for the overlay X so we don't cover content.
-                                    ui.add_space(row_h);
-                                },
-                            );
-
-                            let row_rect = row.response.rect;
-                            let hovered_row = ui.rect_contains_pointer(row_rect);
-
-                            if hovered_row {
-                                let btn_size = egui::vec2(row_h - 5.0, row_h - 5.0);
-                                let btn_rect = egui::Rect::from_min_size(
-                                    egui::pos2(row_rect.right() - btn_size.x, row_rect.center().y - btn_size.y * 0.6),
-                                    btn_size,
+                                        // Reserve space for the overlay X so we don't cover content.
+                                        ui.add_space(row_h * 2.0);
+                                    },
                                 );
 
-                                // Place the button at a fixed rect within the row (overlay).
-                                ui.scope_builder(egui::UiBuilder::new().max_rect(btn_rect), |ui| {
-                                    ui.set_clip_rect(row_rect);
+                                let row_rect = row.response.rect;
+                                let hovered_row = ui.rect_contains_pointer(row_rect);
 
-                                    if ui
-                                        .add(egui::Button::new("x").corner_radius(999.0).fill(egui::Color32::TRANSPARENT))
-                                        .on_hover_cursor(egui::CursorIcon::PointingHand)
-                                        .clicked()
-                                    {
-                                        to_remove = Some((ao.0.clone(), ao.1.clone()));
-                                    }
-                                });
-                            }
+                                if hovered_row {
+                                    let lbl_size = egui::vec2(row_h - 4.0, row_h - 4.0);
+                                    let lbl_rect = egui::Rect::from_min_size(
+                                        egui::pos2(row_rect.right() - lbl_size.x * 2.2, row_rect.center().y - lbl_size.y * 0.5),
+                                        lbl_size,
+                                    );
+                                    // Place the label at a fixed rect within the row (overlay).
+                                    ui.scope_builder(egui::UiBuilder::new().max_rect(lbl_rect), |ui| {
+                                        handle.ui(ui, |ui| {
+                                            ui.add_sized(
+                                                [10.0, row_h],
+                                                egui::Label::new(RichText::new(ICON_REORDER).color(faded_color()).size(9.0)),
+                                            )
+                                            .on_hover_cursor(CursorIcon::Crosshair)
+                                            .on_hover_and_drag_cursor(CursorIcon::ResizeVertical);
+                                        });
+                                    });
+
+                                    let btn_size = egui::vec2(row_h - 4.0, row_h - 4.0);
+                                    let btn_rect = egui::Rect::from_min_size(
+                                        egui::pos2(row_rect.right() - btn_size.x, row_rect.center().y - btn_size.y * 0.5),
+                                        btn_size,
+                                    );
+                                    // Place the button at a fixed rect within the row (overlay).
+                                    ui.scope_builder(egui::UiBuilder::new().max_rect(btn_rect), |ui| {
+                                        ui.set_clip_rect(row_rect);
+
+                                        if ui
+                                            .add(
+                                                Button::new(RichText::new(ICON_X_DEL).size(11.0).color(faded_color()))
+                                                    .corner_radius(999.0)
+                                                    .fill(egui::Color32::TRANSPARENT)
+                                                    .stroke(Stroke::NONE),
+                                            )
+                                            .on_hover_cursor(egui::CursorIcon::PointingHand)
+                                            .clicked()
+                                        {
+                                            to_remove = Some((ao.0.clone(), ao.1.clone()));
+                                        }
+                                    });
+                                }
+                            }); // end-of-ui.horizontal(_)
 
                             ui.add_space(2.0);
                         });
@@ -251,7 +286,7 @@ pub(super) fn render_attrs(app: &mut CogsApp, ui: &mut egui::Ui, item: &mut Item
         },
     );
 
-    // Apply removal after list render (avoid mutating while egui_dnd iterates)
+    // Apply removal after list render (avoid mutating while egui_dnd iterates).
     if let Some((vt, id)) = to_remove {
         item.attributes_order.retain(|(_, oid)| *oid != id);
         match vt {
@@ -274,5 +309,43 @@ pub(super) fn render_attrs(app: &mut CogsApp, ui: &mut egui::Ui, item: &mut Item
             "[changed order] Updated open_windows_item: {:?}",
             app.state.explore.open_windows_item
         );
+    }
+}
+
+fn update(item: &mut Item, app: &mut CogsApp, attr: Attr, value_type: Option<AttributeValueType>, value: Option<String>) {
+    let mut a = attr.clone();
+
+    if let Some(vt) = value_type {
+        item.change_attr_value_type(&a, &vt);
+        if let Some(v) = value {
+            if let Err(e) = Attr::validate_value(&vt, &v) {
+                log::error!(
+                    "Failed to validate value {} for attr={:?} to item id='{}': {}",
+                    &v,
+                    attr,
+                    item.id,
+                    e
+                );
+            } else {
+                a.value = v;
+                log::debug!("Updated attr={:?} on item id='{}' based on value_type and value.", a, item.id);
+                item.change_attr_value_type(&attr.clone().into(), &vt);
+            }
+        }
+    } else if let Some(v) = value {
+        a.value = v;
+        log::debug!("Updated attr={:?} on item id='{}' based on value.", a, item.id);
+    }
+
+    if let Err(e) = item.update_attribute(&a) {
+        log::error!(
+            "Failed to update item attributes on item id='{}' based on attr={:?}: {}",
+            item.id,
+            a,
+            e
+        );
+    } else {
+        // Reflect the change in the global state.
+        app.state.explore.open_windows_item.insert(item.id.clone(), item.clone());
     }
 }

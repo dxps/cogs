@@ -1,5 +1,6 @@
 use crate::{
     UiState,
+    colors::FADED_COLOR,
     comps::{AppComponent, Footer, Header},
     constants::{APP_KEY, CORNER_RADIUS},
     handle_msg,
@@ -279,5 +280,7 @@ fn ui_init_cosmetics(ctx: &egui::Context) {
             spread: 5,
             color: egui::Color32::from_black_alpha(alpha),
         };
+
+        _ = FADED_COLOR.set(style.visuals.text_color().gamma_multiply(0.6));
     });
 }

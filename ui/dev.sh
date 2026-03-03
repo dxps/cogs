@@ -1,3 +1,3 @@
 
-trunk serve --poll
+trunk serve -v --poll
 

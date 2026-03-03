@@ -5,6 +5,7 @@ use crate::domain::model::{
         NumericAttribute, TextAttribute,
     },
 };
+use anyhow::Error;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
@@ -98,9 +99,55 @@ impl Item {
         self.attributes_order.push((value_type, attr_id));
     }
 
-    pub fn change_attr_value_type(&mut self, attr: Attr, to_type: AttributeValueType) {
+    pub fn update_attribute(&mut self, attr: &Attr) -> Result<(), Error> {
+        let value_type = attr.value_type.clone().unwrap_or_default();
+        match value_type {
+            AttributeValueType::Text => {
+                if let Some(a) = self.text_attributes.iter_mut().find(|a| a.id == attr.id) {
+                    a.name = attr.name.clone();
+                    a.value = attr.value.clone();
+                }
+                Ok(())
+            }
+            AttributeValueType::Numeric => {
+                if let Some(a) = self.numeric_attributes.iter_mut().find(|a| a.id == attr.id) {
+                    log::debug!("Updating numeric attr: {a:?} based on {attr:?}");
+                    a.name = attr.name.clone();
+                    a.value = Decimal::from_str(&attr.value)?;
+                }
+                Ok(())
+            }
+            AttributeValueType::Boolean => {
+                if let Some(a) = self.boolean_attributes.iter_mut().find(|a| a.id == attr.id) {
+                    a.name = attr.name.clone();
+                    a.value = attr.value == "true"
+                }
+                Ok(())
+            }
+            AttributeValueType::Date => {
+                if let Some(a) = self.date_attributes.iter_mut().find(|a| a.id == attr.id) {
+                    a.name = attr.name.clone();
+                    a.value = attr.value.parse()?;
+                }
+                Ok(())
+            }
+            AttributeValueType::DateTime => {
+                if let Some(a) = self
+                    .datetime_attributes
+                    .iter_mut()
+                    .find(|a| a.id == attr.id)
+                {
+                    a.name = attr.name.clone();
+                    a.value = attr.value.parse()?;
+                }
+                Ok(())
+            }
+        }
+    }
+
+    pub fn change_attr_value_type(&mut self, attr: &Attr, to_type: &AttributeValueType) {
         // 1) Remove it from the appropriate vec.
-        match attr.value_type.unwrap_or_default() {
+        match attr.value_type.clone().unwrap_or_default() {
             AttributeValueType::Text => self.text_attributes.retain(|a| a.id != attr.id),
             AttributeValueType::Numeric => self.numeric_attributes.retain(|a| a.id != attr.id),
             AttributeValueType::Boolean => self.boolean_attributes.retain(|a| a.id != attr.id),
@@ -124,7 +171,7 @@ impl Item {
                     Ok(v) => v,
                     Err(e) => {
                         log::error!(
-                            "Failed to parse value '{}' for numeric attribute '{}': {}.",
+                            "Failed to parse value '{}' for numeric attribute '{}': {}. Defaulting to 0.",
                             &attr.value,
                             attr.name,
                             e
@@ -146,9 +193,9 @@ impl Item {
         });
 
         log::debug!(
-            "Changed attribute name='{}' value type to_type={}. Result item: {:#?}",
-            &attr.name,
+            "Changed value_type={} for attr named '{}'. Updated item: {:?}",
             to_type,
+            &attr.name,
             self
         );
     }

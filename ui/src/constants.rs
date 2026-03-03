@@ -20,6 +20,8 @@ pub const ICON_LOGIN: &str = "\u{E81E}";
 pub const ICON_LOGOUT: &str = "\u{E824}";
 pub const ICON_HELP: &str = "\u{E66A}";
 pub const ICON_TMPL: &str = "\u{E64E}";
+pub const ICON_REORDER: &str = "\u{E612}";
+pub const ICON_X_DEL: &str = "\u{F530}";
 
 ///////////////////////////
 // General app constants //

@@ -2,32 +2,10 @@ use crate::domain::model::{
     Id,
     meta::{AttributeValueType, NumericAttribute, TextAttribute},
 };
-// use chrono::{DateTime, NaiveDate};
+use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
-
-// pub trait Attribute {
-// fn name(&self) -> String;
-// fn value_type(&self) -> AttributeValueType;
-// fn text_value(&self) -> String;
-// fn smallint_value(&self) -> u16;
-// fn int_value(&self) -> u32;
-// fn bigint_value(&self) -> u64;
-// fn decimal_value(&self) -> f32;
-// fn bool_value(&self) -> bool;
-// fn date_value(&self) -> NaiveDate;
-// fn datetime_value(&self) -> DateTime<chrono::Utc>;
-// }
-//
-// impl Debug for dyn Attribute {
-// fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-// f.debug_struct("Attribute")
-// .field("name", &self.name())
-// .field("value_type", &self.value_type())
-// TODO: add value, based on value type
-// .finish()
-// }
-// }
+use std::str::FromStr;
 
 #[derive(Clone, Debug, Default, Hash, Serialize, Deserialize)]
 pub struct Attr {
@@ -55,6 +33,27 @@ impl From<&mut NumericAttribute> for Attr {
             name: attr.name.clone(),
             value_type: Some(AttributeValueType::Numeric),
             value: attr.value.to_string(),
+        }
+    }
+}
+
+impl Attr {
+    pub fn validate_value(value_type: &AttributeValueType, value: &str) -> Result<(), String> {
+        match value_type {
+            AttributeValueType::Text => Ok(()),
+            AttributeValueType::Numeric => match Decimal::from_str(value) {
+                Ok(_) => Ok(()),
+                Err(e) => Err(e.to_string()),
+            },
+            AttributeValueType::Boolean => {
+                if value == "true" || value == "false" {
+                    Ok(())
+                } else {
+                    Err(format!("Invalid boolean value (of '{value}')").to_string())
+                }
+            }
+            AttributeValueType::Date => todo!(),
+            AttributeValueType::DateTime => todo!(),
         }
     }
 }
