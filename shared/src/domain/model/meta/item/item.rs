@@ -6,6 +6,7 @@ use crate::domain::model::{
     },
 };
 use anyhow::Error;
+use chrono::NaiveDateTime;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
@@ -98,8 +99,19 @@ impl Item {
             }),
             AttributeValueType::DateTime => self.datetime_attributes.push(DateTimeAttribute {
                 id,
-                name: attr.name,
-                value: attr.value.parse().unwrap_or_default(),
+                name: attr.name.clone(),
+                value: match NaiveDateTime::parse_from_str(&attr.value, "%Y-%m-%d %H:%M:%S%.3f") { // Accept exactly 3 fractional digits.
+                    Ok(v) => v,
+                    Err(e) => {
+                        log::error!(
+                            "[item.add_attribute] Failed to parse value '{}' as datetime for attribute '{}': {}. Defaulting to now.",
+                            &attr.value,
+                            attr.name,
+                            e
+                        );
+                        DateTimeAttribute::now_value()
+                    }
+                },
                 tmpl_id: None,
                 owner_id: self.id.clone(),
             }),

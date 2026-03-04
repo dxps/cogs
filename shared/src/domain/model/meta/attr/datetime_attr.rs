@@ -1,5 +1,5 @@
 use crate::domain::model::{Id, meta::AttrTemplate};
-use chrono::{DateTime, Utc};
+use chrono::{Local, NaiveDateTime};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -11,7 +11,7 @@ pub struct DateTimeAttribute {
     pub name: String,
 
     /// Its value.
-    pub value: DateTime<Utc>,
+    pub value: NaiveDateTime,
 
     /// Its (optional) template id.
     pub tmpl_id: Option<Id>,
@@ -24,7 +24,7 @@ impl DateTimeAttribute {
     pub fn new(
         id: Id,
         name: String,
-        value: DateTime<Utc>,
+        value: NaiveDateTime,
         tmpl_id: Option<Id>,
         owner_id: Id,
     ) -> Self {
@@ -36,13 +36,17 @@ impl DateTimeAttribute {
             owner_id,
         }
     }
+
+    pub fn now_value() -> NaiveDateTime {
+        Local::now().naive_local()
+    }
 }
 
 impl From<AttrTemplate> for DateTimeAttribute {
     fn from(at: AttrTemplate) -> Self {
-        let value: DateTime<Utc> = DateTime::parse_from_rfc3339(&at.default_value)
-            .map(|dt| dt.with_timezone(&Utc))
-            .unwrap_or_else(|_| Utc::now());
+        let value: NaiveDateTime =
+            NaiveDateTime::parse_from_str(&at.default_value, "%Y-%m-%d %H:%M:%S%.3f")
+                .unwrap_or_else(|_| Local::now().naive_local());
 
         Self::new(
             Id::default(), // its id

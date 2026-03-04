@@ -1,5 +1,5 @@
 use crate::domain::model::{Id, meta::AttrTemplate};
-use chrono::NaiveDate;
+use chrono::{NaiveDate, Utc};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -30,6 +30,10 @@ impl DateAttribute {
             owner_id,
         }
     }
+
+    pub fn now_value() -> NaiveDate {
+        Utc::now().date_naive()
+    }
 }
 
 impl From<AttrTemplate> for DateAttribute {
@@ -37,11 +41,11 @@ impl From<AttrTemplate> for DateAttribute {
         let value = NaiveDate::from_ymd_opt(at.default_value.parse().unwrap(), 1, 1)
             .unwrap_or_else(|| {
                 log::error!(
-                    "Failed to parse default value '{}' for date attribute '{}'.",
+                    "Failed to parse value '{}' for date attribute '{}'.",
                     at.default_value,
                     at.name,
                 );
-                NaiveDate::from_ymd_opt(2026, 1, 1).unwrap() // Defaults to 2026-01-01, if parsing fails.
+                Utc::now().date_naive()
             });
 
         Self::new(

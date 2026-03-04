@@ -5,7 +5,7 @@ use crate::domain::model::{
         TextAttribute,
     },
 };
-use chrono::{DateTime, NaiveDate, Utc};
+use chrono::{NaiveDate, NaiveDateTime};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
@@ -80,7 +80,10 @@ impl Attr {
             AttributeValueType::Text => Ok(()),
             AttributeValueType::Numeric => match Decimal::from_str(value) {
                 Ok(_) => Ok(()),
-                Err(e) => Err(e.to_string()),
+                Err(e) => {
+                    log::warn!("Failed to parse '{}' as Decimal: {}", value, e);
+                    Err("Invalid numeric value.".to_string())
+                }
             },
             AttributeValueType::Boolean => {
                 if value == "true" || value == "false" {
@@ -94,17 +97,26 @@ impl Attr {
             }
             AttributeValueType::Date => match value.parse::<NaiveDate>() {
                 Ok(_) => Ok(()),
-                Err(_) => Err(
-                    "The value is not a valid date.\nIt must be in YYYY-MM-DD format".to_string(),
-                ),
+                Err(e) => {
+                    log::warn!("Failed to parse '{}' as NaiveDate: {}", value, e);
+                    Err(
+                    "The value is not a valid date.\nIts format must be YYYY-MM-DD\nand contain valid values.".to_string(),
+                )
+                }
             },
-            AttributeValueType::DateTime => match value.parse::<DateTime<Utc>>() {
-                Ok(_) => Ok(()),
-                Err(_) => Err(
-                    "The value is not a valid datetime.\nIt must be in YYYY-MM-DD hh::mm::ss format."
+            AttributeValueType::DateTime => {
+                match NaiveDateTime::parse_from_str(value, "%Y-%m-%d %H:%M:%S%.3f") {
+                    // "%.3f" means that it accept exactly 3 fractional digits.
+                    Ok(_) => Ok(()),
+                    Err(e) => {
+                        log::warn!("Failed to parse '{}' as NaiveDateTime: {}", value, e);
+                        Err(
+                    "The value is not a valid datetime.\nIts format must be YYYY-MM-DD hh::mm::ss.SSS\nand contain valid values."
                         .to_string(),
-                ),
-            },
+                )
+                    }
+                }
+            }
         }
     }
 }
