@@ -202,7 +202,6 @@ impl ItemTemplateWindow {
                         ui.add_sized(
                             [FORM_FIELD_W, (rows as f32) * ui.spacing().interact_size.y],
                             TextEdit::multiline(&mut links_text)
-                                .frame(true)
                                 .interactive(false)
                                 .desired_rows(rows)
                                 .desired_width(FORM_FIELD_W),
@@ -523,7 +522,6 @@ impl ItemTemplateWindow {
                         ui.add_sized(
                             [FORM_FIELD_W, (rows as f32) * ui.spacing().interact_size.y],
                             TextEdit::multiline(&mut attrs_text)
-                                .frame(true)
                                 .interactive(false)
                                 .desired_rows(rows)
                                 .desired_width(FORM_FIELD_W),
@@ -683,7 +681,7 @@ impl AppComponent for ItemTemplateWindow {
             .max_width(300.0)
             .min_height(200.0)
             .max_height(400.0)
-            .frame(egui::Frame::window(&ectx.style()).inner_margin(Margin::ZERO))
+            .frame(egui::Frame::window(&ectx.global_style()).inner_margin(Margin::ZERO))
             .show(ectx, |ui| {
                 ui.vertical(|ui| {
                     Self::render_header(ui, &s);

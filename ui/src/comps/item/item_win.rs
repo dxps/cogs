@@ -207,7 +207,7 @@ impl AppComponent for ItemWindow {
             .min_width(400.0)
             .max_width(500.0)
             .min_height(200.0)
-            .frame(egui::Frame::window(&ectx.style()).inner_margin(Margin::ZERO))
+            .frame(egui::Frame::window(&ectx.global_style()).inner_margin(Margin::ZERO))
             .show(ectx, |ui| {
                 ui.vertical(|ui| {
                     if element.id.is_zero() && !cont {

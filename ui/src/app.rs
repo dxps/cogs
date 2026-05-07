@@ -14,6 +14,52 @@ use egui::{
 };
 use std::sync::mpsc::{Receiver, Sender, channel};
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+struct CatppuccinTheme {
+    rosewater: egui::Color32,
+    maroon: egui::Color32,
+    peach: egui::Color32,
+    blue: egui::Color32,
+    text: egui::Color32,
+    overlay1: egui::Color32,
+    surface2: egui::Color32,
+    surface1: egui::Color32,
+    surface0: egui::Color32,
+    base: egui::Color32,
+    mantle: egui::Color32,
+    crust: egui::Color32,
+}
+
+const CATPPUCCIN_LATTE: CatppuccinTheme = CatppuccinTheme {
+    rosewater: egui::Color32::from_rgb(220, 138, 120),
+    maroon: egui::Color32::from_rgb(230, 69, 83),
+    peach: egui::Color32::from_rgb(254, 100, 11),
+    blue: egui::Color32::from_rgb(30, 102, 245),
+    text: egui::Color32::from_rgb(76, 79, 105),
+    overlay1: egui::Color32::from_rgb(140, 143, 161),
+    surface2: egui::Color32::from_rgb(172, 176, 190),
+    surface1: egui::Color32::from_rgb(188, 192, 204),
+    surface0: egui::Color32::from_rgb(204, 208, 218),
+    base: egui::Color32::from_rgb(239, 241, 245),
+    mantle: egui::Color32::from_rgb(230, 233, 239),
+    crust: egui::Color32::from_rgb(220, 224, 232),
+};
+
+const CATPPUCCIN_FRAPPE: CatppuccinTheme = CatppuccinTheme {
+    rosewater: egui::Color32::from_rgb(242, 213, 207),
+    maroon: egui::Color32::from_rgb(234, 153, 156),
+    peach: egui::Color32::from_rgb(239, 159, 118),
+    blue: egui::Color32::from_rgb(140, 170, 238),
+    text: egui::Color32::from_rgb(198, 208, 245),
+    overlay1: egui::Color32::from_rgb(131, 139, 167),
+    surface2: egui::Color32::from_rgb(98, 104, 128),
+    surface1: egui::Color32::from_rgb(81, 87, 109),
+    surface0: egui::Color32::from_rgb(65, 69, 89),
+    base: egui::Color32::from_rgb(48, 52, 70),
+    mantle: egui::Color32::from_rgb(41, 44, 60),
+    crust: egui::Color32::from_rgb(35, 38, 52),
+};
+
 #[derive(serde::Deserialize, serde::Serialize)] // So we can persist ui state on app shutdown.
 #[serde(default)] // If we add new fields, give them default values when deserializing old state.
 pub struct CogsApp {
@@ -106,6 +152,12 @@ impl eframe::App for CogsApp {
     /// Called by the framework to save state before shutdown.
     fn save(&mut self, storage: &mut dyn eframe::Storage) {
         eframe::set_value(storage, APP_KEY, self);
+    }
+
+    /// Called each time the UI needs repainting, which may be many times per second.
+    #[allow(deprecated)]
+    fn ui(&mut self, ui: &mut egui::Ui, frame: &mut eframe::Frame) {
+        self.update(ui.ctx(), frame);
     }
 
     /// Called each time the UI needs repainting, which may be many times per second.
@@ -255,14 +307,14 @@ impl eframe::App for CogsApp {
 }
 
 fn ui_init_cosmetics(ctx: &egui::Context) {
-    // 1) Set the theme.
-    match ctx.theme() {
-        egui::Theme::Light => catppuccin_egui::set_theme(ctx, catppuccin_egui::LATTE),
-        egui::Theme::Dark => catppuccin_egui::set_theme(ctx, catppuccin_egui::FRAPPE),
-    }
+    let theme = match ctx.theme() {
+        egui::Theme::Light => CATPPUCCIN_LATTE,
+        egui::Theme::Dark => CATPPUCCIN_FRAPPE,
+    };
 
-    // 2) Apply custom tweaks.
-    ctx.style_mut(|style| {
+    ctx.global_style_mut(|style| {
+        apply_catppuccin_theme(style, theme);
+
         style.visuals.widgets.noninteractive.bg_stroke = egui::Stroke::NONE;
 
         let r = egui::CornerRadius::same(CORNER_RADIUS as u8);
@@ -283,4 +335,73 @@ fn ui_init_cosmetics(ctx: &egui::Context) {
 
         _ = FADED_COLOR.set(style.visuals.text_color().gamma_multiply(0.6));
     });
+}
+
+fn apply_catppuccin_theme(style: &mut egui::Style, theme: CatppuccinTheme) {
+    let old = style.visuals.clone();
+    let is_latte = theme == CATPPUCCIN_LATTE;
+    let shadow_color = if is_latte {
+        egui::Color32::from_black_alpha(25)
+    } else {
+        egui::Color32::from_black_alpha(96)
+    };
+
+    style.visuals = egui::Visuals {
+        hyperlink_color: theme.rosewater,
+        faint_bg_color: theme.surface0,
+        extreme_bg_color: theme.crust,
+        code_bg_color: theme.mantle,
+        warn_fg_color: theme.peach,
+        error_fg_color: theme.maroon,
+        window_fill: theme.base,
+        panel_fill: theme.base,
+        window_stroke: egui::Stroke {
+            color: theme.overlay1,
+            ..old.window_stroke
+        },
+        widgets: egui::style::Widgets {
+            noninteractive: catppuccin_widget_visual(old.widgets.noninteractive, theme, theme.base),
+            inactive: catppuccin_widget_visual(old.widgets.inactive, theme, theme.surface0),
+            hovered: catppuccin_widget_visual(old.widgets.hovered, theme, theme.surface2),
+            active: catppuccin_widget_visual(old.widgets.active, theme, theme.surface1),
+            open: catppuccin_widget_visual(old.widgets.open, theme, theme.surface0),
+        },
+        selection: egui::style::Selection {
+            bg_fill: theme.blue.linear_multiply(if is_latte { 0.4 } else { 0.2 }),
+            stroke: egui::Stroke {
+                color: theme.text,
+                ..old.selection.stroke
+            },
+        },
+        window_shadow: egui::epaint::Shadow {
+            color: shadow_color,
+            ..old.window_shadow
+        },
+        popup_shadow: egui::epaint::Shadow {
+            color: shadow_color,
+            ..old.popup_shadow
+        },
+        dark_mode: !is_latte,
+        ..old
+    };
+}
+
+fn catppuccin_widget_visual(
+    old: egui::style::WidgetVisuals,
+    theme: CatppuccinTheme,
+    bg_fill: egui::Color32,
+) -> egui::style::WidgetVisuals {
+    egui::style::WidgetVisuals {
+        bg_fill,
+        weak_bg_fill: bg_fill,
+        bg_stroke: egui::Stroke {
+            color: theme.overlay1,
+            ..old.bg_stroke
+        },
+        fg_stroke: egui::Stroke {
+            color: theme.text,
+            ..old.fg_stroke
+        },
+        ..old
+    }
 }

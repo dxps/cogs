@@ -25,11 +25,7 @@ targets = ["x86_64-unknown-linux-gnu", "wasm32-unknown-unknown"]
 
 cogs_shared = { path = "../shared" }
 
-egui               = { version = "=0.33.3", features = [
-    "persistence",   # Enable persistence of memory (window positions etc).
-    "serde",         # Allow serialization using `serde`.
- ] }
-eframe             = { version = "=0.33.3", default-features = false, features = [
+eframe             = { version = "=0.34.2", default-features = false, features = [
     "accesskit",     # Make egui compatible with screen readers. Note: It adds a lot of dependencies.
     "default_fonts", # Embed the default egui fonts.
     "glow",          # Use the glow rendering backend. Alternative: "wgpu".
@@ -37,17 +33,22 @@ eframe             = { version = "=0.33.3", default-features = false, features =
     "wayland",       # To support Linux (and CI).
     "x11",           # To support older Linux distributions (restores one of the default features).
 ] }
+egui               = { version = "=0.34.2", features = [
+    "persistence",   # Enable persistence of memory (window positions etc).
+    "serde",         # Allow serialization using `serde`.
+ ] }
+egui_extras        = { version = "=0.34.2",  features = [ "all_loaders" ] }
+egui_dnd           = { version = "0.15.0"      }
+
 catppuccin-egui    = { version = "=5.7.0", default-features = false, features = [ "egui33" ] }
-egui_dnd           = { version = "0.14"      }
 
 log                = { version = "=0.4.29"   }
 tracing            = { version = "=0.1.44"   }
 tracing-log        = { version = "=0.2.0"    }
-tracing-subscriber = { version = "=0.3.22",  features = ["env-filter", "fmt"] }
+tracing-subscriber = { version = "=0.3.23",  features = ["env-filter", "fmt"] }
 serde              = { version = "=1.0.228", features = [ "derive" ] }      # For the app persistence.
-egui_extras        = { version = "=0.33.3",  features = [ "all_loaders" ] }
-const_format       = { version = "=0.2.35"   }
-ehttp              = { version = "=0.6.0",   features = [ "json" ] }
+const_format       = { version = "=0.2.36"   }
+ehttp              = { version = "=0.7.1",   features = [ "json" ] }
 serde_json         = { version = "=1.0.149"  }
 strum              = { version = "=0.28.0",  features = [ "derive" ] }
 
@@ -57,7 +58,7 @@ strum              = { version = "=0.28.0",  features = [ "derive" ] }
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 ########################################################
 
-env_logger         = { version =  "=0.11.9" }
+env_logger         = { version =  "=0.11.10" }
 
 
 # Web deps
@@ -67,7 +68,6 @@ env_logger         = { version =  "=0.11.9" }
 
 tracing-wasm            = { version = "=0.2.1"  }
 tracing-subscriber-wasm = { version = "=0.1.0"  }
-wasm-bindgen-futures    = { version = "=0.4.63" }
-web-sys                 = { version = "=0.3.90" }      # To access the DOM (for hiding the loading text).
-
+wasm-bindgen-futures    = { version = "=0.4.71" }
+web-sys                 = { version = "=0.3.98" }      # To access the DOM (for hiding the loading text).
 
