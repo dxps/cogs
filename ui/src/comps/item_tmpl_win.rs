@@ -1,11 +1,11 @@
 use crate::{
-    CogsApp,
-    comps::{AppComponent, AttrsLinksTab, horiz_tab},
+    comps::{horiz_tab, AppComponent, AttrsLinksTab},
     constants::{CORNER_RADIUS, EXPLORE_ELEMENT, FORM_FIELD_W},
+    CogsApp,
 };
 use cogs_shared::domain::model::{
-    Action, Id,
     meta::{AttrTemplate, ItemTemplate, ItemTemplateLink},
+    Action, Id,
 };
 use egui::{
     Align, Button, Color32, ComboBox, CursorIcon, Direction, Frame, Grid, Label, Layout, Margin, RichText, Stroke, TextEdit,
@@ -507,73 +507,126 @@ impl ItemTemplateWindow {
         }
 
         ui.with_layout(Layout::top_down(Align::LEFT), |ui| {
-            egui::ScrollArea::vertical()
-                .auto_shrink([true; 2])
-                .vscroll(false)
-                .show(ui, |ui| {
-                    if s.action.is_view() {
-                        let mut attrs_text = element
-                            .attributes
-                            .iter()
-                            .map(|a| a.name.clone())
-                            .collect::<Vec<_>>()
-                            .join("\n");
-                        let rows = element.attributes.len().max(1);
-                        ui.add_sized(
-                            [FORM_FIELD_W, (rows as f32) * ui.spacing().interact_size.y],
-                            TextEdit::multiline(&mut attrs_text)
-                                .interactive(false)
-                                .desired_rows(rows)
-                                .desired_width(FORM_FIELD_W),
-                        );
-                    } else {
-                        Self::render_dnd_attr_list(ui, element);
-                    }
+            if s.action.is_view() {
+                let mut attrs_text = element
+                    .attributes
+                    .iter()
+                    .map(|a| a.name.clone())
+                    .collect::<Vec<_>>()
+                    .join("\n");
+                let max_rows = 10;
+                let rows = element.attributes.len().max(1);
+                let visible_rows = rows.min(max_rows);
+                let row_h = ui.spacing().interact_size.y;
+                let margin = Margin::symmetric(4, 2);
+                let scroll_h = visible_rows as f32 * row_h;
+                let content_h = rows as f32 * row_h;
+                let content_w = FORM_FIELD_W - margin.sum().x;
+
+                let frame = Frame::new()
+                    .inner_margin(margin)
+                    .fill(ui.visuals().text_edit_bg_color())
+                    .stroke(ui.visuals().widgets.inactive.bg_stroke)
+                    .corner_radius(ui.visuals().widgets.inactive.corner_radius);
+
+                frame.show(ui, |ui| {
+                    ui.set_width(content_w);
+                    egui::ScrollArea::vertical()
+                        .id_salt(("item_tmpl_attrs_view_scroll", &element.id))
+                        .auto_shrink([false, false])
+                        .min_scrolled_height(scroll_h)
+                        .max_height(scroll_h)
+                        .show(ui, |ui| {
+                            ui.add_sized(
+                                [content_w, content_h],
+                                TextEdit::multiline(&mut attrs_text)
+                                    .frame(Frame::NONE)
+                                    .margin(Margin::ZERO)
+                                    .interactive(false)
+                                    .desired_rows(rows)
+                                    .desired_width(content_w),
+                            );
+                        });
                 });
+            } else {
+                let max_rows = 10;
+                let rows = element.attributes.len().max(1);
+                let visible_rows = rows.min(max_rows);
+                let row_h = ui
+                    .spacing()
+                    .interact_size
+                    .y
+                    .max(ui.text_style_height(&egui::TextStyle::Body) + ui.spacing().item_spacing.y);
+                let margin = Margin::symmetric(4, 2);
+                let scroll_h = visible_rows as f32 * row_h;
+                let content_w = FORM_FIELD_W - margin.sum().x;
+
+                let frame = Frame::new()
+                    .inner_margin(margin)
+                    .fill(ui.visuals().text_edit_bg_color())
+                    .stroke(ui.visuals().widgets.inactive.bg_stroke)
+                    .corner_radius(ui.visuals().widgets.inactive.corner_radius);
+
+                frame.show(ui, |ui| {
+                    ui.set_width(content_w);
+                    egui::ScrollArea::vertical()
+                        .id_salt(("item_tmpl_attrs_edit_scroll", &element.id))
+                        .auto_shrink([false, false])
+                        .min_scrolled_height(scroll_h)
+                        .max_height(scroll_h)
+                        .show(ui, |ui| {
+                            Self::render_dnd_attr_list(ui, element, Frame::NONE);
+                        });
+                });
+            }
         });
 
         ui.end_row();
     }
 
-    fn render_dnd_attr_list(ui: &mut egui::Ui, element: &mut ItemTemplate) {
-        let frame = Frame::default().corner_radius(CORNER_RADIUS).inner_margin(4.0);
+    fn render_dnd_attr_list(ui: &mut egui::Ui, element: &mut ItemTemplate, frame: Frame) {
         let mut from_idx = None::<usize>;
         let mut to_idx = None::<usize>;
 
-        ui.dnd_drop_zone::<usize, ()>(frame, |ui| {
-            ui.set_min_width(FORM_FIELD_W - 8.0);
+        ui.scope(|ui| {
+            ui.visuals_mut().widgets.inactive.bg_fill = Color32::TRANSPARENT;
+            ui.visuals_mut().widgets.inactive.bg_stroke = Stroke::NONE;
 
-            for (idx, item) in element.attributes.iter().enumerate() {
-                let row_id = egui::Id::new(("item_tmpl_attr_row", element.id.clone(), item.id.clone(), idx));
-                let item_idx = idx;
+            ui.dnd_drop_zone::<usize, ()>(frame, |ui| {
+                ui.set_min_width(FORM_FIELD_W - 8.0);
 
-                let response = ui
-                    .push_id(row_id, |ui| ui.dnd_drag_source(row_id, item_idx, |ui| ui.label(&item.name)))
-                    .response;
+                for (idx, item) in element.attributes.iter().enumerate() {
+                    let row_id = egui::Id::new(("item_tmpl_attr_row", element.id.clone(), item.id.clone(), idx));
+                    let item_idx = idx;
 
-                if let (Some(pointer), Some(hovered_idx)) =
-                    (ui.input(|i| i.pointer.interact_pos()), response.dnd_hover_payload::<usize>())
-                {
-                    let rect = response.rect;
-                    let stroke = egui::Stroke::new(1.4, Color32::WHITE);
+                    let response = ui
+                        .push_id(row_id, |ui| ui.dnd_drag_source(row_id, item_idx, |ui| ui.label(&item.name)))
+                        .response;
 
-                    let drop_idx = if *hovered_idx == item_idx {
-                        item_idx
-                    } else if pointer.y < rect.center().y {
-                        ui.painter().hline(rect.x_range().shrink(1.0), rect.top(), stroke);
-                        item_idx
-                    } else {
-                        ui.painter().hline(rect.x_range().shrink(1.0), rect.bottom(), stroke);
-                        item_idx
-                    };
+                    if let (Some(pointer), Some(hovered_idx)) =
+                        (ui.input(|i| i.pointer.interact_pos()), response.dnd_hover_payload::<usize>())
+                    {
+                        let rect = response.rect;
+                        let stroke = egui::Stroke::new(1.4, Color32::WHITE);
 
-                    let attrs_len = element.attributes.len();
-                    if let Some(drag_idx) = response.dnd_release_payload::<usize>() {
-                        from_idx = Some(*drag_idx);
-                        to_idx = Some(if drop_idx == attrs_len { attrs_len - 1 } else { drop_idx });
+                        let drop_idx = if *hovered_idx == item_idx {
+                            item_idx
+                        } else if pointer.y < rect.center().y {
+                            ui.painter().hline(rect.x_range().shrink(1.0), rect.top(), stroke);
+                            item_idx
+                        } else {
+                            ui.painter().hline(rect.x_range().shrink(1.0), rect.bottom(), stroke);
+                            item_idx
+                        };
+
+                        let attrs_len = element.attributes.len();
+                        if let Some(drag_idx) = response.dnd_release_payload::<usize>() {
+                            from_idx = Some(*drag_idx);
+                            to_idx = Some(if drop_idx == attrs_len { attrs_len - 1 } else { drop_idx });
+                        }
                     }
                 }
-            }
+            });
         });
 
         if let (Some(from), Some(to)) = (from_idx, to_idx) {
@@ -680,7 +733,7 @@ impl AppComponent for ItemTemplateWindow {
             .min_width(300.0)
             .max_width(300.0)
             .min_height(200.0)
-            .max_height(400.0)
+            .max_height(620.0)
             .frame(egui::Frame::window(&ectx.global_style()).inner_margin(Margin::ZERO))
             .show(ectx, |ui| {
                 ui.vertical(|ui| {
