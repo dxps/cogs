@@ -1,5 +1,5 @@
-use crate::{CogsApp, comps::AppComponent};
-use egui::{Color32, FontFamily, FontId, RichText, Sense, Ui, vec2};
+use crate::{comps::AppComponent, CogsApp};
+use egui::{vec2, Color32, FontFamily, FontId, Sense, Ui};
 
 pub struct Footer {}
 
@@ -32,26 +32,23 @@ impl AppComponent for Footer {
             let avail_w = ui.available_width();
             let left_pad = ((avail_w - content_w) * 0.5).max(0.0);
 
-            let h = ui.spacing().interact_size.y;
-            let (_rect, _) = ui.allocate_exact_size(vec2(avail_w, h), Sense::hover());
-
             ui.horizontal(|ui| {
                 ui.add_space(left_pad);
                 ui.label(copyright);
                 ui.add_space(gap);
 
-                let resp = ui
-                    .add(egui::Label::new(RichText::new(status).size(font.size)).sense(Sense::click()))
-                    .on_hover_cursor(egui::CursorIcon::PointingHand)
-                    .on_hover_text("Click to get the status of the system.");
+                let status_size = vec2(w2, ui.spacing().interact_size.y);
+                let (rect, resp) = ui.allocate_exact_size(status_size, Sense::click());
+                let resp = resp
+                    .on_hover_text("Click to get the status of the system.")
+                    .on_hover_cursor(egui::CursorIcon::PointingHand);
 
-                // 2) repaint text color based on hover (overrides gray footer color)
                 let color = if resp.hovered() { hover_orange } else { dim };
                 ui.painter()
-                    .text(resp.rect.left_top(), egui::Align2::LEFT_TOP, status, font.clone(), color);
+                    .text(rect.left_center(), egui::Align2::LEFT_CENTER, status, font.clone(), color);
 
                 if resp.clicked() {
-                    let req = ehttp::Request::get("http://localhost:9009/manifest.json");
+                    let req = ehttp::Request::get("manifest.json");
                     ehttp::fetch(req, move |rsp| {
                         log::info!("[status] clicked. Test response: {:?}", rsp);
                     });

@@ -1,18 +1,18 @@
 use crate::{
-    UiState,
     colors::FADED_COLOR,
     comps::{AppComponent, Footer, Header},
     constants::{APP_KEY, CORNER_RADIUS},
     handle_msg,
     messages::UiMessage,
     views::{AppView, Explore, ExploreCategory, ExploreKind, Home, Login, Settings, ViewName},
+    UiState,
 };
 use cogs_shared::domain::model::meta::Kind;
 use egui::{
-    FontData,
     epaint::text::{FontInsert, InsertFontFamily},
+    FontData,
 };
-use std::sync::mpsc::{Receiver, Sender, channel};
+use std::sync::mpsc::{channel, Receiver, Sender};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 struct CatppuccinTheme {
@@ -155,14 +155,9 @@ impl eframe::App for CogsApp {
     }
 
     /// Called each time the UI needs repainting, which may be many times per second.
-    #[allow(deprecated)]
-    fn ui(&mut self, ui: &mut egui::Ui, frame: &mut eframe::Frame) {
-        self.update(ui.ctx(), frame);
-    }
-
-    /// Called each time the UI needs repainting, which may be many times per second.
-    fn update(&mut self, ectx: &egui::Context, _frame: &mut eframe::Frame) {
+    fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         //
+        let ectx = ui.ctx();
 
         // State related logistics.
         if self.state.explore.category != ExploreCategory::Templates {
