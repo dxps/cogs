@@ -1,9 +1,9 @@
 use crate::domain::model::{
-    Id,
     meta::{
         AttributeValueType, BooleanAttribute, DateAttribute, DateTimeAttribute, NumericAttribute,
         TextAttribute,
     },
+    Id,
 };
 use chrono::{NaiveDate, NaiveDateTime};
 use rust_decimal::Decimal;

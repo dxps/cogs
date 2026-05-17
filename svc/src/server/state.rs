@@ -1,4 +1,4 @@
-use crate::server::{AttrTemplateRepo, DataMgmt, ItemTemplateRepo, UserAccountsRepo, UserMgmt};
+use crate::server::{AccessLevelRepo, AttrTemplateRepo, DataMgmt, ItemTemplateRepo, UserAccountsRepo, UserMgmt};
 use axum::extract::{FromRef, FromRequestParts};
 use http::{StatusCode, request::Parts};
 use sqlx::PgPool;
@@ -18,6 +18,7 @@ impl ServerState {
         let data_mgmt = Arc::new(DataMgmt::new(
             Arc::new(AttrTemplateRepo::new(db_pool.clone())),
             Arc::new(ItemTemplateRepo::new(db_pool.clone())),
+            Arc::new(AccessLevelRepo::new(db_pool.clone())),
         ));
 
         Self { user_mgmt, data_mgmt }

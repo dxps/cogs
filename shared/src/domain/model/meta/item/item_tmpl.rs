@@ -1,4 +1,4 @@
-use crate::domain::model::{Id, meta::AttrTemplate};
+use crate::domain::model::{meta::AttrTemplate, Id};
 use serde::{Deserialize, Serialize};
 
 /// A template for an item.

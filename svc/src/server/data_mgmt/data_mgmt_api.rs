@@ -1,12 +1,15 @@
-use crate::server::{ServerState, respond_internal_server_error, respond_not_found};
+use crate::server::{ServerState, respond_forbidden, respond_internal_server_error, respond_not_found};
 use axum::{
     Json,
     extract::{self, Path, State},
     response::IntoResponse,
 };
-use cogs_shared::domain::model::{
-    Id,
-    meta::{AttrTemplate, ItemTemplate},
+use cogs_shared::{
+    app::AppError,
+    domain::model::{
+        AccessLevel, Id,
+        meta::{AttrTemplate, ItemTemplate},
+    },
 };
 use http::StatusCode;
 use serde_json::json;
@@ -78,5 +81,45 @@ pub async fn delete_item_template(State(state): State<ServerState>, Path(id): Pa
     match state.data_mgmt.delete_item_template(id).await {
         Ok(()) => (StatusCode::OK, Json::default()),
         Err(err) => respond_not_found(err),
+    }
+}
+
+pub async fn upsert_access_level(
+    State(state): State<ServerState>,
+    extract::Json(input): extract::Json<AccessLevel>,
+) -> impl IntoResponse {
+    //
+    log::debug!("Upserting access level {input:?} ...");
+    match state.data_mgmt.upsert_access_level(input).await {
+        Ok(id) => (StatusCode::OK, Json(json!({ "id": id }))),
+        Err(err) => match err {
+            AppError::ReadOnly(_) => respond_forbidden(err),
+            AppError::NotFound => respond_not_found(err),
+            _ => respond_internal_server_error(err),
+        },
+    }
+}
+
+pub async fn get_all_access_levels(State(state): State<ServerState>) -> impl IntoResponse {
+    //
+    match state.data_mgmt.get_all_access_levels().await {
+        Ok(access_levels) => {
+            log::debug!("Got {} access levels.", access_levels.len());
+            (StatusCode::OK, Json(json!(access_levels)))
+        }
+        Err(err) => respond_not_found(err),
+    }
+}
+
+pub async fn delete_access_level(State(state): State<ServerState>, Path(id): Path<Id>) -> impl IntoResponse {
+    //
+    log::debug!("Delete access_level w/ id {id} ...",);
+    match state.data_mgmt.delete_access_level(id).await {
+        Ok(()) => (StatusCode::OK, Json::default()),
+        Err(err) => match err {
+            AppError::ReadOnly(_) => respond_forbidden(err),
+            AppError::NotFound => respond_not_found(err),
+            _ => respond_internal_server_error(err),
+        },
     }
 }

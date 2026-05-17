@@ -1,4 +1,4 @@
-use crate::domain::model::{Id, meta::AttrTemplate};
+use crate::domain::model::{meta::AttrTemplate, Id};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 // use std::str::FromStr;

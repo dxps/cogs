@@ -44,6 +44,9 @@ pub enum AppError {
 
     #[error("not found")]
     NotFound,
+
+    #[error("{0} is read-only")]
+    ReadOnly(String),
 }
 
 impl From<&str> for AppError {

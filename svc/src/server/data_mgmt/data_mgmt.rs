@@ -1,13 +1,13 @@
 use std::sync::Arc;
 
 use crate::{
-    server::{AttrTemplateRepo, ItemTemplateRepo},
+    server::{AccessLevelRepo, AttrTemplateRepo, ItemTemplateRepo},
     utils::new_id,
 };
 use cogs_shared::{
     app::AppResult,
     domain::model::{
-        Id,
+        AccessLevel, Id,
         meta::{AttrTemplate, ItemTemplate},
     },
 };
@@ -16,14 +16,20 @@ use cogs_shared::{
 pub struct DataMgmt {
     attr_templ_repo: Arc<AttrTemplateRepo>,
     item_templ_repo: Arc<ItemTemplateRepo>,
+    access_level_repo: Arc<AccessLevelRepo>,
 }
 
 impl DataMgmt {
     //
-    pub fn new(attr_templ_repo: Arc<AttrTemplateRepo>, item_templ_repo: Arc<ItemTemplateRepo>) -> Self {
+    pub fn new(
+        attr_templ_repo: Arc<AttrTemplateRepo>,
+        item_templ_repo: Arc<ItemTemplateRepo>,
+        access_level_repo: Arc<AccessLevelRepo>,
+    ) -> Self {
         Self {
             attr_templ_repo,
             item_templ_repo,
+            access_level_repo,
         }
     }
 
@@ -65,5 +71,28 @@ impl DataMgmt {
 
     pub async fn delete_item_template(&self, id: Id) -> AppResult<()> {
         self.item_templ_repo.delete(id).await
+    }
+
+    // -------------
+    // Access Levels
+    // -------------
+
+    pub async fn upsert_access_level(&self, mut access_level: AccessLevel) -> AppResult<Id> {
+        if access_level.id.is_zero() {
+            access_level.id = new_id();
+            self.access_level_repo.insert(&access_level).await?;
+        } else {
+            self.access_level_repo.update(&access_level).await?;
+        }
+
+        Ok(access_level.id)
+    }
+
+    pub async fn get_all_access_levels(&self) -> AppResult<Vec<AccessLevel>> {
+        self.access_level_repo.get_all().await
+    }
+
+    pub async fn delete_access_level(&self, id: Id) -> AppResult<()> {
+        self.access_level_repo.delete(id).await
     }
 }

@@ -1,6 +1,7 @@
 use crate::server::{
-    ServerState, delete_attr_template, delete_item_template, get_all_attr_templates, get_all_item_templates, init_auth_layer,
-    init_session_layer, login, logout, upsert_attr_template, upsert_item_template,
+    ServerState, delete_access_level, delete_attr_template, delete_item_template, get_all_access_levels, get_all_attr_templates,
+    get_all_item_templates, init_auth_layer, init_session_layer, login, logout, upsert_access_level, upsert_attr_template,
+    upsert_item_template,
 };
 use axum::{
     Router,
@@ -29,6 +30,9 @@ pub async fn init_router(pg_pool: &Pool<Postgres>) -> Router<ServerState> {
         .route("/api/item_templates", post(upsert_item_template))
         .route("/api/item_templates", get(get_all_item_templates))
         .route("/api/item_templates/{id}/delete", post(delete_item_template))
+        .route("/api/access_levels", post(upsert_access_level))
+        .route("/api/access_levels", get(get_all_access_levels))
+        .route("/api/access_levels/{id}/delete", post(delete_access_level))
         .layer(auth_layer)
         .layer(session_layer)
         .layer(tracing_layer)

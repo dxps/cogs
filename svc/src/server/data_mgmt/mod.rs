@@ -9,3 +9,6 @@ pub use attr_tmpl_repo::*;
 
 mod item_tmpl_repo;
 pub use item_tmpl_repo::*;
+
+mod access_level_repo;
+pub use access_level_repo::*;

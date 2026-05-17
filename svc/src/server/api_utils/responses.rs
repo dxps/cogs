@@ -40,6 +40,19 @@ where
     )
 }
 
+/// Utility function for responding with `403 Forbidden` code and an error description.
+pub fn respond_forbidden<E>(err: E) -> (StatusCode, Json<Value>)
+where
+    E: std::error::Error,
+{
+    (
+        StatusCode::FORBIDDEN,
+        Json(json!({
+            "error": err.to_string()
+        })),
+    )
+}
+
 /// Utility function for responding with `404 Not Found` code and an error description.
 pub fn respond_not_found<E>(err: E) -> (StatusCode, Json<Value>)
 where
