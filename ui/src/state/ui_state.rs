@@ -1,4 +1,9 @@
-use crate::{AuthState, DataState, ExploreViewState, messages::UiMessage, views::ViewName};
+use crate::{
+    explore::ExploreViewState,
+    messages::UiMessage,
+    state::{AuthState, DataState},
+    views::ViewName,
+};
 use serde::{Deserialize, Serialize};
 use std::sync::mpsc::Sender;
 

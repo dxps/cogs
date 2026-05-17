@@ -1,10 +1,9 @@
 use crate::{
     CogsApp,
-    comps::{
-        AppComponent, AttrTemplatePreview, Dropdown, DropdownItem, DropdownStyle, ExploreTable, ItemTemplatePreview, menu_row,
-    },
+    comps::{AppComponent, AttrTemplatePreview, Dropdown, DropdownItem, DropdownStyle, ItemTemplatePreview, menu_row},
     constants::{EXPLORE_ELEMENT, ICON_ATTR_TMPL, ICON_HELP, ICON_ITEM, ICON_ITEM_TMPL, ICON_RARROW, ICON_TMPL, POPUP_ROW_WIDTH},
-    views::{AppView, show_windows},
+    explore::{ExploreTable, show_windows},
+    views::AppView,
 };
 use cogs_shared::domain::model::{
     Id,
@@ -283,8 +282,7 @@ fn show_kind(ctx: &mut CogsApp, ui: &mut Ui) {
         .on_hover_cursor(CursorIcon::Help);
 }
 
-// ///////// The add ("+") button menu ///////////
-
+/// Show the add ("+") button menu.
 fn show_add_menu(ctx: &mut CogsApp, ui: &mut Ui) {
     //
     let btn = ui

@@ -1,4 +1,4 @@
-use crate::{UiState, messages::UiMessage};
+use crate::{messages::UiMessage, state::UiState};
 
 pub(super) fn handle_msg(msg: UiMessage, state: &UiState) {
     //

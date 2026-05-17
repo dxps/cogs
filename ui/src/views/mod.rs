@@ -1,9 +1,6 @@
 mod home_view;
 pub use home_view::*;
 
-mod explore;
-pub use explore::*;
-
 mod login_view;
 pub use login_view::*;
 

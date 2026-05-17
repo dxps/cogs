@@ -1,9 +1,10 @@
 use crate::{
-    CogsApp, SourceType,
+    CogsApp,
     comps::{
         Dropdown, DropdownItem, DropdownStyle,
         item::{ItemWindowState, cleanup},
     },
+    state::SourceType,
 };
 use cogs_shared::domain::model::meta::ItemTemplate;
 use egui::{Align, Button, CursorIcon, Layout, Ui};

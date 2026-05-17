@@ -9,9 +9,6 @@ pub use attr_tmpl_win::*;
 mod dropdown;
 pub use dropdown::*;
 
-mod explore_table;
-pub use explore_table::*;
-
 mod header;
 pub use header::*;
 

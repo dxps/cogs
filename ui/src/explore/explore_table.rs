@@ -1,7 +1,7 @@
 use crate::{
-    CogsApp, ExploreViewState,
+    CogsApp,
     comps::AppComponent,
-    views::{ExploreCategory, ExploreKind, TemplateTypeFilter},
+    explore::{ExploreCategory, ExploreKind, ExploreViewState, TemplateTypeFilter},
 };
 use cogs_shared::domain::model::{
     AccessLevel,

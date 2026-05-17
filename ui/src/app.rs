@@ -1,11 +1,12 @@
 use crate::{
-    UiState,
     colors::FADED_COLOR,
     comps::{AppComponent, Footer, Header},
     constants::{APP_KEY, CORNER_RADIUS},
+    explore::ExploreView,
     handle_msg,
     messages::UiMessage,
-    views::{AppView, ExploreView, HomeView, LoginView, SettingsView, ViewName},
+    state::UiState,
+    views::{AppView, HomeView, LoginView, SettingsView, ViewName},
 };
 use cogs_shared::domain::model::meta::Kind;
 use egui::{

@@ -1,6 +1,6 @@
 use crate::{
-    SourceType,
-    views::{ExploreCategory, ExploreKind},
+    explore::{ExploreCategory, ExploreKind},
+    state::SourceType,
 };
 use cogs_shared::domain::model::{
     Id,
