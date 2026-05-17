@@ -1,11 +1,11 @@
 use crate::{
-    comps::{horiz_tab, AppComponent, AttrsLinksTab},
-    constants::{CORNER_RADIUS, EXPLORE_ELEMENT, FORM_FIELD_W},
     CogsApp,
+    comps::{AppComponent, AttrsLinksTab, horiz_tab},
+    constants::{CORNER_RADIUS, EXPLORE_ELEMENT, FORM_FIELD_W},
 };
 use cogs_shared::domain::model::{
-    meta::{AttrTemplate, ItemTemplate, ItemTemplateLink},
     Action, Id,
+    meta::{AttrTemplate, ItemTemplate, ItemTemplateLink},
 };
 use egui::{
     Align, Button, Color32, ComboBox, CursorIcon, Direction, Frame, Grid, Label, Layout, Margin, RichText, Stroke, TextEdit,

@@ -2,10 +2,10 @@ use const_format::concatcp;
 use egui::{Align, Layout};
 
 use crate::{
-    CogsApp,
     comps::{AppComponent, UserMenu},
     constants::{ICON_EXPLORE, ICON_HOME},
     views::{AppView, ViewName},
+    CogsApp,
 };
 
 pub struct Header {}
@@ -13,10 +13,12 @@ pub struct Header {}
 impl AppView for Header {
     type Context = CogsApp;
 
-    fn show(ctx: &mut Self::Context, ectx: &egui::Context) {
-        egui::TopBottomPanel::top("top_panel")
+    fn show(ctx: &mut Self::Context, ui: &mut egui::Ui) {
+        let ectx = ui.ctx().clone();
+
+        egui::Panel::top("top_panel")
             .show_separator_line(false)
-            .show(ectx, |ui| {
+            .show_inside(ui, |ui| {
                 // When running as a desktop app, the top panel
                 // is often a good place for a menu bar.
                 let is_web = cfg!(target_arch = "wasm32");

@@ -1,5 +1,5 @@
-use crate::{comps::AppComponent, CogsApp};
-use egui::{vec2, Color32, FontFamily, FontId, Sense, Ui};
+use crate::{CogsApp, comps::AppComponent};
+use egui::{Color32, FontFamily, FontId, Sense, Ui, vec2};
 
 pub struct Footer {}
 

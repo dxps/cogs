@@ -231,7 +231,7 @@ impl AppComponent for AttrTemplateWindow {
             .title_bar(false)
             .resizable(false)
             .fixed_size(vec2(320.0, 300.0))
-            .frame(egui::Frame::window(&ectx.style()).inner_margin(Margin::ZERO))
+            .frame(egui::Frame::window(&ectx.global_style()).inner_margin(Margin::ZERO))
             .show(ectx, |ui| {
                 ui.vertical(|ui| {
                     Self::render_header(ui, &s);

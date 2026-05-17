@@ -157,7 +157,7 @@ impl eframe::App for CogsApp {
     /// Called each time the UI needs repainting, which may be many times per second.
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         //
-        let ectx = ui.ctx();
+        let ectx = ui.ctx().clone();
 
         // State related logistics.
         if self.state.explore.category != ExploreCategory::Templates {
@@ -167,10 +167,10 @@ impl eframe::App for CogsApp {
         let curr_theme = ectx.theme();
         if self.state.ui_theme != curr_theme {
             self.state.ui_theme = curr_theme;
-            ui_init_cosmetics(ectx);
+            ui_init_cosmetics(&ectx);
         }
 
-        Header::show(self, ectx);
+        Header::show(self, ui);
 
         if let Ok(res) = self.recvr.try_recv() {
             log::trace!("Received {:?}", res);
@@ -203,12 +203,12 @@ impl eframe::App for CogsApp {
                 UiMessage::Settings => {}
 
                 UiMessage::AttrTemplateUpserted(_) => {
-                    self.state.data.fetch_all_attr_templates(ectx, self.sendr.clone());
+                    self.state.data.fetch_all_attr_templates(&ectx, self.sendr.clone());
                     ectx.request_repaint();
                 }
 
                 UiMessage::AttrTemplateDeleted(_) => {
-                    self.state.data.fetch_all_attr_templates(ectx, self.sendr.clone());
+                    self.state.data.fetch_all_attr_templates(&ectx, self.sendr.clone());
                     ectx.request_repaint();
                 }
 
@@ -217,11 +217,11 @@ impl eframe::App for CogsApp {
                         Ok(_id) => match kind {
                             Kind::Item => todo!(),
                             Kind::ItemTemplate => {
-                                self.state.data.fetch_all_item_templates(ectx, self.sendr.clone());
+                                self.state.data.fetch_all_item_templates(&ectx, self.sendr.clone());
                                 ectx.request_repaint();
                             }
                             Kind::AttributeTemplate => {
-                                self.state.data.fetch_all_attr_templates(ectx, self.sendr.clone());
+                                self.state.data.fetch_all_attr_templates(&ectx, self.sendr.clone());
                                 ectx.request_repaint();
                             }
                             Kind::LinkTemplate => todo!(),
@@ -237,7 +237,7 @@ impl eframe::App for CogsApp {
                         Kind::Item => todo!(),
                         Kind::ItemTemplate => todo!(),
                         Kind::AttributeTemplate => {
-                            self.state.data.fetch_all_attr_templates(ectx, self.sendr.clone());
+                            self.state.data.fetch_all_attr_templates(&ectx, self.sendr.clone());
                             ectx.request_repaint();
                         }
                         Kind::LinkTemplate => todo!(),
@@ -251,11 +251,11 @@ impl eframe::App for CogsApp {
                     Ok(_id) => match kind {
                         Kind::Item => todo!(),
                         Kind::ItemTemplate => {
-                            self.state.data.fetch_all_item_templates(ectx, self.sendr.clone());
+                            self.state.data.fetch_all_item_templates(&ectx, self.sendr.clone());
                             ectx.request_repaint();
                         }
                         Kind::AttributeTemplate => {
-                            self.state.data.fetch_all_attr_templates(ectx, self.sendr.clone());
+                            self.state.data.fetch_all_attr_templates(&ectx, self.sendr.clone());
                             ectx.request_repaint();
                         }
                         Kind::LinkTemplate => todo!(),
@@ -283,21 +283,21 @@ impl eframe::App for CogsApp {
             }
         }
 
-        match self.state.curr_view() {
-            ViewName::Home => Home::show(self, ectx),
-            ViewName::Explore => Explore::show(self, ectx),
-            ViewName::Settings => Settings::show(self, ectx),
-            ViewName::Login => {
-                self.state.set_curr_view(ViewName::Login);
-                Login::show(self, ectx);
-            }
-        }
-
-        egui::TopBottomPanel::bottom("footer_panel")
+        egui::Panel::bottom("footer_panel")
             .show_separator_line(false)
-            .show(ectx, |ui| {
+            .show_inside(ui, |ui| {
                 Footer::show(self, ui);
             });
+
+        match self.state.curr_view() {
+            ViewName::Home => Home::show(self, ui),
+            ViewName::Explore => Explore::show(self, ui),
+            ViewName::Settings => Settings::show(self, ui),
+            ViewName::Login => {
+                self.state.set_curr_view(ViewName::Login);
+                Login::show(self, ui);
+            }
+        }
     }
 }
 

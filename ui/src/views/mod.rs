@@ -1,6 +1,9 @@
 mod home_view;
 pub use home_view::*;
 
+mod explore;
+pub use explore::*;
+
 mod explore_view;
 pub use explore_view::*;
 
@@ -25,5 +28,5 @@ pub trait AppView {
     type Context;
 
     #[allow(unused)]
-    fn show(ctx: &mut Self::Context, ectx: &egui::Context) {}
+    fn show(ctx: &mut Self::Context, ui: &mut egui::Ui) {}
 }

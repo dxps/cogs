@@ -285,8 +285,10 @@ pub(super) fn render_attrs(app: &mut CogsApp, ui: &mut egui::Ui, item: &mut Item
 
                                                     let mut tmp = attr.value.to_string();
                                                     let mut cval = tmp.clone();
-                                                    let id =
-                                                        egui::Id::new(format!("item_{}_attr_{}_mumeric_value", item.id, attr.name));
+                                                    let id = egui::Id::new(format!(
+                                                        "item_{}_attr_{}_mumeric_value",
+                                                        item.id, attr.name
+                                                    ));
                                                     if let Some(v) = ui.ctx().data(|d| d.get_temp::<String>(id)) {
                                                         tmp = v.clone();
                                                         cval = v;

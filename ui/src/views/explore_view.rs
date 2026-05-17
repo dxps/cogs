@@ -1,10 +1,10 @@
 use crate::{
     CogsApp,
     comps::{
-        AppComponent, AttrTemplatePreview, AttrTemplateWindow, Dropdown, DropdownItem, DropdownStyle, ExploreTable, ItemTemplatePreview, ItemTemplateWindow, ItemWindow, menu_row
+        AppComponent, AttrTemplatePreview, Dropdown, DropdownItem, DropdownStyle, ExploreTable, ItemTemplatePreview, menu_row,
     },
     constants::{EXPLORE_ELEMENT, ICON_ATTR_TMPL, ICON_HELP, ICON_ITEM, ICON_ITEM_TMPL, ICON_RARROW, ICON_TMPL, POPUP_ROW_WIDTH},
-    views::AppView,
+    views::{AppView, show_windows},
 };
 use cogs_shared::domain::model::{
     Id,
@@ -44,12 +44,13 @@ pub struct Explore {}
 impl AppView for Explore {
     type Context = CogsApp;
 
-    fn show(ctx: &mut Self::Context, ectx: &egui::Context) {
+    fn show(ctx: &mut Self::Context, ui: &mut egui::Ui) {
         //
-        let style = ectx.style();
+        let ectx = ui.ctx().clone();
+        let style = ectx.global_style();
         egui::CentralPanel::default()
         .frame(egui::Frame::central_panel(&style).inner_margin(egui::Margin::symmetric(20, 0)))
-        .show(ectx, |ui| {
+        .show_inside(ui, |ui| {
             ui.add_space(17.0);
             ui.label(
                 RichText::new(
@@ -64,16 +65,17 @@ impl AppView for Explore {
                 .size(Size::exact(20.0)) // middle (space) cell.
                 .size(Size::remainder().at_least(80.0)) // Preview cell.
                 .horizontal(|mut strip| {
-                    show_table_cell(ctx, ectx, &mut strip);
+                    show_table_cell(ctx, &mut strip);
                     strip.cell(|_| {}); // For that middle space.
-                    show_preview_cell(ctx, ectx, &mut strip);
-                    
+                    show_preview_cell(ctx, &ectx, &mut strip);
                 });
+
+            show_windows(ctx, ui, &ectx);
         });
     }
 }
 
-fn show_table_cell(ctx: &mut CogsApp, ectx: &egui::Context, strip: &mut Strip<'_, '_>) {
+fn show_table_cell(ctx: &mut CogsApp, strip: &mut Strip<'_, '_>) {
     // Keep `kind` valid whenever category changes or persisted state is stale.
     fn normalize_kind_for_category(ctx: &mut CogsApp) {
         match ctx.state.explore.category {
@@ -104,12 +106,8 @@ fn show_table_cell(ctx: &mut CogsApp, ectx: &egui::Context, strip: &mut Strip<'_
                     // Any template kind visible.
                     *sel_kind == Kind::ItemTemplate || *sel_kind == Kind::AttributeTemplate
                 }
-                ExploreKind::TemplateType(TemplateTypeFilter::ItemTemplate) => {
-                    *sel_kind == Kind::ItemTemplate
-                }
-                ExploreKind::TemplateType(TemplateTypeFilter::AttributeTemplate) => {
-                    *sel_kind == Kind::AttributeTemplate
-                }
+                ExploreKind::TemplateType(TemplateTypeFilter::ItemTemplate) => *sel_kind == Kind::ItemTemplate,
+                ExploreKind::TemplateType(TemplateTypeFilter::AttributeTemplate) => *sel_kind == Kind::AttributeTemplate,
                 ExploreKind::ItemTemplateId(_) => true,
             },
 
@@ -129,7 +127,7 @@ fn show_table_cell(ctx: &mut CogsApp, ectx: &egui::Context, strip: &mut Strip<'_
                     //     .find(|it| it.id == *sel_id)
                     //     .map(|it| it.template_id == *tmpl_id) // <- replace field name if different
                     //     .unwrap_or(false)
-                    true 
+                    true
                 }
                 ExploreKind::TemplateType(_) => true, // normalized away above
             },
@@ -158,23 +156,7 @@ fn show_table_cell(ctx: &mut CogsApp, ectx: &egui::Context, strip: &mut Strip<'_
         // Table is expected to read `ctx.state.explore.category` and `ctx.state.explore.kind`
         // and apply filtering internally.
         ExploreTable::show(ctx, ui);
-
-        // ----------------------------------------------------------------------------------
-        // TODO: Move the followings to a specific function, as these are not table specific.
-        for (_, element) in ctx.state.explore.open_windows_item_template.clone().iter() {
-            ectx.data_mut(|d| d.insert_temp(egui::Id::from(EXPLORE_ELEMENT), element.clone()));
-            ItemTemplateWindow::show(ctx, ui);
-        }
-        for (_, element) in ctx.state.explore.open_windows_attr_template.clone().iter() {
-            ectx.data_mut(|d| d.insert_temp(egui::Id::from(EXPLORE_ELEMENT), element.clone()));
-            AttrTemplateWindow::show(ctx, ui);
-        }
-        for (_, element) in ctx.state.explore.open_windows_item.clone().iter() {
-            ectx.data_mut(|d| d.insert_temp(egui::Id::from(EXPLORE_ELEMENT), element.clone()));
-            ItemWindow::show(ctx, ui);
-        }
     });
-
 }
 
 fn show_category(ctx: &mut CogsApp, ui: &mut egui::Ui) {
@@ -244,7 +226,6 @@ fn build_kind_options(ctx: &CogsApp) -> Vec<KindOption> {
 
     out
 }
-
 
 fn show_kind(ctx: &mut CogsApp, ui: &mut Ui) {
     ui.label("Kind");
@@ -316,10 +297,7 @@ fn show_add_menu(ctx: &mut CogsApp, ui: &mut Ui) {
         .gap(5.0)
         .show(|ui| {
             if menu_row(ui, concatcp!(ICON_ITEM, "   Item"), false, Some(115.0)).clicked() {
-                 ctx.state
-                        .explore
-                        .open_windows_item
-                        .insert(Id::default(), Item::default());
+                ctx.state.explore.open_windows_item.insert(Id::default(), Item::default());
                 ui.close();
             }
 
@@ -371,7 +349,6 @@ fn show_add_menu(ctx: &mut CogsApp, ui: &mut Ui) {
                                     .insert(Id::default(), Arc::new(Mutex::new(AttrTemplate::default())));
                                 ui.close();
                             }
-
                         });
                     });
 
@@ -411,7 +388,7 @@ fn show_add_menu(ctx: &mut CogsApp, ui: &mut Ui) {
         });
 }
 
-fn show_preview_cell(ctx: &mut CogsApp, ectx: &egui::Context,  strip: &mut Strip<'_, '_>) {
+fn show_preview_cell(ctx: &mut CogsApp, ectx: &egui::Context, strip: &mut Strip<'_, '_>) {
     strip.cell(|ui| {
         ui.vertical(|ui| {
             ui.add_space(45.0);
@@ -420,9 +397,7 @@ fn show_preview_cell(ctx: &mut CogsApp, ectx: &egui::Context,  strip: &mut Strip
                     Kind::AttributeTemplate => {
                         for elem in ctx.state.data.get_attr_templates().iter() {
                             if elem.id == *id {
-                                ectx.data_mut(|d| {
-                                    d.insert_temp(egui::Id::from(EXPLORE_ELEMENT), elem.clone())
-                                });
+                                ectx.data_mut(|d| d.insert_temp(egui::Id::from(EXPLORE_ELEMENT), elem.clone()));
                                 break;
                             }
                         }
@@ -431,9 +406,7 @@ fn show_preview_cell(ctx: &mut CogsApp, ectx: &egui::Context,  strip: &mut Strip
                     Kind::ItemTemplate => {
                         for elem in ctx.state.data.get_item_templates().iter() {
                             if elem.id == *id {
-                                ectx.data_mut(|d| {
-                                    d.insert_temp(egui::Id::from(EXPLORE_ELEMENT), elem.clone())
-                                });
+                                ectx.data_mut(|d| d.insert_temp(egui::Id::from(EXPLORE_ELEMENT), elem.clone()));
                                 break;
                             }
                         }

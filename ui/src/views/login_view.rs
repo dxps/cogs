@@ -1,9 +1,9 @@
 use crate::{
-    CogsApp,
     comps::{AppComponent, Modal, PasswordInput},
     constants::{MODAL_BTN_LABEL, MODAL_BTN_MSG, MODAL_CONTENT, MODAL_TITLE},
     messages::UiMessage,
     views::AppView,
+    CogsApp,
 };
 use cogs_shared::{
     app::AppError,
@@ -17,9 +17,11 @@ pub struct Login {}
 impl AppView for Login {
     type Context = CogsApp;
 
-    fn show(ctx: &mut Self::Context, ectx: &egui::Context) {
+    fn show(ctx: &mut Self::Context, ui: &mut egui::Ui) {
         //
-        egui::CentralPanel::default().show(ectx, |ui| {
+        let ectx = ui.ctx().clone();
+
+        egui::CentralPanel::default().show_inside(ui, |ui| {
             let frame = egui::Frame::new()
                 .corner_radius(6.0)
                 .inner_margin(20.0)
@@ -34,7 +36,7 @@ impl AppView for Login {
                 .resizable(false)
                 .title_bar(false);
 
-            window.show(ectx, |ui| {
+            window.show(&ectx, |ui| {
                 ui.horizontal(|ui| {
                     ui.vertical(|ui| {
                         ui.label(RichText::new("Login").heading());

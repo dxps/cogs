@@ -5,9 +5,9 @@ pub struct Home {}
 impl AppView for Home {
     type Context = CogsApp;
 
-    fn show(_ctx: &mut Self::Context, ectx: &egui::Context) {
+    fn show(_ctx: &mut Self::Context, ui: &mut egui::Ui) {
         // The central panel is the region left after adding TopPanel's and SidePanel's.
-        egui::CentralPanel::default().show(ectx, |ui| {
+        egui::CentralPanel::default().show_inside(ui, |ui| {
             ui.add_space(10.0);
             ui.heading("Home");
             ui.add_space(10.0);
