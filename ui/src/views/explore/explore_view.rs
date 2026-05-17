@@ -39,9 +39,9 @@ pub enum TemplateTypeFilter {
     AttributeTemplate,
 }
 
-pub struct Explore {}
+pub struct ExploreView {}
 
-impl AppView for Explore {
+impl AppView for ExploreView {
     type Context = CogsApp;
 
     fn show(ctx: &mut Self::Context, ui: &mut egui::Ui) {

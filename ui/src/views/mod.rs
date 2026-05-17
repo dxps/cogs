@@ -4,9 +4,6 @@ pub use home_view::*;
 mod explore;
 pub use explore::*;
 
-mod explore_view;
-pub use explore_view::*;
-
 mod login_view;
 pub use login_view::*;
 

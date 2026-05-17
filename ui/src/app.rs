@@ -1,18 +1,18 @@
 use crate::{
+    UiState,
     colors::FADED_COLOR,
     comps::{AppComponent, Footer, Header},
     constants::{APP_KEY, CORNER_RADIUS},
     handle_msg,
     messages::UiMessage,
-    views::{AppView, Explore, ExploreCategory, ExploreKind, Home, Login, Settings, ViewName},
-    UiState,
+    views::{AppView, ExploreCategory, ExploreKind, ExploreView, HomeView, LoginView, SettingsView, ViewName},
 };
 use cogs_shared::domain::model::meta::Kind;
 use egui::{
-    epaint::text::{FontInsert, InsertFontFamily},
     FontData,
+    epaint::text::{FontInsert, InsertFontFamily},
 };
-use std::sync::mpsc::{channel, Receiver, Sender};
+use std::sync::mpsc::{Receiver, Sender, channel};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 struct CatppuccinTheme {
@@ -290,12 +290,12 @@ impl eframe::App for CogsApp {
             });
 
         match self.state.curr_view() {
-            ViewName::Home => Home::show(self, ui),
-            ViewName::Explore => Explore::show(self, ui),
-            ViewName::Settings => Settings::show(self, ui),
+            ViewName::Home => HomeView::show(self, ui),
+            ViewName::Explore => ExploreView::show(self, ui),
+            ViewName::Settings => SettingsView::show(self, ui),
             ViewName::Login => {
                 self.state.set_curr_view(ViewName::Login);
-                Login::show(self, ui);
+                LoginView::show(self, ui);
             }
         }
     }

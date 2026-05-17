@@ -1,8 +1,8 @@
-use crate::{views::AppView, CogsApp};
+use crate::{CogsApp, views::AppView};
 
-pub struct Settings {}
+pub struct SettingsView {}
 
-impl AppView for Settings {
+impl AppView for SettingsView {
     type Context = CogsApp;
 
     fn show(_ctx: &mut Self::Context, ui: &mut egui::Ui) {

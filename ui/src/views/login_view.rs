@@ -1,9 +1,9 @@
 use crate::{
+    CogsApp,
     comps::{AppComponent, Modal, PasswordInput},
     constants::{MODAL_BTN_LABEL, MODAL_BTN_MSG, MODAL_CONTENT, MODAL_TITLE},
     messages::UiMessage,
     views::AppView,
-    CogsApp,
 };
 use cogs_shared::{
     app::AppError,
@@ -12,9 +12,9 @@ use cogs_shared::{
 use egui::{Align2, Id, RichText, Shadow, Stroke};
 use std::sync::mpsc::Sender;
 
-pub struct Login {}
+pub struct LoginView {}
 
-impl AppView for Login {
+impl AppView for LoginView {
     type Context = CogsApp;
 
     fn show(ctx: &mut Self::Context, ui: &mut egui::Ui) {

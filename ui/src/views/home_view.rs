@@ -1,8 +1,8 @@
 use crate::{CogsApp, views::AppView};
 
-pub struct Home {}
+pub struct HomeView {}
 
-impl AppView for Home {
+impl AppView for HomeView {
     type Context = CogsApp;
 
     fn show(_ctx: &mut Self::Context, ui: &mut egui::Ui) {
