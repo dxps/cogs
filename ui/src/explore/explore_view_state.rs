@@ -3,7 +3,7 @@ use crate::{
     state::SourceType,
 };
 use cogs_shared::domain::model::{
-    Id,
+    AccessLevel, Id,
     meta::{Attr, AttrTemplate, Item, ItemTemplate, Kind},
 };
 use serde::{Deserialize, Serialize};
@@ -33,6 +33,10 @@ pub struct ExploreViewState {
     /// The open windows for creating (one) or editing (one or more) item templates.
     // #[serde(skip)]  todo: temporary used during form dev.
     pub open_windows_item_template: HashMap<Id, Arc<Mutex<ItemTemplate>>>,
+
+    /// The open windows for viewing access levels.
+    #[serde(skip)]
+    pub open_windows_access_level: HashMap<Id, AccessLevel>,
 
     /// The element that is currently clicked (not double clicked) in the Explore's table.
     #[serde(skip)]

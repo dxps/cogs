@@ -40,6 +40,7 @@ impl AppComponent for ExploreTable {
         egui::ScrollArea::vertical().show(ui, |ui| {
             ui.add_space(10.0);
 
+            let ectx = ui.ctx().clone();
             let available_height = ui.available_height();
             let w = ctx.state.explore.table_col_widths.unwrap_or([40.0, 120.0, 150.0]);
 
@@ -94,7 +95,7 @@ impl AppComponent for ExploreTable {
                     let access_levels = access_level_rows_filtered(ctx);
 
                     table.body(|mut body| {
-                        show_access_levels(&mut body, &access_levels);
+                        show_access_levels(ctx, &ectx, &mut body, &access_levels);
 
                         remember_widths(&body, &mut ctx.state.explore);
                     });
@@ -144,9 +145,16 @@ fn template_rows_filtered(ctx: &CogsApp) -> (Vec<ItemTemplate>, Vec<AttrTemplate
     }
 }
 
-fn show_access_levels(body: &mut TableBody<'_>, elems: &[AccessLevel]) {
+fn show_access_levels(ctx: &mut CogsApp, ectx: &egui::Context, body: &mut TableBody<'_>, elems: &[AccessLevel]) {
     for elem in elems {
+        let mut open_win = false;
+        let hovered_id = egui::Id::new(("access_level_row_hovered", &elem.id));
         body.row(20.0, |mut row| {
+            let was_hovered = ectx.data(|d| d.get_temp::<bool>(hovered_id)).unwrap_or(false);
+            row.set_hovered(was_hovered);
+
+            let mut is_hovered = false;
+
             row.col(|ui| {
                 ui.label(RichText::new("A.L.").color(Color32::GRAY))
                     .on_hover_text("Access Level")
@@ -154,13 +162,35 @@ fn show_access_levels(body: &mut TableBody<'_>, elems: &[AccessLevel]) {
             });
 
             row.col(|ui| {
-                ui.label(&elem.name);
+                let resp = ui.label(&elem.name).on_hover_cursor(CursorIcon::PointingHand);
+                is_hovered |= resp.hovered();
             });
 
             row.col(|ui| {
-                ui.label(RichText::new(elem.description.as_deref().unwrap_or_default()).color(Color32::GRAY));
+                let resp = ui
+                    .label(RichText::new(elem.description.as_deref().unwrap_or_default()).color(Color32::GRAY))
+                    .on_hover_cursor(CursorIcon::PointingHand);
+                is_hovered |= resp.hovered();
             });
+
+            let row_resp = row.response().on_hover_cursor(CursorIcon::PointingHand);
+            is_hovered |= row_resp.hovered();
+            if row_resp.double_clicked() {
+                open_win = true;
+            }
+
+            ectx.data_mut(|d| d.insert_temp(hovered_id, is_hovered));
+            if is_hovered {
+                ectx.request_repaint();
+            }
         });
+
+        if open_win {
+            ctx.state
+                .explore
+                .open_windows_access_level
+                .insert(elem.id.clone(), elem.clone());
+        }
     }
 }
 

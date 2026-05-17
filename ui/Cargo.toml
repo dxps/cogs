@@ -39,6 +39,7 @@ egui               = { version = "=0.34.2", features = [
  ] }
 egui_extras        = { version = "=0.34.2",  features = [ "all_loaders" ] }
 egui_dnd           = { version = "0.15.0"      }
+egui_material_icons = { version = "=0.6.0", default-features = false, features = [ "outline" ] }
 
 # catppuccin-egui    = { version = "=5.7.0", default-features = false, features = [ "egui33" ] }
 catppuccin-egui    = { git = "https://github.com/Lynnesbian/egui", branch = "main", default-features = false, features = [ "egui34" ] }
@@ -71,4 +72,3 @@ tracing-wasm            = { version = "=0.2.1"  }
 tracing-subscriber-wasm = { version = "=0.1.0"  }
 wasm-bindgen-futures    = { version = "=0.4.71" }
 web-sys                 = { version = "=0.3.98" }      # To access the DOM (for hiding the loading text).
-

@@ -94,6 +94,7 @@ impl CogsApp {
 
         let ectx = &cc.egui_ctx;
         Self::init_font(ectx);
+        egui_material_icons::initialize(ectx);
 
         // Image loading init.
         egui_extras::install_image_loaders(ectx);

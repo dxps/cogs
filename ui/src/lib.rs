@@ -13,6 +13,8 @@ mod constants;
 
 mod comps;
 
+pub mod security;
+
 pub mod state;
 
 mod views;
