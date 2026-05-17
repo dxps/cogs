@@ -1,7 +1,7 @@
 use cogs_shared::{
     app::{AppError, AppResult},
     domain::model::{
-        Id, UserAccount,
+        AccessLevel, Id, UserAccount,
         meta::{AttrTemplate, ItemTemplate, Kind},
     },
 };
@@ -24,4 +24,5 @@ pub enum UiMessage {
 
     AttrTemplatesFetched(Result<Vec<AttrTemplate>, AppError>),
     ItemTemplatesFetched(Result<Vec<ItemTemplate>, AppError>),
+    AccessLevelsFetched(Result<Vec<AccessLevel>, AppError>),
 }

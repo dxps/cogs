@@ -1,4 +1,4 @@
-use crate::domain::model::{meta::AttrTemplate, Id};
+use crate::domain::model::{Id, meta::AttrTemplate};
 use chrono::{Local, NaiveDateTime};
 use serde::{Deserialize, Serialize};
 

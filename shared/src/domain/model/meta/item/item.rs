@@ -1,9 +1,9 @@
 use crate::domain::model::{
+    Id,
     meta::{
         Attr, AttributeValueType, BooleanAttribute, DateAttribute, DateTimeAttribute,
         NumericAttribute, TextAttribute,
     },
-    Id,
 };
 use anyhow::Error;
 use chrono::NaiveDateTime;

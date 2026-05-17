@@ -2,10 +2,10 @@ use const_format::concatcp;
 use egui::{Align, Layout};
 
 use crate::{
+    CogsApp,
     comps::{AppComponent, UserMenu},
     constants::{ICON_EXPLORE, ICON_HOME},
     views::{AppView, ViewName},
-    CogsApp,
 };
 
 pub struct Header {}

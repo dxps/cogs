@@ -21,6 +21,7 @@ pub enum ExploreCategory {
     #[default]
     Items,
     Templates,
+    Security,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -31,6 +32,8 @@ pub enum ExploreKind {
     TemplateType(TemplateTypeFilter),
     // Used when Category::Items.
     ItemTemplateId(Id),
+    // Used when Category::Security.
+    AccessLevel,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -81,13 +84,19 @@ fn show_table_cell(ctx: &mut CogsApp, strip: &mut Strip<'_, '_>) {
         match ctx.state.explore.category {
             ExploreCategory::Templates => match ctx.state.explore.kind {
                 ExploreKind::All | ExploreKind::TemplateType(_) => {}
-                ExploreKind::ItemTemplateId(_) => {
+                ExploreKind::ItemTemplateId(_) | ExploreKind::AccessLevel => {
                     ctx.state.explore.kind = ExploreKind::All;
                 }
             },
             ExploreCategory::Items => match ctx.state.explore.kind {
                 ExploreKind::All | ExploreKind::ItemTemplateId(_) => {}
-                ExploreKind::TemplateType(_) => {
+                ExploreKind::TemplateType(_) | ExploreKind::AccessLevel => {
+                    ctx.state.explore.kind = ExploreKind::All;
+                }
+            },
+            ExploreCategory::Security => match ctx.state.explore.kind {
+                ExploreKind::All | ExploreKind::AccessLevel => {}
+                ExploreKind::TemplateType(_) | ExploreKind::ItemTemplateId(_) => {
                     ctx.state.explore.kind = ExploreKind::All;
                 }
             },
@@ -109,6 +118,7 @@ fn show_table_cell(ctx: &mut CogsApp, strip: &mut Strip<'_, '_>) {
                 ExploreKind::TemplateType(TemplateTypeFilter::ItemTemplate) => *sel_kind == Kind::ItemTemplate,
                 ExploreKind::TemplateType(TemplateTypeFilter::AttributeTemplate) => *sel_kind == Kind::AttributeTemplate,
                 ExploreKind::ItemTemplateId(_) => true,
+                ExploreKind::AccessLevel => false,
             },
 
             ExploreCategory::Items => match &ctx.state.explore.kind {
@@ -130,7 +140,10 @@ fn show_table_cell(ctx: &mut CogsApp, strip: &mut Strip<'_, '_>) {
                     true
                 }
                 ExploreKind::TemplateType(_) => true, // normalized away above
+                ExploreKind::AccessLevel => true,     // normalized away above
             },
+
+            ExploreCategory::Security => true,
         }
     }
 
@@ -166,6 +179,7 @@ fn show_category(ctx: &mut CogsApp, ui: &mut egui::Ui) {
         let items = vec![
             DropdownItem::new("Items", ExploreCategory::Items),
             DropdownItem::new("Templates", ExploreCategory::Templates),
+            DropdownItem::new("Security", ExploreCategory::Security),
         ];
 
         if let Some(v) = Dropdown::show(
@@ -222,6 +236,13 @@ fn build_kind_options(ctx: &CogsApp) -> Vec<KindOption> {
                 });
             }
         }
+        ExploreCategory::Security => {
+            out.push(KindOption {
+                label: "Access Level".to_string(),
+                value: ExploreKind::AccessLevel,
+                italic: false,
+            });
+        }
     }
 
     out
@@ -257,7 +278,7 @@ fn show_kind(ctx: &mut CogsApp, ui: &mut Ui) {
 
     ui.label(RichText::new(ICON_HELP).color(Color32::GRAY).size(10.0))
         .on_hover_text(
-            "If category is:\n- 'Items', you may filter by item template.\n- 'Templates', you may filter by template type.",
+            "If category is:\n- 'Items', you may filter by item template.\n- 'Templates', you may filter by template type.\n- 'Security', you may filter by security element type.",
         )
         .on_hover_cursor(CursorIcon::Help);
 }

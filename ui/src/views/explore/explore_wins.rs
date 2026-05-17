@@ -1,9 +1,9 @@
 use egui::Ui;
 
 use crate::{
+    CogsApp,
     comps::{AppComponent, AttrTemplateWindow, ItemTemplateWindow, ItemWindow},
     constants::EXPLORE_ELEMENT,
-    CogsApp,
 };
 
 pub fn show_windows(ctx: &mut CogsApp, ui: &mut Ui, ectx: &egui::Context) {

@@ -3,7 +3,10 @@ use crate::{
     comps::AppComponent,
     views::{ExploreCategory, ExploreKind, TemplateTypeFilter},
 };
-use cogs_shared::domain::model::meta::{AttrTemplate, ItemTemplate, Kind};
+use cogs_shared::domain::model::{
+    AccessLevel,
+    meta::{AttrTemplate, ItemTemplate, Kind},
+};
 use egui::{Color32, CursorIcon, RichText, Sense, Ui};
 use egui_extras::{Column, TableBody, TableBuilder};
 use std::sync::{Arc, Mutex};
@@ -15,16 +18,21 @@ impl AppComponent for ExploreTable {
 
     fn show(ctx: &mut Self::Context, ui: &mut Ui) {
         // Fetch data.
-        if !ctx.state.data.has_fetched_all() {
-            match ctx.state.explore.category {
-                ExploreCategory::Items => {
-                    // TODO: fetch items when implemented.
-                    // ctx.state.data.fetch_all_items(ui.ctx(), ctx.sendr.clone());
-                }
-                ExploreCategory::Templates => {
+        match ctx.state.explore.category {
+            ExploreCategory::Items => {
+                // TODO: fetch items when implemented.
+                // ctx.state.data.fetch_all_items(ui.ctx(), ctx.sendr.clone());
+            }
+            ExploreCategory::Templates => {
+                if !ctx.state.data.has_fetched_all() {
                     ctx.state.data.fetch_all_attr_templates(ui.ctx(), ctx.sendr.clone());
                     ctx.state.data.fetch_all_item_templates(ui.ctx(), ctx.sendr.clone());
                     // TODO: fetch_all_link_templates
+                }
+            }
+            ExploreCategory::Security => {
+                if !ctx.state.data.has_fetched_access_levels() {
+                    ctx.state.data.fetch_all_access_levels(ui.ctx(), ctx.sendr.clone());
                 }
             }
         }
@@ -82,8 +90,25 @@ impl AppComponent for ExploreTable {
                         remember_widths(&body, &mut ctx.state.explore);
                     });
                 }
+                ExploreCategory::Security => {
+                    let access_levels = access_level_rows_filtered(ctx);
+
+                    table.body(|mut body| {
+                        show_access_levels(&mut body, &access_levels);
+
+                        remember_widths(&body, &mut ctx.state.explore);
+                    });
+                }
             }
         });
+    }
+}
+
+fn access_level_rows_filtered(ctx: &CogsApp) -> Vec<AccessLevel> {
+    match (&ctx.state.explore.category, &ctx.state.explore.kind) {
+        (ExploreCategory::Security, ExploreKind::All | ExploreKind::AccessLevel) => ctx.state.data.get_access_levels().to_vec(),
+        (ExploreCategory::Security, _) => Vec::new(),
+        _ => Vec::new(),
     }
 }
 
@@ -106,13 +131,36 @@ fn template_rows_filtered(ctx: &CogsApp) -> (Vec<ItemTemplate>, Vec<AttrTemplate
         }
 
         // Stale value (from Items mode) while in Templates: fallback to All.
-        (ExploreCategory::Templates, ExploreKind::ItemTemplateId(_)) => (
+        (ExploreCategory::Templates, ExploreKind::ItemTemplateId(_) | ExploreKind::AccessLevel) => (
             ctx.state.data.get_item_templates().to_vec(),
             ctx.state.data.get_attr_templates().to_vec(),
         ),
 
         // Category = Items -> templates list isn't relevant here.
         (ExploreCategory::Items, _) => (Vec::new(), Vec::new()),
+
+        // Category = Security -> templates list isn't relevant here.
+        (ExploreCategory::Security, _) => (Vec::new(), Vec::new()),
+    }
+}
+
+fn show_access_levels(body: &mut TableBody<'_>, elems: &[AccessLevel]) {
+    for elem in elems {
+        body.row(20.0, |mut row| {
+            row.col(|ui| {
+                ui.label(RichText::new("A.L.").color(Color32::GRAY))
+                    .on_hover_text("Access Level")
+                    .on_hover_cursor(CursorIcon::Help);
+            });
+
+            row.col(|ui| {
+                ui.label(&elem.name);
+            });
+
+            row.col(|ui| {
+                ui.label(RichText::new(elem.description.as_deref().unwrap_or_default()).color(Color32::GRAY));
+            });
+        });
     }
 }
 

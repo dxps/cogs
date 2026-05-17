@@ -1,4 +1,4 @@
-use crate::domain::model::{meta::AttributeValueType, Id};
+use crate::domain::model::{Id, meta::AttributeValueType};
 use serde::{Deserialize, Serialize};
 use std::hash::Hash;
 

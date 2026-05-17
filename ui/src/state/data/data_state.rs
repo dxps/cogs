@@ -2,7 +2,7 @@ use crate::messages::UiMessage;
 use cogs_shared::{
     app::{AppError, AppResult},
     domain::model::{
-        Id,
+        AccessLevel, Id,
         meta::{AttrTemplate, ItemTemplate, Kind},
     },
     dtos::IdDto,
@@ -24,6 +24,12 @@ pub struct DataState {
 
     #[serde(skip)]
     fetched_item_templates: bool,
+
+    #[serde(skip)]
+    access_levels: Vec<AccessLevel>,
+
+    #[serde(skip)]
+    fetched_access_levels: bool,
 }
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
@@ -45,6 +51,10 @@ impl DataState {
 
     pub fn has_fetched_item_templates(&self) -> bool {
         self.fetched_item_templates
+    }
+
+    pub fn has_fetched_access_levels(&self) -> bool {
+        self.fetched_access_levels
     }
 
     // ------------------------
@@ -90,6 +100,11 @@ impl DataState {
     pub fn set_item_templates(&mut self, data: Vec<ItemTemplate>) {
         self.item_templates = data;
         self.fetched_item_templates = true;
+    }
+
+    pub fn set_access_levels(&mut self, data: Vec<AccessLevel>) {
+        self.access_levels = data;
+        self.fetched_access_levels = true;
     }
 
     pub fn get_attr_templates(&self) -> Vec<AttrTemplate> {
@@ -192,6 +207,10 @@ impl DataState {
         self.item_templates.clone()
     }
 
+    pub fn get_access_levels(&self) -> Vec<AccessLevel> {
+        self.access_levels.clone()
+    }
+
     pub fn get_item_template_name(&self, id: &Id) -> String {
         self.item_templates
             .iter()
@@ -211,6 +230,23 @@ impl DataState {
                 log::error!("[DataState::delete_item_template] Failed to send UiMessage. Error: {e}");
             }
             ectx.request_repaint();
+        });
+    }
+
+    pub fn fetch_all_access_levels(&self, ectx: &egui::Context, sender: Sender<UiMessage>) {
+        //
+        let mut req = ehttp::Request::get("http://localhost:9010/api/access_levels");
+        req.headers.insert("content-type", "application/json");
+        let ectx = ectx.clone();
+        ehttp::fetch(req, move |rsp| {
+            if let Ok(rsp) = rsp {
+                let data: Vec<AccessLevel> = serde_json::from_str(rsp.text().unwrap_or_default()).unwrap();
+                log::trace!("[DataState::fetch_all_access_levels] Got {} elements.", data.len());
+                if let Err(e) = sender.send(UiMessage::AccessLevelsFetched(Ok(data))) {
+                    log::info!("[DataState::fetch_all_access_levels] Failed to send UiMessage. Error: {e}");
+                }
+                ectx.request_repaint();
+            }
         });
     }
 }

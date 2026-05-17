@@ -1,4 +1,4 @@
-use crate::domain::model::{meta::AttrTemplate, Id};
+use crate::domain::model::{Id, meta::AttrTemplate};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]

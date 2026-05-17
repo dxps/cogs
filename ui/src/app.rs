@@ -5,7 +5,7 @@ use crate::{
     constants::{APP_KEY, CORNER_RADIUS},
     handle_msg,
     messages::UiMessage,
-    views::{AppView, ExploreCategory, ExploreKind, ExploreView, HomeView, LoginView, SettingsView, ViewName},
+    views::{AppView, ExploreView, HomeView, LoginView, SettingsView, ViewName},
 };
 use cogs_shared::domain::model::meta::Kind;
 use egui::{
@@ -160,10 +160,6 @@ impl eframe::App for CogsApp {
         let ectx = ui.ctx().clone();
 
         // State related logistics.
-        if self.state.explore.category != ExploreCategory::Templates {
-            self.state.explore.kind = ExploreKind::All;
-        }
-
         let curr_theme = ectx.theme();
         if self.state.ui_theme != curr_theme {
             self.state.ui_theme = curr_theme;
@@ -278,6 +274,15 @@ impl eframe::App for CogsApp {
                     }
                     Err(err) => {
                         log::error!("[app.update] Error fetching item templates: {}", err);
+                    }
+                },
+
+                UiMessage::AccessLevelsFetched(data) => match data {
+                    Ok(data) => {
+                        self.state.data.set_access_levels(data);
+                    }
+                    Err(err) => {
+                        log::error!("[app.update] Error fetching access levels: {}", err);
                     }
                 },
             }
