@@ -19,7 +19,7 @@ pub struct ExploreViewState {
 
     pub kind: ExploreKind,
 
-    // The name and description columns widths of the explore table.
+    /// The type, name, and description columns widths of the explore table.
     pub table_col_widths: Option<[f32; 3]>,
 
     /// The open windows for creating (one) or editing (one or more) items.

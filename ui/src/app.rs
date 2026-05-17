@@ -317,10 +317,11 @@ fn ui_init_cosmetics(ctx: &egui::Context) {
     ctx.global_style_mut(|style| {
         apply_catppuccin_theme(style, theme);
 
+        let dim_edge_stroke = egui::Stroke::new(1.0, style.visuals.text_color().gamma_multiply(0.22));
         style.visuals.widgets.noninteractive.bg_stroke = egui::Stroke::NONE;
-        style.visuals.widgets.hovered.bg_stroke = egui::Stroke::NONE;
-        style.visuals.widgets.active.bg_stroke = egui::Stroke::NONE;
-        style.visuals.window_stroke = egui::Stroke::new(1.0, style.visuals.text_color().gamma_multiply(0.20));
+        style.visuals.widgets.hovered.bg_stroke = dim_edge_stroke;
+        style.visuals.widgets.active.bg_stroke = dim_edge_stroke;
+        style.visuals.window_stroke = dim_edge_stroke;
         style.visuals.window_fill = style.visuals.window_fill.gamma_multiply(1.08);
 
         let r = egui::CornerRadius::same(CORNER_RADIUS as u8);

@@ -7,7 +7,7 @@ use cogs_shared::domain::model::{
     AccessLevel,
     meta::{AttrTemplate, ItemTemplate, Kind},
 };
-use egui::{Color32, CursorIcon, RichText, Sense, Ui};
+use egui::{Color32, CursorIcon, Rect, RichText, Sense, Ui};
 use egui_extras::{Column, TableBody, TableBuilder};
 use std::sync::{Arc, Mutex};
 
@@ -39,19 +39,29 @@ impl AppComponent for ExploreTable {
 
         egui::ScrollArea::vertical().show(ui, |ui| {
             ui.add_space(10.0);
-
             let ectx = ui.ctx().clone();
             let available_height = ui.available_height();
             let w = ctx.state.explore.table_col_widths.unwrap_or([40.0, 120.0, 150.0]);
 
+            if matches!(ctx.state.explore.category, ExploreCategory::Security) {
+                let access_levels = access_level_rows_filtered(ctx);
+                show_access_levels(ctx, &ectx, ui, &access_levels);
+                return;
+            }
+
+            let resize_stroke = egui::Stroke::new(1.0, ui.visuals().text_color().gamma_multiply(0.55));
+            ui.visuals_mut().widgets.hovered.bg_fill = Color32::TRANSPARENT;
+            ui.visuals_mut().widgets.hovered.bg_stroke = resize_stroke;
+            ui.visuals_mut().widgets.active.bg_stroke = resize_stroke;
+
             let table = TableBuilder::new(ui)
                 .id_salt("explore_table")
-                .striped(true)
+                .striped(false)
                 .resizable(true)
                 .cell_layout(egui::Layout::left_to_right(egui::Align::Center))
                 .column(Column::auto().at_least(40.0)) // type
                 .column(Column::initial(w[1]).at_least(100.0).at_most(250.0)) // name
-                .column(Column::initial(w[2]).at_least(100.0).at_most(400.0)) // description
+                .column(Column::remainder().at_least(w[2].max(100.0)).resizable(true)) // description
                 .max_scroll_height(available_height)
                 .sense(Sense::click());
 
@@ -91,15 +101,7 @@ impl AppComponent for ExploreTable {
                         remember_widths(&body, &mut ctx.state.explore);
                     });
                 }
-                ExploreCategory::Security => {
-                    let access_levels = access_level_rows_filtered(ctx);
-
-                    table.body(|mut body| {
-                        show_access_levels(ctx, &ectx, &mut body, &access_levels);
-
-                        remember_widths(&body, &mut ctx.state.explore);
-                    });
-                }
+                ExploreCategory::Security => {}
             }
         });
     }
@@ -145,52 +147,167 @@ fn template_rows_filtered(ctx: &CogsApp) -> (Vec<ItemTemplate>, Vec<AttrTemplate
     }
 }
 
-fn show_access_levels(ctx: &mut CogsApp, ectx: &egui::Context, body: &mut TableBody<'_>, elems: &[AccessLevel]) {
-    for elem in elems {
-        let mut open_win = false;
-        let hovered_id = egui::Id::new(("access_level_row_hovered", &elem.id));
-        body.row(20.0, |mut row| {
-            let was_hovered = ectx.data(|d| d.get_temp::<bool>(hovered_id)).unwrap_or(false);
-            row.set_hovered(was_hovered);
+fn show_access_levels(ctx: &mut CogsApp, ectx: &egui::Context, ui: &mut Ui, elems: &[AccessLevel]) {
+    let row_hover_fill = ui.visuals().widgets.hovered.bg_fill;
+    let resize_stroke = egui::Stroke::new(1.0, ui.visuals().text_color().gamma_multiply(0.55));
+    let spacing = ui.spacing().item_spacing;
+    let row_height = 20.0;
+    let header_height = 20.0;
+    let available_width = ui.available_width();
+    let total_height = header_height + spacing.y + elems.len() as f32 * (row_height + spacing.y);
 
-            let mut is_hovered = false;
+    let mut widths = ctx.state.explore.table_col_widths.unwrap_or([40.0, 120.0, 150.0]);
+    widths[0] = widths[0].clamp(40.0, 150.0);
+    widths[1] = widths[1].clamp(100.0, 350.0);
 
-            row.col(|ui| {
-                ui.label(RichText::new("A.L.").color(Color32::GRAY))
-                    .on_hover_text("Access Level")
-                    .on_hover_cursor(CursorIcon::Help);
-            });
+    ui.allocate_ui(egui::vec2(available_width, total_height), |ui| {
+        let table_rect = ui.max_rect();
+        let left = table_rect.left();
+        let top = table_rect.top();
+        let type_width = widths[0];
+        let name_width = widths[1];
+        let description_width = (available_width - type_width - name_width - spacing.x * 2.0).max(100.0);
 
-            row.col(|ui| {
-                let resp = ui.label(&elem.name).on_hover_cursor(CursorIcon::PointingHand);
-                is_hovered |= resp.hovered();
-            });
+        let type_x = left;
+        let name_x = type_x + type_width + spacing.x;
+        let description_x = name_x + name_width + spacing.x;
 
-            row.col(|ui| {
-                let resp = ui
-                    .label(RichText::new(elem.description.as_deref().unwrap_or_default()).color(Color32::GRAY))
-                    .on_hover_cursor(CursorIcon::PointingHand);
-                is_hovered |= resp.hovered();
-            });
+        paint_access_level_cell(
+            ui,
+            Rect::from_min_size(egui::pos2(type_x, top), egui::vec2(type_width, header_height)),
+            |ui| {
+                ui.label(RichText::new("type").color(Color32::GRAY));
+            },
+        );
+        paint_access_level_cell(
+            ui,
+            Rect::from_min_size(egui::pos2(name_x, top), egui::vec2(name_width, header_height)),
+            |ui| {
+                ui.label(RichText::new("name").color(Color32::GRAY));
+            },
+        );
+        paint_access_level_cell(
+            ui,
+            Rect::from_min_size(egui::pos2(description_x, top), egui::vec2(description_width, header_height)),
+            |ui| {
+                ui.label(RichText::new("description").color(Color32::GRAY));
+            },
+        );
 
-            let row_resp = row.response().on_hover_cursor(CursorIcon::PointingHand);
-            is_hovered |= row_resp.hovered();
-            if row_resp.double_clicked() {
-                open_win = true;
-            }
+        let mut row_top = top + header_height + spacing.y;
+        for elem in elems {
+            let row_rect = Rect::from_min_size(egui::pos2(left, row_top), egui::vec2(available_width, row_height));
+            let row_hovered = ui.input(|i| i.pointer.hover_pos().is_some_and(|pos| row_rect.contains(pos)));
 
-            ectx.data_mut(|d| d.insert_temp(hovered_id, is_hovered));
-            if is_hovered {
+            if row_hovered {
+                ui.painter().rect_filled(row_rect, egui::CornerRadius::ZERO, row_hover_fill);
                 ectx.request_repaint();
             }
-        });
 
-        if open_win {
-            ctx.state
-                .explore
-                .open_windows_access_level
-                .insert(elem.id.clone(), elem.clone());
+            paint_access_level_cell(
+                ui,
+                Rect::from_min_size(egui::pos2(type_x, row_top), egui::vec2(type_width, row_height)),
+                |ui| {
+                    ui.label(RichText::new("A.L.").color(Color32::GRAY))
+                        .on_hover_text("Access Level")
+                        .on_hover_cursor(CursorIcon::Help);
+                },
+            );
+            paint_access_level_cell(
+                ui,
+                Rect::from_min_size(egui::pos2(name_x, row_top), egui::vec2(name_width, row_height)),
+                |ui| {
+                    ui.label(&elem.name);
+                },
+            );
+            paint_access_level_cell(
+                ui,
+                Rect::from_min_size(egui::pos2(description_x, row_top), egui::vec2(description_width, row_height)),
+                |ui| {
+                    ui.label(RichText::new(elem.description.as_deref().unwrap_or_default()).color(Color32::GRAY));
+                },
+            );
+
+            let row_resp = ui
+                .interact(row_rect, ui.id().with(("access_level_row", &elem.id)), Sense::click())
+                .on_hover_cursor(CursorIcon::PointingHand);
+
+            if row_resp.double_clicked() {
+                ctx.state
+                    .explore
+                    .open_windows_access_level
+                    .insert(elem.id.clone(), elem.clone());
+            }
+
+            row_top += row_height + spacing.y;
         }
+
+        resize_access_level_column(
+            ui,
+            "type",
+            left + type_width + spacing.x * 0.5,
+            table_rect,
+            resize_stroke,
+            |pointer_x| {
+                widths[0] = (pointer_x - left).clamp(40.0, 150.0);
+            },
+        );
+        resize_access_level_column(
+            ui,
+            "name",
+            name_x + name_width + spacing.x * 0.5,
+            table_rect,
+            resize_stroke,
+            |pointer_x| {
+                widths[1] = (pointer_x - name_x).clamp(100.0, 350.0);
+            },
+        );
+    });
+
+    widths[2] = (available_width - widths[0] - widths[1] - spacing.x * 2.0).max(100.0);
+    ctx.state.explore.table_col_widths = Some(widths);
+}
+
+fn paint_access_level_cell(ui: &mut Ui, rect: Rect, add_contents: impl FnOnce(&mut Ui)) {
+    ui.scope_builder(
+        egui::UiBuilder::new()
+            .max_rect(rect)
+            .layout(egui::Layout::left_to_right(egui::Align::Center)),
+        |ui| {
+            ui.set_clip_rect(rect);
+            add_contents(ui);
+        },
+    );
+}
+
+fn resize_access_level_column(
+    ui: &mut Ui,
+    id_salt: &'static str,
+    x: f32,
+    table_rect: Rect,
+    resize_stroke: egui::Stroke,
+    update_width: impl FnOnce(f32),
+) {
+    let resize_rect = Rect::from_min_max(egui::pos2(x, table_rect.top()), egui::pos2(x, table_rect.bottom()))
+        .expand(ui.style().interaction.resize_grab_radius_side);
+    let response = ui.interact(
+        resize_rect,
+        ui.id().with(("access_level_resize", id_salt)),
+        Sense::click_and_drag(),
+    );
+
+    if response.hovered() || response.dragged() {
+        ui.set_cursor_icon(CursorIcon::ResizeColumn);
+        ui.painter().line_segment(
+            [egui::pos2(x, table_rect.top()), egui::pos2(x, table_rect.bottom())],
+            resize_stroke,
+        );
+    }
+
+    if response.dragged()
+        && let Some(pointer) = ui.ctx().pointer_latest_pos()
+    {
+        update_width(pointer.x);
     }
 }
 
