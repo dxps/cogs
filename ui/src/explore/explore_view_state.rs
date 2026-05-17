@@ -35,7 +35,7 @@ pub struct ExploreViewState {
     pub open_windows_item_template: HashMap<Id, Arc<Mutex<ItemTemplate>>>,
 
     /// The open windows for viewing access levels.
-    #[serde(skip)]
+    // #[serde(skip)]  todo: temporary used during form dev.
     pub open_windows_access_level: HashMap<Id, AccessLevel>,
 
     /// The element that is currently clicked (not double clicked) in the Explore's table.

@@ -318,6 +318,10 @@ fn ui_init_cosmetics(ctx: &egui::Context) {
         apply_catppuccin_theme(style, theme);
 
         style.visuals.widgets.noninteractive.bg_stroke = egui::Stroke::NONE;
+        style.visuals.widgets.hovered.bg_stroke = egui::Stroke::NONE;
+        style.visuals.widgets.active.bg_stroke = egui::Stroke::NONE;
+        style.visuals.window_stroke = egui::Stroke::new(1.0, style.visuals.text_color().gamma_multiply(0.20));
+        style.visuals.window_fill = style.visuals.window_fill.gamma_multiply(1.08);
 
         let r = egui::CornerRadius::same(CORNER_RADIUS as u8);
         style.visuals.widgets.inactive.corner_radius = r;
@@ -327,13 +331,14 @@ fn ui_init_cosmetics(ctx: &egui::Context) {
         style.visuals.widgets.noninteractive.corner_radius = r;
 
         // Centered shadow on windows.
-        let alpha = if style.visuals.dark_mode { 75 } else { 40 };
+        let alpha = if style.visuals.dark_mode { 105 } else { 55 };
         style.visuals.window_shadow = egui::epaint::Shadow {
             offset: [0, 0],
-            blur: 25,
-            spread: 5,
+            blur: 32,
+            spread: 7,
             color: egui::Color32::from_black_alpha(alpha),
         };
+        style.visuals.popup_shadow = style.visuals.window_shadow;
 
         _ = FADED_COLOR.set(style.visuals.text_color().gamma_multiply(0.6));
     });
