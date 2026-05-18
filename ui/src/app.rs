@@ -10,10 +10,10 @@ use crate::{
 };
 use cogs_shared::domain::model::meta::Kind;
 use egui::{
-    FontData,
     epaint::text::{FontInsert, InsertFontFamily},
+    FontData,
 };
-use std::sync::mpsc::{Receiver, Sender, channel};
+use std::sync::mpsc::{channel, Receiver, Sender};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 struct CatppuccinTheme {
@@ -223,6 +223,7 @@ impl eframe::App for CogsApp {
                                 ectx.request_repaint();
                             }
                             Kind::LinkTemplate => todo!(),
+                            Kind::AccessLevel => {}
                         },
                         Err(_err) => {
                             // TODO: show a popup window.
@@ -239,6 +240,7 @@ impl eframe::App for CogsApp {
                             ectx.request_repaint();
                         }
                         Kind::LinkTemplate => todo!(),
+                        Kind::AccessLevel => {}
                     },
                     Err(_) => {
                         todo!();
@@ -257,6 +259,7 @@ impl eframe::App for CogsApp {
                             ectx.request_repaint();
                         }
                         Kind::LinkTemplate => todo!(),
+                        Kind::AccessLevel => {}
                     },
                     Err(_) => todo!(),
                 },

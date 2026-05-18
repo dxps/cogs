@@ -1,6 +1,6 @@
-use crate::{CogsApp, comps::AppComponent, constants::EXPLORE_ELEMENT};
+use crate::{comps::AppComponent, constants::EXPLORE_ELEMENT, CogsApp};
 use cogs_shared::domain::model::{AccessLevel, Id};
-use egui::{Align, Button, CursorIcon, Layout, Margin, RichText, TextEdit, Window, vec2};
+use egui::{vec2, Align, Button, CursorIcon, Layout, Margin, RichText, TextEdit, Window};
 use egui_material_icons::{
     icon_button, icon_text,
     icons::{ICON_CLOSE, ICON_DELETE, ICON_EDIT, ICON_INFO},

@@ -1,13 +1,14 @@
 use crate::{
-    CogsApp,
-    comps::{AppComponent, AttrTemplatePreview, Dropdown, DropdownItem, DropdownStyle, ItemTemplatePreview, menu_row},
+    comps::{menu_row, AppComponent, AttrTemplatePreview, Dropdown, DropdownItem, DropdownStyle, ItemTemplatePreview},
     constants::{EXPLORE_ELEMENT, ICON_ATTR_TMPL, ICON_HELP, ICON_ITEM, ICON_ITEM_TMPL, ICON_RARROW, ICON_TMPL, POPUP_ROW_WIDTH},
-    explore::{ExploreTable, show_windows},
+    explore::{show_windows, ExploreTable},
+    security::AccessLevelPreview,
     views::AppView,
+    CogsApp,
 };
 use cogs_shared::domain::model::{
-    Id,
     meta::{AttrTemplate, Item, ItemTemplate, Kind},
+    Id,
 };
 use const_format::concatcp;
 use egui::{Color32, CursorIcon, Popup, RichText, Sense, Ui};
@@ -430,6 +431,15 @@ fn show_preview_cell(ctx: &mut CogsApp, ectx: &egui::Context, strip: &mut Strip<
                             }
                         }
                         ItemTemplatePreview::show(ctx, ui);
+                    }
+                    Kind::AccessLevel => {
+                        for elem in ctx.state.data.get_access_levels().iter() {
+                            if elem.id == *id {
+                                ectx.data_mut(|d| d.insert_temp(egui::Id::from(EXPLORE_ELEMENT), elem.clone()));
+                                break;
+                            }
+                        }
+                        AccessLevelPreview::show(ctx, ui);
                     }
                     _ => {}
                 }

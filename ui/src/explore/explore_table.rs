@@ -1,13 +1,13 @@
 use crate::{
-    CogsApp,
     comps::AppComponent,
     explore::{ExploreCategory, ExploreKind, ExploreViewState, TemplateTypeFilter},
+    CogsApp,
 };
 use cogs_shared::domain::model::{
-    AccessLevel,
     meta::{AttrTemplate, ItemTemplate, Kind},
+    AccessLevel,
 };
-use egui::{Color32, CursorIcon, Rect, RichText, Sense, Ui};
+use egui::{Color32, CursorIcon, RichText, Sense, Ui};
 use egui_extras::{Column, TableBody, TableBuilder};
 use std::sync::{Arc, Mutex};
 
@@ -39,20 +39,25 @@ impl AppComponent for ExploreTable {
 
         egui::ScrollArea::vertical().show(ui, |ui| {
             ui.add_space(10.0);
-            let ectx = ui.ctx().clone();
             let available_height = ui.available_height();
+            let available_width = ui.available_width();
             let w = ctx.state.explore.table_col_widths.unwrap_or([40.0, 120.0, 150.0]);
 
             if matches!(ctx.state.explore.category, ExploreCategory::Security) {
                 let access_levels = access_level_rows_filtered(ctx);
-                show_access_levels(ctx, &ectx, ui, &access_levels);
+                show_access_levels(ctx, ui, &access_levels, available_height, available_width);
                 return;
             }
 
-            let resize_stroke = egui::Stroke::new(1.0, ui.visuals().text_color().gamma_multiply(0.55));
-            ui.visuals_mut().widgets.hovered.bg_fill = Color32::TRANSPARENT;
-            ui.visuals_mut().widgets.hovered.bg_stroke = resize_stroke;
-            ui.visuals_mut().widgets.active.bg_stroke = resize_stroke;
+            ui.visuals_mut().widgets.hovered.bg_stroke = egui::Stroke::NONE;
+            ui.visuals_mut().widgets.active.bg_stroke = egui::Stroke::NONE;
+            ui.visuals_mut().widgets.noninteractive.bg_stroke = egui::Stroke::NONE;
+
+            let spacing_x = ui.spacing().item_spacing.x;
+            let name_width = w[1].clamp(100.0, 250.0);
+            let description_width = w[2]
+                .max(100.0)
+                .min((available_width - 40.0 - name_width - spacing_x * 2.0).max(100.0));
 
             let table = TableBuilder::new(ui)
                 .id_salt("explore_table")
@@ -60,8 +65,8 @@ impl AppComponent for ExploreTable {
                 .resizable(true)
                 .cell_layout(egui::Layout::left_to_right(egui::Align::Center))
                 .column(Column::auto().at_least(40.0)) // type
-                .column(Column::initial(w[1]).at_least(100.0).at_most(250.0)) // name
-                .column(Column::remainder().at_least(w[2].max(100.0)).resizable(true)) // description
+                .column(Column::initial(name_width).at_least(100.0).at_most(250.0)) // name
+                .column(Column::initial(description_width).at_least(100.0).resizable(true)) // description
                 .max_scroll_height(available_height)
                 .sense(Sense::click());
 
@@ -147,168 +152,102 @@ fn template_rows_filtered(ctx: &CogsApp) -> (Vec<ItemTemplate>, Vec<AttrTemplate
     }
 }
 
-fn show_access_levels(ctx: &mut CogsApp, ectx: &egui::Context, ui: &mut Ui, elems: &[AccessLevel]) {
-    let row_hover_fill = ui.visuals().widgets.hovered.bg_fill;
-    let resize_stroke = egui::Stroke::new(1.0, ui.visuals().text_color().gamma_multiply(0.55));
-    let spacing = ui.spacing().item_spacing;
-    let row_height = 20.0;
-    let header_height = 20.0;
-    let available_width = ui.available_width();
-    let total_height = header_height + spacing.y + elems.len() as f32 * (row_height + spacing.y);
+fn show_access_levels(ctx: &mut CogsApp, ui: &mut Ui, elems: &[AccessLevel], available_height: f32, available_width: f32) {
+    ui.visuals_mut().widgets.hovered.bg_stroke = egui::Stroke::NONE;
+    ui.visuals_mut().widgets.active.bg_stroke = egui::Stroke::NONE;
+    ui.visuals_mut().widgets.noninteractive.bg_stroke = egui::Stroke::NONE;
 
-    let mut widths = ctx.state.explore.table_col_widths.unwrap_or([40.0, 120.0, 150.0]);
-    widths[0] = widths[0].clamp(40.0, 150.0);
-    widths[1] = widths[1].clamp(100.0, 350.0);
+    let w = ctx.state.explore.table_col_widths.unwrap_or([40.0, 120.0, 150.0]);
+    let spacing_x = ui.spacing().item_spacing.x;
+    let type_width = w[0].clamp(40.0, 150.0);
+    let name_width = w[1].clamp(100.0, 350.0);
+    let description_width = w[2]
+        .max(160.0)
+        .min((available_width - type_width - name_width - spacing_x * 2.0).max(160.0));
 
-    ui.allocate_ui(egui::vec2(available_width, total_height), |ui| {
-        let table_rect = ui.max_rect();
-        let left = table_rect.left();
-        let top = table_rect.top();
-        let type_width = widths[0];
-        let name_width = widths[1];
-        let description_width = (available_width - type_width - name_width - spacing.x * 2.0).max(100.0);
+    let table = TableBuilder::new(ui)
+        .id_salt("explore_access_levels_table")
+        .striped(false)
+        .resizable(true)
+        .cell_layout(egui::Layout::left_to_right(egui::Align::Center))
+        .column(Column::initial(type_width).at_least(40.0).at_most(150.0)) // type
+        .column(Column::initial(name_width).at_least(100.0).at_most(350.0)) // name
+        .column(Column::initial(description_width).at_least(160.0).resizable(true)) // description
+        .max_scroll_height(available_height)
+        .sense(Sense::click());
 
-        let type_x = left;
-        let name_x = type_x + type_width + spacing.x;
-        let description_x = name_x + name_width + spacing.x;
+    let table = table.header(20.0, |mut header| {
+        header.col(|ui| {
+            ui.label(RichText::new("type").color(Color32::GRAY));
+        });
+        header.col(|ui| {
+            ui.label(RichText::new("name").color(Color32::GRAY));
+        });
+        header.col(|ui| {
+            ui.label(RichText::new("description").color(Color32::GRAY));
+        });
+    });
 
-        paint_access_level_cell(
-            ui,
-            Rect::from_min_size(egui::pos2(type_x, top), egui::vec2(type_width, header_height)),
-            |ui| {
-                ui.label(RichText::new("type").color(Color32::GRAY));
-            },
-        );
-        paint_access_level_cell(
-            ui,
-            Rect::from_min_size(egui::pos2(name_x, top), egui::vec2(name_width, header_height)),
-            |ui| {
-                ui.label(RichText::new("name").color(Color32::GRAY));
-            },
-        );
-        paint_access_level_cell(
-            ui,
-            Rect::from_min_size(egui::pos2(description_x, top), egui::vec2(description_width, header_height)),
-            |ui| {
-                ui.label(RichText::new("description").color(Color32::GRAY));
-            },
-        );
-
-        let mut row_top = top + header_height + spacing.y;
+    table.body(|mut body| {
         for elem in elems {
-            let row_rect = Rect::from_min_size(egui::pos2(left, row_top), egui::vec2(available_width, row_height));
-            let row_hovered = ui.input(|i| i.pointer.hover_pos().is_some_and(|pos| row_rect.contains(pos)));
+            let mut open_win = false;
+            let mut show_right = false;
 
-            if row_hovered {
-                ui.painter().rect_filled(row_rect, egui::CornerRadius::ZERO, row_hover_fill);
-                ectx.request_repaint();
-            }
-
-            paint_access_level_cell(
-                ui,
-                Rect::from_min_size(egui::pos2(type_x, row_top), egui::vec2(type_width, row_height)),
-                |ui| {
+            body.row(20.0, |mut row| {
+                row.col(|ui| {
                     ui.label(RichText::new("A.L.").color(Color32::GRAY))
                         .on_hover_text("Access Level")
                         .on_hover_cursor(CursorIcon::Help);
-                },
-            );
-            paint_access_level_cell(
-                ui,
-                Rect::from_min_size(egui::pos2(name_x, row_top), egui::vec2(name_width, row_height)),
-                |ui| {
-                    ui.label(&elem.name);
-                },
-            );
-            paint_access_level_cell(
-                ui,
-                Rect::from_min_size(egui::pos2(description_x, row_top), egui::vec2(description_width, row_height)),
-                |ui| {
-                    ui.label(RichText::new(elem.description.as_deref().unwrap_or_default()).color(Color32::GRAY));
-                },
-            );
+                });
 
-            let row_resp = ui
-                .interact(row_rect, ui.id().with(("access_level_row", &elem.id)), Sense::click())
-                .on_hover_cursor(CursorIcon::PointingHand);
+                row.col(|ui| {
+                    let label = ui.label(&elem.name).on_hover_cursor(CursorIcon::PointingHand);
 
-            if row_resp.double_clicked() {
+                    if label.double_clicked() {
+                        open_win = true;
+                    } else if label.clicked() {
+                        show_right = true;
+                    }
+                });
+
+                row.col(|ui| {
+                    let label = ui
+                        .label(RichText::new(elem.description.as_deref().unwrap_or_default()).color(Color32::GRAY))
+                        .on_hover_cursor(CursorIcon::PointingHand);
+
+                    if label.double_clicked() {
+                        open_win = true;
+                    } else if label.clicked() {
+                        show_right = true;
+                    }
+                });
+
+                row.response().on_hover_cursor(CursorIcon::PointingHand);
+                if row.response().double_clicked() {
+                    open_win = true;
+                }
+                if row.response().clicked() {
+                    show_right = true;
+                }
+            });
+
+            if open_win {
                 ctx.state
                     .explore
                     .open_windows_access_level
                     .insert(elem.id.clone(), elem.clone());
             }
 
-            row_top += row_height + spacing.y;
+            if show_right {
+                ctx.state.explore.curr_sel_elem = Some((Kind::AccessLevel, elem.id.clone()));
+            }
         }
 
-        resize_access_level_column(
-            ui,
-            "type",
-            left + type_width + spacing.x * 0.5,
-            table_rect,
-            resize_stroke,
-            |pointer_x| {
-                widths[0] = (pointer_x - left).clamp(40.0, 150.0);
-            },
-        );
-        resize_access_level_column(
-            ui,
-            "name",
-            name_x + name_width + spacing.x * 0.5,
-            table_rect,
-            resize_stroke,
-            |pointer_x| {
-                widths[1] = (pointer_x - name_x).clamp(100.0, 350.0);
-            },
-        );
+        let widths = body.widths();
+        if widths.len() >= 3 {
+            ctx.state.explore.table_col_widths = Some([widths[0], widths[1], widths[2]]);
+        }
     });
-
-    widths[2] = (available_width - widths[0] - widths[1] - spacing.x * 2.0).max(100.0);
-    ctx.state.explore.table_col_widths = Some(widths);
-}
-
-fn paint_access_level_cell(ui: &mut Ui, rect: Rect, add_contents: impl FnOnce(&mut Ui)) {
-    ui.scope_builder(
-        egui::UiBuilder::new()
-            .max_rect(rect)
-            .layout(egui::Layout::left_to_right(egui::Align::Center)),
-        |ui| {
-            ui.set_clip_rect(rect);
-            add_contents(ui);
-        },
-    );
-}
-
-fn resize_access_level_column(
-    ui: &mut Ui,
-    id_salt: &'static str,
-    x: f32,
-    table_rect: Rect,
-    resize_stroke: egui::Stroke,
-    update_width: impl FnOnce(f32),
-) {
-    let resize_rect = Rect::from_min_max(egui::pos2(x, table_rect.top()), egui::pos2(x, table_rect.bottom()))
-        .expand(ui.style().interaction.resize_grab_radius_side);
-    let response = ui.interact(
-        resize_rect,
-        ui.id().with(("access_level_resize", id_salt)),
-        Sense::click_and_drag(),
-    );
-
-    if response.hovered() || response.dragged() {
-        ui.set_cursor_icon(CursorIcon::ResizeColumn);
-        ui.painter().line_segment(
-            [egui::pos2(x, table_rect.top()), egui::pos2(x, table_rect.bottom())],
-            resize_stroke,
-        );
-    }
-
-    if response.dragged()
-        && let Some(pointer) = ui.ctx().pointer_latest_pos()
-    {
-        update_width(pointer.x);
-    }
 }
 
 fn show_attr_templates(ctx: &mut CogsApp, body: &mut TableBody<'_>, elems: &[AttrTemplate]) {
