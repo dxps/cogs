@@ -1,5 +1,6 @@
 use crate::{
     CogsApp,
+    colors::faded_color,
     comps::{AppComponent, AttrsLinksTab, horiz_tab},
     constants::{CORNER_RADIUS, EXPLORE_ELEMENT, FORM_FIELD_W},
 };
@@ -8,8 +9,8 @@ use cogs_shared::domain::model::{
     meta::{AttrTemplate, ItemTemplate, ItemTemplateLink},
 };
 use egui::{
-    Align, Button, Color32, ComboBox, CursorIcon, Direction, Frame, Grid, Label, Layout, Margin, RichText, Stroke, TextEdit,
-    Window,
+    Align, Button, CollapsingHeader, Color32, ComboBox, CursorIcon, Direction, Frame, Grid, Label, Layout, Margin, RichText,
+    Stroke, TextEdit, Window,
 };
 use std::{
     collections::HashMap,
@@ -103,43 +104,46 @@ impl ItemTemplateWindow {
         element: &mut ItemTemplate,
         s: &mut FormUiState,
     ) {
-        ui.horizontal(|ui| {
-            ui.add_space(14.0);
+        ui.vertical(|ui| {
+            ui.horizontal(|ui| {
+                ui.add_space(14.0);
 
-            Grid::new(format!("item_tmpl_win_{}_grid", s.id))
-                .spacing([10.0, 10.0])
-                .num_columns(2)
-                .show(ui, |ui| {
-                    Self::row_name(ui, ectx, element, s);
-                    Self::row_description(ui, element, s);
-                    Self::row_tabs(ui, ectx, s);
+                Grid::new(format!("item_tmpl_win_{}_grid", s.id))
+                    .spacing([10.0, 10.0])
+                    .num_columns(2)
+                    .show(ui, |ui| {
+                        Self::row_name(ui, ectx, element, s);
+                        Self::row_description(ui, element, s);
+                        Self::row_tabs(ui, ectx, s);
 
+                        match s.tab {
+                            AttrsLinksTab::Attributes => {
+                                Self::row_listing_attr(ui, element, s);
+                                Self::row_attributes(ui, element, s);
+                                ui.label("");
+                                ui.end_row();
+                            }
+                            AttrsLinksTab::Links => {
+                                Self::row_links(app, ui, element, s);
+                                ui.label("");
+                                ui.end_row();
+                            }
+                        }
+                    });
+
+                ui.add_space(8.0);
+            });
+
+            if s.action != Action::View {
+                ui.add_space(8.0);
+                ui.horizontal(|ui| {
+                    ui.add_space(14.0);
                     match s.tab {
-                        AttrsLinksTab::Attributes => {
-                            Self::row_listing_attr(ui, element, s);
-                            Self::row_attributes(ui, element, s);
-                            ui.label("");
-                            ui.end_row();
-
-                            if s.action != Action::View {
-                                Self::row_add_attr_template(app, ui, element, s);
-                                ui.end_row();
-                            }
-                        }
-                        AttrsLinksTab::Links => {
-                            Self::row_links(app, ui, element, s);
-                            ui.label("");
-                            ui.end_row();
-
-                            if s.action != Action::View {
-                                Self::row_add_link_template(app, ui, element, s);
-                                ui.end_row();
-                            }
-                        }
+                        AttrsLinksTab::Attributes => Self::row_add_attr_template(app, ui, element, s),
+                        AttrsLinksTab::Links => Self::row_add_link_template(app, ui, element, s),
                     }
                 });
-
-            ui.add_space(8.0);
+            }
         });
     }
 
@@ -313,86 +317,85 @@ impl ItemTemplateWindow {
     }
 
     fn row_add_link_template(app: &mut CogsApp, ui: &mut egui::Ui, element: &mut ItemTemplate, s: &FormUiState) {
-        ui.add_enabled(false, Label::new("              Add Link"));
+        let header = RichText::new("Add Link").color(faded_color(ui));
+        CollapsingHeader::new(header)
+            .id_salt(("item_tmpl_add_link", &s.id))
+            .show(ui, |ui| {
+                let link_name_id = egui::Id::from(format!("item_templ_form_{}_new_link_name", s.id));
+                let mut new_link_name = ui.ctx().data(|d| d.get_temp::<String>(link_name_id)).unwrap_or_default();
 
-        ui.vertical(|ui| {
-            let link_name_id = egui::Id::from(format!("item_templ_form_{}_new_link_name", s.id));
-            let mut new_link_name = ui.ctx().data(|d| d.get_temp::<String>(link_name_id)).unwrap_or_default();
+                ui.horizontal(|ui| {
+                    ui.label(" Name");
+                    ui.add_sized(
+                        [190.0, ui.spacing().interact_size.y],
+                        TextEdit::singleline(&mut new_link_name),
+                    );
+                });
 
-            ui.horizontal(|ui| {
-                ui.label(" Name");
-                ui.add_sized(
-                    [190.0, ui.spacing().interact_size.y],
-                    TextEdit::singleline(&mut new_link_name),
-                );
-            });
+                ui.add_space(6.0); // A small vertical gap between Name and Target rows.
+                ui.ctx().data_mut(|d| d.insert_temp(link_name_id, new_link_name.clone()));
 
-            ui.add_space(6.0); // A small vertical gap between Name and Target rows.
-            ui.ctx().data_mut(|d| d.insert_temp(link_name_id, new_link_name.clone()));
+                ui.horizontal(|ui| {
+                    ui.label("Target");
+                    let curr_add_link = app.state.explore.item_template_cu_add_link_template.clone();
+                    ComboBox::from_id_salt(format!("item_templ_form_{}_add_link_", s.id))
+                        .width(160.0)
+                        .selected_text(selected_link_target_name(app, &curr_add_link, &element.id))
+                        .show_ui(ui, |ui| {
+                            let selected_for_element = app
+                                .state
+                                .explore
+                                .item_template_cu_add_link_template
+                                .entry(element.id.clone())
+                                .or_insert(None);
 
-            ui.horizontal(|ui| {
-                ui.label("Target");
-                let curr_add_link = app.state.explore.item_template_cu_add_link_template.clone();
-                ComboBox::from_id_salt(format!("item_templ_form_{}_add_link_", s.id))
-                    .width(160.0)
-                    .selected_text(selected_link_target_name(app, &curr_add_link, &element.id))
-                    .show_ui(ui, |ui| {
-                        let selected_for_element = app
-                            .state
-                            .explore
-                            .item_template_cu_add_link_template
-                            .entry(element.id.clone())
-                            .or_insert(None);
+                            for it in app.state.data.get_item_templates() {
+                                let is_self = it.id == element.id;
+                                let already_linked = element.links.iter().any(|l| l.item_template_id == it.id);
 
-                        for it in app.state.data.get_item_templates() {
-                            let is_self = it.id == element.id;
-                            let already_linked = element.links.iter().any(|l| l.item_template_id == it.id);
-
-                            if !is_self && !already_linked {
-                                ui.selectable_value(selected_for_element, Some(it.id.clone()), it.name);
+                                if !is_self && !already_linked {
+                                    ui.selectable_value(selected_for_element, Some(it.id.clone()), it.name);
+                                }
                             }
-                        }
-                    });
+                        });
 
-                let has_selected = app
-                    .state
-                    .explore
-                    .item_template_cu_add_link_template
-                    .get(&element.id)
-                    .and_then(|o| o.as_ref())
-                    .is_some();
-
-                let name_ok = !new_link_name.trim().is_empty();
-
-                let btn = ui
-                    .add_enabled(has_selected && name_ok, Button::new(" + "))
-                    .on_disabled_hover_text("Provide the link name and\nselect an item template first.");
-
-                if btn.clicked() {
-                    if let Some(linked_id) = app
+                    let has_selected = app
                         .state
                         .explore
                         .item_template_cu_add_link_template
                         .get(&element.id)
-                        .and_then(|o| o.clone())
-                    {
-                        element.links.push(ItemTemplateLink {
-                            name: new_link_name.trim().to_string(),
-                            item_template_id: linked_id,
-                        });
+                        .and_then(|o| o.as_ref())
+                        .is_some();
 
-                        app.state
+                    let name_ok = !new_link_name.trim().is_empty();
+
+                    let btn = ui
+                        .add_enabled(has_selected && name_ok, Button::new(" + "))
+                        .on_disabled_hover_text("Provide the link name and\nselect an item template first.");
+
+                    if btn.clicked() {
+                        if let Some(linked_id) = app
+                            .state
                             .explore
                             .item_template_cu_add_link_template
-                            .insert(element.id.clone(), None);
+                            .get(&element.id)
+                            .and_then(|o| o.clone())
+                        {
+                            element.links.push(ItemTemplateLink {
+                                name: new_link_name.trim().to_string(),
+                                item_template_id: linked_id,
+                            });
 
-                        ui.ctx().data_mut(|d| d.insert_temp(link_name_id, String::new()));
+                            app.state
+                                .explore
+                                .item_template_cu_add_link_template
+                                .insert(element.id.clone(), None);
+
+                            ui.ctx().data_mut(|d| d.insert_temp(link_name_id, String::new()));
+                        }
                     }
-                }
+                });
             });
-        });
-
-        ui.end_row();
     }
 
     fn render_footer_buttons(
@@ -640,66 +643,69 @@ impl ItemTemplateWindow {
         const FORM_FIELD_W: f32 = 240.0;
         const PLUS_W: f32 = 32.0;
 
-        ui.add_enabled(false, Label::new("      Add Attribute"));
+        let header = RichText::new("Add Attribute").color(faded_color(ui));
+        CollapsingHeader::new(header)
+            .id_salt(("item_tmpl_add_attribute", &s.id))
+            .show(ui, |ui| {
+                ui.horizontal(|ui| {
+                    let curr_attr_tmpl = app.state.explore.item_template_cu_add_attr_template.clone();
+                    let combo_w = FORM_FIELD_W - PLUS_W;
 
-        ui.horizontal(|ui| {
-            let curr_attr_tmpl = app.state.explore.item_template_cu_add_attr_template.clone();
-            let combo_w = FORM_FIELD_W - PLUS_W;
+                    let response = ComboBox::from_id_salt(format!("item_templ_form_{}_add_attr_", s.id))
+                        .width(combo_w)
+                        .selected_text(selected_attr_name(&curr_attr_tmpl, &element.id))
+                        .show_ui(ui, |ui| {
+                            let selected_for_element = app
+                                .state
+                                .explore
+                                .item_template_cu_add_attr_template
+                                .entry(element.id.clone())
+                                .or_insert(None);
 
-            let response = ComboBox::from_id_salt(format!("item_templ_form_{}_add_attr_", s.id))
-                .width(combo_w)
-                .selected_text(selected_attr_name(&curr_attr_tmpl, &element.id))
-                .show_ui(ui, |ui| {
-                    let selected_for_element = app
+                            for at in app.state.data.get_attr_templates() {
+                                if element.attributes.iter().all(|a| a.id != at.id) {
+                                    ui.selectable_value(selected_for_element, Some(at.clone()), at.name.clone());
+                                }
+                            }
+                        })
+                        .response;
+
+                    if let Some(drag_idx) = response.dnd_release_payload::<usize>() {
+                        element.attributes.remove(*drag_idx);
+                        if element.attributes.is_empty() {
+                            element.listing_attr = Default::default();
+                        }
+                    }
+
+                    let has_selected = app
                         .state
                         .explore
                         .item_template_cu_add_attr_template
-                        .entry(element.id.clone())
-                        .or_insert(None);
+                        .get(&element.id)
+                        .and_then(|o| o.as_ref())
+                        .is_some();
 
-                    for at in app.state.data.get_attr_templates() {
-                        if element.attributes.iter().all(|a| a.id != at.id) {
-                            ui.selectable_value(selected_for_element, Some(at.clone()), at.name.clone());
+                    let btn = ui
+                        .add_enabled(has_selected, Button::new(" + "))
+                        .on_disabled_hover_text("Select an attribute template first");
+
+                    if has_selected && btn.clicked() {
+                        if let Some(attr) = app
+                            .state
+                            .explore
+                            .item_template_cu_add_attr_template
+                            .get(&element.id)
+                            .and_then(|o| o.clone())
+                        {
+                            element.attributes.push(attr);
+                            app.state
+                                .explore
+                                .item_template_cu_add_attr_template
+                                .insert(element.id.clone(), None);
                         }
                     }
-                })
-                .response;
-
-            if let Some(drag_idx) = response.dnd_release_payload::<usize>() {
-                element.attributes.remove(*drag_idx);
-                if element.attributes.is_empty() {
-                    element.listing_attr = Default::default();
-                }
-            }
-
-            let has_selected = app
-                .state
-                .explore
-                .item_template_cu_add_attr_template
-                .get(&element.id)
-                .and_then(|o| o.as_ref())
-                .is_some();
-
-            let btn = ui
-                .add_enabled(has_selected, Button::new(" + "))
-                .on_disabled_hover_text("Select an attribute template first");
-
-            if has_selected && btn.clicked() {
-                if let Some(attr) = app
-                    .state
-                    .explore
-                    .item_template_cu_add_attr_template
-                    .get(&element.id)
-                    .and_then(|o| o.clone())
-                {
-                    element.attributes.push(attr);
-                    app.state
-                        .explore
-                        .item_template_cu_add_attr_template
-                        .insert(element.id.clone(), None);
-                }
-            }
-        });
+                });
+            });
     }
 }
 
