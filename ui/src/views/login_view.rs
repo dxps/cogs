@@ -21,7 +21,7 @@ impl AppView for LoginView {
         //
         let ectx = ui.ctx().clone();
 
-        egui::CentralPanel::default().show_inside(ui, |ui| {
+        egui::CentralPanel::default().show(ui, |ui| {
             let frame = egui::Frame::new()
                 .corner_radius(6.0)
                 .inner_margin(20.0)

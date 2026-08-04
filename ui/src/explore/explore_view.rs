@@ -1,14 +1,14 @@
 use crate::{
-    comps::{menu_row, AppComponent, AttrTemplatePreview, Dropdown, DropdownItem, DropdownStyle, ItemTemplatePreview},
+    CogsApp,
+    comps::{AppComponent, AttrTemplatePreview, Dropdown, DropdownItem, DropdownStyle, ItemTemplatePreview, menu_row},
     constants::{EXPLORE_ELEMENT, ICON_ATTR_TMPL, ICON_HELP, ICON_ITEM, ICON_ITEM_TMPL, ICON_RARROW, ICON_TMPL, POPUP_ROW_WIDTH},
-    explore::{show_windows, ExploreTable},
+    explore::{ExploreTable, show_windows},
     security::AccessLevelPreview,
     views::AppView,
-    CogsApp,
 };
 use cogs_shared::domain::model::{
-    meta::{AttrTemplate, Item, ItemTemplate, Kind},
     Id,
+    meta::{AttrTemplate, Item, ItemTemplate, Kind},
 };
 use const_format::concatcp;
 use egui::{Color32, CursorIcon, Popup, RichText, Sense, Ui};
@@ -53,7 +53,7 @@ impl AppView for ExploreView {
         let style = ectx.global_style();
         egui::CentralPanel::default()
         .frame(egui::Frame::central_panel(&style).inner_margin(egui::Margin::symmetric(20, 0)))
-        .show_inside(ui, |ui| {
+        .show(ui, |ui| {
             ui.add_space(17.0);
             ui.label(
                 RichText::new(

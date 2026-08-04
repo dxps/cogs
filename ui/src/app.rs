@@ -1,5 +1,4 @@
 use crate::{
-    colors::FADED_COLOR,
     comps::{AppComponent, Footer, Header},
     constants::{APP_KEY, CORNER_RADIUS},
     explore::ExploreView,
@@ -10,10 +9,10 @@ use crate::{
 };
 use cogs_shared::domain::model::meta::Kind;
 use egui::{
-    epaint::text::{FontInsert, InsertFontFamily},
     FontData,
+    epaint::text::{FontInsert, InsertFontFamily},
 };
-use std::sync::mpsc::{channel, Receiver, Sender};
+use std::sync::mpsc::{Receiver, Sender, channel};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 struct CatppuccinTheme {
@@ -293,11 +292,9 @@ impl eframe::App for CogsApp {
             }
         }
 
-        egui::Panel::bottom("footer_panel")
-            .show_separator_line(false)
-            .show_inside(ui, |ui| {
-                Footer::show(self, ui);
-            });
+        egui::Panel::bottom("footer_panel").show_separator_line(false).show(ui, |ui| {
+            Footer::show(self, ui);
+        });
 
         match self.state.curr_view() {
             ViewName::Home => HomeView::show(self, ui),
@@ -343,8 +340,6 @@ fn ui_init_cosmetics(ctx: &egui::Context) {
             color: egui::Color32::from_black_alpha(alpha),
         };
         style.visuals.popup_shadow = style.visuals.window_shadow;
-
-        _ = FADED_COLOR.set(style.visuals.text_color().gamma_multiply(0.6));
     });
 }
 

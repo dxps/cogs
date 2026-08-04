@@ -1,10 +1,7 @@
 use egui::Color32;
-use std::sync::OnceLock;
 
-pub static FADED_COLOR: OnceLock<Color32> = OnceLock::new();
-
-pub fn faded_color() -> Color32 {
-    FADED_COLOR.get().unwrap_or(&Color32::GRAY).clone()
+pub fn faded_color(ui: &egui::Ui) -> Color32 {
+    ui.visuals().text_color().gamma_multiply(0.6)
 }
 
 pub fn faded_red_color() -> Color32 {

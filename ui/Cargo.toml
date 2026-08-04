@@ -25,7 +25,7 @@ targets = ["x86_64-unknown-linux-gnu", "wasm32-unknown-unknown"]
 
 cogs_shared = { path = "../shared" }
 
-eframe             = { version = "=0.34.2", default-features = false, features = [
+eframe             = { version = "=0.35.0", default-features = false, features = [
     "accesskit",     # Make egui compatible with screen readers. Note: It adds a lot of dependencies.
     "default_fonts", # Embed the default egui fonts.
     "glow",          # Use the glow rendering backend. Alternative: "wgpu".
@@ -33,18 +33,15 @@ eframe             = { version = "=0.34.2", default-features = false, features =
     "wayland",       # To support Linux (and CI).
     "x11",           # To support older Linux distributions (restores one of the default features).
 ] }
-egui               = { version = "=0.34.2", features = [
+egui               = { version = "=0.35.0", features = [
     "persistence",   # Enable persistence of memory (window positions etc).
     "serde",         # Allow serialization using `serde`.
  ] }
-egui_extras        = { version = "=0.34.2",  features = [ "all_loaders" ] }
-egui_dnd           = { version = "0.15.0"      }
-egui_material_icons = { version = "=0.6.0", default-features = false, features = [ "outline" ] }
+egui_extras        = { version = "=0.35.0", features = [ "all_loaders" ] }
+egui_dnd           = { version = "=0.16.0" }
+egui_material_icons = { version = "=0.7.0", default-features = false, features = [ "outline" ] }
 
-# catppuccin-egui    = { version = "=5.7.0", default-features = false, features = [ "egui33" ] }
-catppuccin-egui    = { git = "https://github.com/Lynnesbian/egui", branch = "main", default-features = false, features = [ "egui34" ] }
-
-log                = { version = "=0.4.29"   }
+log                = { version = "=0.4.33"   }
 tracing            = { version = "=0.1.44"   }
 tracing-log        = { version = "=0.2.0"    }
 tracing-subscriber = { version = "=0.3.23",  features = ["env-filter", "fmt"] }

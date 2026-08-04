@@ -33,7 +33,7 @@ async-trait       = { version = "=0.1.89"  }
 
 thiserror         = { version = "=2.0.18"  }
 anyhow            = { version = "=1.0.102" }
-log               = { version = "=0.4.29"  }
+log               = { version = "=0.4.33"  }
 simple_logger     = { version = "=5.2.0"   }
 
 dotenvy           = { version = "=0.15.7"  }

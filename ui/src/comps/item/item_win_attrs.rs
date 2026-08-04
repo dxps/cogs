@@ -32,7 +32,7 @@ pub(super) fn render_add_attr(app: &mut CogsApp, ui: &mut Ui, item: &mut Item, s
 
     ui.horizontal(|ui| {
         ui.add_space(10.0);
-        CollapsingHeader::new(RichText::new("Add an attribute").color(faded_color())).show(ui, |ui| {
+        CollapsingHeader::new(RichText::new("Add an attribute").color(faded_color(ui))).show(ui, |ui| {
             ui.add_space(10.0);
             Grid::new(format!("item_win_{}_add_attr_grid", state.id))
                 .spacing([10.0, 10.0])
@@ -115,14 +115,16 @@ pub(super) fn render_add_attr(app: &mut CogsApp, ui: &mut Ui, item: &mut Item, s
                             if let Some(ref e) = valid_value {
                                 resp = resp.on_hover_text_at_pointer(e.clone());
                             }
-                            if resp.changed()
-                            {
+                            if resp.changed() {
                                 attr.value = value;
                             }
                         }
-                        
-                        let btn_enabled = !attr.name.is_empty() && attr.value_type.is_some() && !attr.value.is_empty() 
-                            && !attr_name_already_included && valid_value.is_none();
+
+                        let btn_enabled = !attr.name.is_empty()
+                            && attr.value_type.is_some()
+                            && !attr.value.is_empty()
+                            && !attr_name_already_included
+                            && valid_value.is_none();
                         let hover_label = if attr_name_already_included {
                             "Cannot add an attribute with\nthe same name as an existing one.".to_string()
                         } else if let Some(e) = valid_value {
@@ -177,15 +179,15 @@ pub(super) fn render_attrs(app: &mut CogsApp, ui: &mut egui::Ui, item: &mut Item
                 ui.add_space(20.0);
                 ui.add_sized(
                     [26.0, row_h],
-                    Label::new(egui::RichText::new("type").size(11.0).color(faded_color())),
+                    Label::new(egui::RichText::new("type").size(11.0).color(faded_color(ui))),
                 );
                 ui.add_sized(
                     [136.0, row_h],
-                    Label::new(egui::RichText::new("name").size(11.0).color(faded_color())),
+                    Label::new(egui::RichText::new("name").size(11.0).color(faded_color(ui))),
                 );
                 ui.add_sized(
                     [144.0, row_h],
-                    Label::new(egui::RichText::new("value").size(11.0).color(faded_color())),
+                    Label::new(egui::RichText::new("value").size(11.0).color(faded_color(ui))),
                 );
             });
             egui::ScrollArea::vertical().auto_shrink([true; 2]).show(ui, |ui| {
@@ -210,7 +212,9 @@ pub(super) fn render_attrs(app: &mut CogsApp, ui: &mut egui::Ui, item: &mut Item
                                                     egui::ComboBox::from_id_salt("choice")
                                                         .width(74.0)
                                                         .selected_text(
-                                                            RichText::new(value_type.to_string()).color(faded_color()).size(12.0),
+                                                            RichText::new(value_type.to_string())
+                                                                .color(faded_color(ui))
+                                                                .size(12.0),
                                                         )
                                                         .show_ui(ui, |ui| {
                                                             for vt in AttributeValueType::iter() {
@@ -256,7 +260,9 @@ pub(super) fn render_attrs(app: &mut CogsApp, ui: &mut egui::Ui, item: &mut Item
                                                     egui::ComboBox::from_id_salt("choice")
                                                         .width(74.0)
                                                         .selected_text(
-                                                            RichText::new(value_type.to_string()).color(faded_color()).size(12.0),
+                                                            RichText::new(value_type.to_string())
+                                                                .color(faded_color(ui))
+                                                                .size(12.0),
                                                         )
                                                         .show_ui(ui, |ui| {
                                                             for vt in AttributeValueType::iter() {
@@ -326,7 +332,9 @@ pub(super) fn render_attrs(app: &mut CogsApp, ui: &mut egui::Ui, item: &mut Item
                                                     egui::ComboBox::from_id_salt("choice")
                                                         .width(74.0)
                                                         .selected_text(
-                                                            RichText::new(value_type.to_string()).color(faded_color()).size(12.0),
+                                                            RichText::new(value_type.to_string())
+                                                                .color(faded_color(ui))
+                                                                .size(12.0),
                                                         )
                                                         .show_ui(ui, |ui| {
                                                             for vt in AttributeValueType::iter() {
@@ -367,7 +375,7 @@ pub(super) fn render_attrs(app: &mut CogsApp, ui: &mut egui::Ui, item: &mut Item
                                                                 |ui| {
                                                                     ui.label(
                                                                         egui::RichText::new(format!("({})", attr.value))
-                                                                            .color(faded_color())
+                                                                            .color(faded_color(ui))
                                                                             .size(12.0),
                                                                     );
                                                                 },
@@ -387,7 +395,9 @@ pub(super) fn render_attrs(app: &mut CogsApp, ui: &mut egui::Ui, item: &mut Item
                                                     egui::ComboBox::from_id_salt("choice")
                                                         .width(74.0)
                                                         .selected_text(
-                                                            RichText::new(value_type.to_string()).color(faded_color()).size(12.0),
+                                                            RichText::new(value_type.to_string())
+                                                                .color(faded_color(ui))
+                                                                .size(12.0),
                                                         )
                                                         .show_ui(ui, |ui| {
                                                             for vt in AttributeValueType::iter() {
@@ -455,7 +465,9 @@ pub(super) fn render_attrs(app: &mut CogsApp, ui: &mut egui::Ui, item: &mut Item
                                                     egui::ComboBox::from_id_salt("choice")
                                                         .width(74.0)
                                                         .selected_text(
-                                                            RichText::new(value_type.to_string()).color(faded_color()).size(12.0),
+                                                            RichText::new(value_type.to_string())
+                                                                .color(faded_color(ui))
+                                                                .size(12.0),
                                                         )
                                                         .show_ui(ui, |ui| {
                                                             for vt in AttributeValueType::iter() {
@@ -535,7 +547,7 @@ pub(super) fn render_attrs(app: &mut CogsApp, ui: &mut egui::Ui, item: &mut Item
                                         handle.ui(ui, |ui| {
                                             ui.add_sized(
                                                 [10.0, row_h],
-                                                egui::Label::new(RichText::new(ICON_REORDER).color(faded_color()).size(9.0)),
+                                                egui::Label::new(RichText::new(ICON_REORDER).color(faded_color(ui)).size(9.0)),
                                             )
                                             .on_hover_cursor(CursorIcon::Crosshair)
                                             .on_hover_and_drag_cursor(CursorIcon::ResizeVertical);
@@ -553,7 +565,7 @@ pub(super) fn render_attrs(app: &mut CogsApp, ui: &mut egui::Ui, item: &mut Item
 
                                         if ui
                                             .add(
-                                                Button::new(RichText::new(ICON_X_DEL).size(9.0).color(faded_color()))
+                                                Button::new(RichText::new(ICON_X_DEL).size(9.0).color(faded_color(ui)))
                                                     .corner_radius(999.0)
                                                     .fill(egui::Color32::TRANSPARENT)
                                                     .stroke(Stroke::NONE),
