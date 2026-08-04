@@ -107,7 +107,10 @@ pub async fn get_all_access_levels(State(state): State<ServerState>) -> impl Int
             log::debug!("Got {} access levels.", access_levels.len());
             (StatusCode::OK, Json(json!(access_levels)))
         }
-        Err(err) => respond_not_found(err),
+        Err(err) => match err {
+            AppError::NotFound => respond_not_found(err),
+            _ => respond_internal_server_error(err),
+        },
     }
 }
 

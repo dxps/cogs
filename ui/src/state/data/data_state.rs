@@ -7,6 +7,7 @@ use cogs_shared::{
     },
     dtos::IdDto,
 };
+use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::sync::mpsc::Sender;
 
@@ -30,6 +31,9 @@ pub struct DataState {
 
     #[serde(skip)]
     fetched_access_levels: bool,
+
+    #[serde(skip)]
+    access_levels_fetch_requested: bool,
 }
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
@@ -53,8 +57,8 @@ impl DataState {
         self.fetched_item_templates
     }
 
-    pub fn has_fetched_access_levels(&self) -> bool {
-        self.fetched_access_levels
+    pub fn should_fetch_access_levels(&self) -> bool {
+        !self.fetched_access_levels && !self.access_levels_fetch_requested
     }
 
     // ------------------------
@@ -233,20 +237,71 @@ impl DataState {
         });
     }
 
-    pub fn fetch_all_access_levels(&self, ectx: &egui::Context, sender: Sender<UiMessage>) {
+    pub fn fetch_all_access_levels(&mut self, ectx: &egui::Context, sender: Sender<UiMessage>) {
         //
+        self.access_levels_fetch_requested = true;
         let mut req = ehttp::Request::get("http://localhost:9010/api/access_levels");
         req.headers.insert("content-type", "application/json");
         let ectx = ectx.clone();
         ehttp::fetch(req, move |rsp| {
-            if let Ok(rsp) = rsp {
-                let data: Vec<AccessLevel> = serde_json::from_str(rsp.text().unwrap_or_default()).unwrap();
+            let result = match rsp {
+                Ok(rsp) => decode_json_response::<Vec<AccessLevel>>(&rsp),
+                Err(err) => Err(AppError::ErrDetails("failed to fetch access levels".to_string(), err)),
+            };
+
+            if let Ok(data) = &result {
                 log::trace!("[DataState::fetch_all_access_levels] Got {} elements.", data.len());
-                if let Err(e) = sender.send(UiMessage::AccessLevelsFetched(Ok(data))) {
-                    log::info!("[DataState::fetch_all_access_levels] Failed to send UiMessage. Error: {e}");
-                }
-                ectx.request_repaint();
             }
+
+            if let Err(e) = sender.send(UiMessage::AccessLevelsFetched(result)) {
+                log::error!("[DataState::fetch_all_access_levels] Failed to send UiMessage. Error: {e}");
+            }
+            ectx.request_repaint();
         });
+    }
+}
+
+fn decode_json_response<T: DeserializeOwned>(rsp: &ehttp::Response) -> AppResult<T> {
+    let body = rsp.text().unwrap_or("<response body is not valid UTF-8>");
+
+    if !rsp.ok {
+        return Err(AppError::ErrDetails(
+            format!("HTTP {} {}", rsp.status, rsp.status_text),
+            body.to_string(),
+        ));
+    }
+
+    rsp.json()
+        .map_err(|err| AppError::ErrDetails("invalid JSON response".to_string(), format!("{err}; response body: {body}")))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::decode_json_response;
+    use cogs_shared::domain::model::AccessLevel;
+
+    fn response(status: u16, body: &str) -> ehttp::Response {
+        ehttp::Response {
+            url: "http://localhost/api/access_levels".to_string(),
+            ok: (200..300).contains(&status),
+            status,
+            status_text: String::new(),
+            headers: ehttp::Headers::default(),
+            bytes: body.as_bytes().to_vec(),
+        }
+    }
+
+    #[test]
+    fn access_level_error_object_is_not_treated_as_a_list() {
+        let result = decode_json_response::<Vec<AccessLevel>>(&response(404, r#"{"error":"not found"}"#));
+
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn invalid_access_level_shape_returns_an_error() {
+        let result = decode_json_response::<Vec<AccessLevel>>(&response(200, r#"{"error":"internal error"}"#));
+
+        assert!(result.is_err());
     }
 }

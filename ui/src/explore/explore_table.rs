@@ -1,11 +1,11 @@
 use crate::{
+    CogsApp,
     comps::AppComponent,
     explore::{ExploreCategory, ExploreKind, ExploreViewState, TemplateTypeFilter},
-    CogsApp,
 };
 use cogs_shared::domain::model::{
-    meta::{AttrTemplate, ItemTemplate, Kind},
     AccessLevel,
+    meta::{AttrTemplate, ItemTemplate, Kind},
 };
 use egui::{Color32, CursorIcon, RichText, Sense, Ui};
 use egui_extras::{Column, TableBody, TableBuilder};
@@ -31,7 +31,7 @@ impl AppComponent for ExploreTable {
                 }
             }
             ExploreCategory::Security => {
-                if !ctx.state.data.has_fetched_access_levels() {
+                if ctx.state.data.should_fetch_access_levels() {
                     ctx.state.data.fetch_all_access_levels(ui.ctx(), ctx.sendr.clone());
                 }
             }
